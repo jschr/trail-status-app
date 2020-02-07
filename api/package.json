@@ -1,0 +1,15 @@
+{
+  "name": "@hydrocut-trail-status/api",
+  "version": "0.2.0",
+  "repository": "https://github.com/jschr/vscodethemes",
+  "private": true,
+  "main": "build/src/index.js",
+  "types": "build/src/index.d.ts",
+  "scripts": {
+    "build": "tsc -b",
+    "watch": "tsc -b -w --preserveWatchOutput",
+    "lint": "eslint -c ./.eslintrc src/**/*.ts"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}

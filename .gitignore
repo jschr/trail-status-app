@@ -1,0 +1,13 @@
+build
+dist
+node_modules
+tmp
+data
+.DS_STORE
+.cache
+out
+*.env
+*.log
+.terraform
+terraform.plan
+.netlify
