@@ -9,7 +9,9 @@
   "scripts": {
     "build": "wsrun --exclude-missing --stages build",
     "watch": "wsrun --exclude-missing watch",
-    "lint": "wsrun --exclude-missing lint"
+    "lint": "wsrun --exclude-missing lint",
+    "--- workspaces ---": "",
+    "api": "yarn workspace @hydrocut-trail-status/api"
   },
   "devDependencies": {
     "@aws-cdk/aws-apigateway": "1.23.0",

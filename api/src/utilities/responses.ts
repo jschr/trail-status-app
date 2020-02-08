@@ -1,0 +1,26 @@
+import { isHttpError, InternalServerError } from './HttpError';
+
+const headers = {
+  'Content-Type': 'application/json',
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': '*',
+  'Access-Control-Allow-Headers': '*'
+};
+
+export const success = (body: any): AWSLambda.APIGatewayProxyResult => ({
+  statusCode: 200,
+  body: JSON.stringify(body),
+  headers
+});
+
+export const fail = <E extends Error>(
+  err: E
+): AWSLambda.APIGatewayProxyResult => {
+  console.error(err);
+  const httpError = isHttpError(err) ? err : new InternalServerError();
+  return {
+    statusCode: httpError.statusCode,
+    body: JSON.stringify({ message: httpError.message }),
+    headers
+  };
+};
