@@ -1,6 +1,8 @@
 {
   "private": true,
   "name": "@hydrocut-trail-status/workspace",
+  "repository": "git@github.com:jschr/hydrocut-trail-status.git",
+  "author": "Jordan Schroter <github@jschr.io>",
   "workspaces": [
     "api"
   ],
@@ -20,7 +22,5 @@
     "ts-node-dev": "^1.0.0-pre.44",
     "typescript": "^3.7.5",
     "wsrun": "^5.2.0"
-  },
-  "repository": "git@github.com:jschr/hydrocut-trail-status.git",
-  "author": "Jordan Schroter <github@jschr.io>"
+  }
 }
