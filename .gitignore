@@ -11,3 +11,4 @@ out
 .terraform
 terraform.plan
 .netlify
+cdk.out
