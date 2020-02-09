@@ -1,8 +1,8 @@
 // import bodyParser from 'body-parser';
+import { toExpressHandler } from '@hydrocut-trail-status/utilities';
 import express from 'express';
 import getTrailStatus from './functions/getTrailStatus';
 import updateTrailStatus from './functions/updateTrailStatus';
-import toExpressHandler from './utilities/toExpressHandler';
 
 const server = express();
 

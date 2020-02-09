@@ -22,6 +22,24 @@
     "@aws-cdk/aws-lambda" "1.23.0"
     "@aws-cdk/core" "1.23.0"
 
+"@aws-cdk/aws-applicationautoscaling@1.23.0":
+  version "1.23.0"
+  resolved "https://registry.yarnpkg.com/@aws-cdk/aws-applicationautoscaling/-/aws-applicationautoscaling-1.23.0.tgz#ba04a2c21f288a6ed161b8fb13ffca554fe26f87"
+  integrity sha512-Z94siXGd6xR/gwCFCuLrQMk7lMUu56fs9W+fYIGLAFWDOKTvXahXpe0G8tQ74MzJFnj2jwAIYMK0SGFkgZU8+w==
+  dependencies:
+    "@aws-cdk/aws-autoscaling-common" "1.23.0"
+    "@aws-cdk/aws-cloudwatch" "1.23.0"
+    "@aws-cdk/aws-iam" "1.23.0"
+    "@aws-cdk/core" "1.23.0"
+
+"@aws-cdk/aws-autoscaling-common@1.23.0":
+  version "1.23.0"
+  resolved "https://registry.yarnpkg.com/@aws-cdk/aws-autoscaling-common/-/aws-autoscaling-common-1.23.0.tgz#180cc0baa845694769aff71afa1d444241fc34dc"
+  integrity sha512-ieeFKui3MFg6aOdg0BsoaTTwRSp8l+4aet+UCwczeBMTLvxRg3G7BBuhNWlN0q7yXuhQbRo3TsASpWvIxrUz5w==
+  dependencies:
+    "@aws-cdk/aws-iam" "1.23.0"
+    "@aws-cdk/core" "1.23.0"
+
 "@aws-cdk/aws-certificatemanager@1.23.0":
   version "1.23.0"
   resolved "https://registry.yarnpkg.com/@aws-cdk/aws-certificatemanager/-/aws-certificatemanager-1.23.0.tgz#79ad8759e3198a0c804601aaa240cd7a38e3e8f1"
@@ -50,6 +68,15 @@
   resolved "https://registry.yarnpkg.com/@aws-cdk/aws-cloudwatch/-/aws-cloudwatch-1.23.0.tgz#6aea3ac124d5f53b59ad1a6494c8ab53a65fba7d"
   integrity sha512-JZEOfwpcHFqL5X8+Lj0BW23LcNlwH8MfI+DFXb9y2374knPCJQmRw92V/0SkcxtSUhPt7przDag0tsm0Eopkjw==
   dependencies:
+    "@aws-cdk/aws-iam" "1.23.0"
+    "@aws-cdk/core" "1.23.0"
+
+"@aws-cdk/aws-dynamodb@1.23.0":
+  version "1.23.0"
+  resolved "https://registry.yarnpkg.com/@aws-cdk/aws-dynamodb/-/aws-dynamodb-1.23.0.tgz#294e4726e2013cebf9c5da142127a227c0cfa620"
+  integrity sha512-GBYqsxzkykdq0lZL64bBeiSAv87fLifIVeBivVaL8yD3GSK8gOmljuuFyCMCTLLLjIam/R2g6I5hExvsWhkxZQ==
+  dependencies:
+    "@aws-cdk/aws-applicationautoscaling" "1.23.0"
     "@aws-cdk/aws-iam" "1.23.0"
     "@aws-cdk/core" "1.23.0"
 
@@ -615,7 +642,7 @@ aws-cdk@^1.23.0:
     yaml "^1.7.2"
     yargs "^15.0.2"
 
-aws-sdk@^2.610.0:
+aws-sdk@^2.610.0, aws-sdk@^2.614.0:
   version "2.614.0"
   resolved "https://registry.yarnpkg.com/aws-sdk/-/aws-sdk-2.614.0.tgz#e954824c1b9e566691a24ed8491ebf1d68350d37"
   integrity sha512-o7utaxDMo9ri1VyPKw8Kcmpy5uZOqMeok2cgur70iZ94zsLIRnHKrBv1wMBbyRGuUbfJRq76HGAS9QxdiSqQHw==
@@ -1055,6 +1082,11 @@ doctrine@^3.0.0:
   integrity sha512-yS+Q5i3hBf7GBkd4KG8a7eBNNWNGLTaEwwYWUijIYM7zrlYDM0BFXHjjPWlWZ1Rg7UaddZeIDmi9jF3HmqiQ2w==
   dependencies:
     esutils "^2.0.2"
+
+dotenv@^8.2.0:
+  version "8.2.0"
+  resolved "https://registry.yarnpkg.com/dotenv/-/dotenv-8.2.0.tgz#97e619259ada750eea3e4ea3e26bceea5424b16a"
+  integrity sha512-8sJ78ElpbDJBHNeBzUbUVLsqKdccaa/BXF1uPTw3GrvQTBgrQrtObr2mUrE38vzYd8cEv+m/JBfDLioYcfXoaw==
 
 dreamopt@~0.6.0:
   version "0.6.0"
@@ -1741,11 +1773,6 @@ invert-kv@^2.0.0:
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/invert-kv/-/invert-kv-2.0.0.tgz#7393f5afa59ec9ff5f67a27620d11c226e3eec02"
   integrity sha512-wPVv/y/QQ/Uiirj/vh3oP+1Ww+AWehmi1g5fFWGPF6IpCBCDVrhgHRMvrLfdYcwDh3QJbGXDW4JAuzxElLSqKA==
-
-io-ts@^2.0.6:
-  version "2.0.6"
-  resolved "https://registry.yarnpkg.com/io-ts/-/io-ts-2.0.6.tgz#49e65cb8508ace0329a45bfa94cd9d29d1e0cce5"
-  integrity sha512-WNfGzm4csMVwL4hX6QlpQWu65SV6GmOUtDo259GKlLYH1cC5bpOENgYHqQIRJ9uR3FuU1RQKDke5STwHZAn3KA==
 
 ip@1.1.5, ip@^1.1.5:
   version "1.1.5"

@@ -4,22 +4,23 @@
   "repository": "git@github.com:jschr/hydrocut-trail-status.git",
   "author": "Jordan Schroter <github@jschr.io>",
   "workspaces": [
-    "api"
+    "api",
+    "utilities",
+    "infrastructure"
   ],
   "scripts": {
+    "dev": "wsrun --exclude-missing dev",
     "build": "wsrun --exclude-missing --stages build",
     "watch": "wsrun --exclude-missing watch",
     "lint": "wsrun --exclude-missing lint",
     "--- workspaces ---": "",
-    "api": "yarn workspace @hydrocut-trail-status/api"
+    "api": "yarn workspace @hydrocut-trail-status/api",
+    "utilities": "yarn workspace @hydrocut-trail-status/utilities",
+    "infrastructure": "yarn workspace @hydrocut-trail-status/infrastructure"
   },
   "devDependencies": {
-    "@aws-cdk/aws-apigateway": "1.23.0",
-    "@aws-cdk/aws-lambda": "1.23.0",
-    "@aws-cdk/core": "1.23.0",
     "@typescript-eslint/eslint-plugin": "^2.19.0",
     "@typescript-eslint/parser": "^2.19.0",
-    "aws-cdk": "^1.23.0",
     "eslint": "^6.8.0",
     "eslint-config-prettier": "^6.10.0",
     "eslint-plugin-prettier": "^3.1.2",
