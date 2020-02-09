@@ -5,7 +5,7 @@ import * as cdk from '@aws-cdk/core';
 import Stack from './stack';
 
 const app = new cdk.App();
-new Stack(app, 'HydrocutTrailStatusStack', {
+new Stack(app, `${env('PROJECT')}`, {
   env: {
     account: env('AWS_ACCOUNT_ID'),
     region: env('AWS_REGION')

@@ -5,7 +5,9 @@
   "main": "build/src/index.js",
   "types": "build/src/index.d.ts",
   "scripts": {
-    "cdk": "cdk",
+    "diff": "cdk diff",
+    "deploy": "cdk deploy",
+    "destroy": "cdk destroy",
     "build": "tsc -b",
     "watch": "tsc -b -w --preserveWatchOutput",
     "lint": "eslint -c ./.eslintrc src/**/*.ts"

@@ -1,8 +1,10 @@
 import { success, fail } from '@hydrocut-trail-status/utilities';
+import TrailStatusModel from '../models/TrailStatusModel';
 
 const handler: AWSLambda.APIGatewayProxyHandler = async () => {
   try {
-    return success('OK');
+    const trailStatus = await TrailStatusModel.get('hydrocut');
+    return success(trailStatus);
   } catch (err) {
     return fail(err);
   }
