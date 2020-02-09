@@ -1,14 +1,33 @@
-import { success, fail } from '@hydrocut-trail-status/utilities';
 import TrailStatusModel from '../models/TrailStatusModel';
+import { parseBody } from '../requests';
+import { success, fail } from '../responses';
+import { BadRequestError } from '../HttpError';
 
-const handler: AWSLambda.APIGatewayProxyHandler = async () => {
+interface UpdateTrailStatus {
+  status: 'open' | 'closed';
+}
+
+function assertUpdateTrailStatus(body: any): UpdateTrailStatus {
+  if (!body || typeof body !== 'object')
+    throw new BadRequestError('Invalid body.');
+  if (body.status !== 'open' && body.status !== 'closed')
+    throw new BadRequestError(
+      'Invalid status provided in body, must be `open` or `closed`.'
+    );
+
+  return body as UpdateTrailStatus;
+}
+
+const handler: AWSLambda.APIGatewayProxyHandler = async event => {
   try {
+    const { status } = assertUpdateTrailStatus(parseBody(event));
+
     let trailStatus = await TrailStatusModel.get('hydrocut');
     if (!trailStatus) {
       trailStatus = new TrailStatusModel({ trailId: 'hydrocut' });
     }
 
-    await trailStatus.save({ status: 'open' });
+    await trailStatus.save({ status });
 
     return success(trailStatus);
   } catch (err) {
