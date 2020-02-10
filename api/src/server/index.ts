@@ -7,7 +7,7 @@ import toExpressHandler from './toExpressHandler';
 const server = express();
 
 server.get('/status', toExpressHandler(getTrailStatus));
-server.post(
+server.put(
   '/status',
   bodyParser.text({ type: 'application/json' }),
   toExpressHandler(updateTrailStatus)

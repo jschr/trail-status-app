@@ -13,11 +13,11 @@
     "lint": "eslint -c ./.eslintrc src/**/*.ts"
   },
   "dependencies": {
-    "@hydrocut-trail-status/utilities": "",
-    "@aws-cdk/aws-apigateway": "1.23.0",
+    "@aws-cdk/aws-apigateway": "^1.23.0",
     "@aws-cdk/aws-dynamodb": "1.23.0",
     "@aws-cdk/aws-lambda": "1.23.0",
     "@aws-cdk/core": "1.23.0",
+    "@hydrocut-trail-status/utilities": "",
     "aws-cdk": "^1.23.0"
   }
 }

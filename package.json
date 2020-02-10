@@ -13,6 +13,7 @@
     "build": "wsrun --exclude-missing --stages build",
     "watch": "wsrun --exclude-missing watch",
     "lint": "wsrun --exclude-missing lint",
+    "package": "tasks/package.sh",
     "--- workspaces ---": "",
     "api": "dotenv yarn workspace @hydrocut-trail-status/api",
     "utilities": "dotenv yarn workspace @hydrocut-trail-status/utilities",
