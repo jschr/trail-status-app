@@ -2,6 +2,7 @@ import TrailStatusModel from '../models/TrailStatusModel';
 import { parseBody } from '../requests';
 import { success, fail } from '../responses';
 import { BadRequestError } from '../HttpError';
+import * as twitter from '../clients/twitter';
 
 interface UpdateTrailStatus {
   status: 'open' | 'closed';
@@ -28,6 +29,7 @@ const handler: AWSLambda.APIGatewayProxyHandler = async event => {
     }
 
     await trailStatus.save({ status });
+    await twitter.postStatus(`Trails are ${status}.`);
 
     return success(trailStatus);
   } catch (err) {

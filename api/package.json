@@ -9,7 +9,9 @@
     "lint": "eslint -c ./.eslintrc src/**/*.ts"
   },
   "dependencies": {
-    "@hydrocut-trail-status/utilities": ""
+    "@hydrocut-trail-status/utilities": "",
+    "@types/twitter": "^1.7.0",
+    "twitter": "^1.7.1"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.39",

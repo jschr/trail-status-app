@@ -27,7 +27,7 @@ export default class extends cdk.Stack {
     const api = new apigateway.RestApi(this, `${env('PROJECT')}-api`, {
       deployOptions: { stageName: env('STAGE') }
     });
-    const trailStatusApi = api.root.addResource('trailStatus');
+    const trailStatusApi = api.root.addResource('status');
 
     const getTrailStatusHandler = new lambda.Function(
       this,
