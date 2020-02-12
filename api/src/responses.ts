@@ -13,6 +13,14 @@ export const success = (body: any): AWSLambda.APIGatewayProxyResult => ({
   headers
 });
 
+export const redirect = (
+  location: string
+): AWSLambda.APIGatewayProxyResult => ({
+  statusCode: 302,
+  headers: { Location: location },
+  body: ''
+});
+
 export const fail = <E extends Error>(
   err: E
 ): AWSLambda.APIGatewayProxyResult => {

@@ -2,6 +2,8 @@ import bodyParser from 'body-parser';
 import express from 'express';
 import getTrailStatus from '../functions/getTrailStatus';
 import updateTrailStatus from '../functions/updateTrailStatus';
+import authorizeTwitter from '../functions/authorizeTwitter';
+import authorizeTwitterCallback from '../functions/authorizeTwitterCallback';
 import toExpressHandler from './toExpressHandler';
 
 const server = express();
@@ -11,6 +13,12 @@ server.put(
   '/status',
   bodyParser.text({ type: 'application/json' }),
   toExpressHandler(updateTrailStatus)
+);
+
+server.get('/twitter/authorize', toExpressHandler(authorizeTwitter));
+server.get(
+  '/twitter/authorize/callback',
+  toExpressHandler(authorizeTwitterCallback)
 );
 
 server.listen(4000, () => {
