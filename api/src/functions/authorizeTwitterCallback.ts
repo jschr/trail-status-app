@@ -39,6 +39,9 @@ const handler: AWSLambda.APIGatewayProxyHandler = async event => {
       query.oauth_verifier
     );
 
+    // TODO: Lookup trail id for oauth_token, save access token and
+    // secret for trail id in database.
+
     return success({ accessToken, accessTokenSecret });
   } catch (err) {
     return fail(err);
