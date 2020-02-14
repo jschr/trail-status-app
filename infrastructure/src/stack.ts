@@ -33,6 +33,20 @@ export default class extends cdk.Stack {
           : cdk.RemovalPolicy.RETAIN
     });
 
+    const trailAuthSessionTable = new dynamodb.Table(
+      this,
+      tables.trailAuthSession.name,
+      {
+        tableName: tables.trailAuthSession.name,
+        partitionKey: tables.trailAuthSession.partitionKey,
+        billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+        removalPolicy:
+          env('USER_RESOURCE_REMOVAL_POLICY') === 'destroy'
+            ? cdk.RemovalPolicy.DESTROY
+            : cdk.RemovalPolicy.RETAIN
+      }
+    );
+
     // API
     const api = new apigateway.RestApi(this, `${env('PROJECT')}-api`, {
       deployOptions: { stageName: env('STAGE') }
@@ -118,6 +132,7 @@ export default class extends cdk.Stack {
 
     twitterAuthorizeApi.addMethod('GET', authorizeTwitterIntegration);
     trailAuthTable.grantReadWriteData(authorizeTwitterHandler);
+    trailAuthSessionTable.grantReadWriteData(authorizeTwitterHandler);
 
     // GET twitter/authorize/callback
     const authorizeTwitterCallbackHandler = new lambda.Function(
@@ -146,5 +161,6 @@ export default class extends cdk.Stack {
       authorizeTwitterCallbackIntegration
     );
     trailAuthTable.grantReadWriteData(authorizeTwitterCallbackHandler);
+    trailAuthSessionTable.grantReadWriteData(authorizeTwitterCallbackHandler);
   }
 }

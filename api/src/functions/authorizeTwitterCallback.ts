@@ -1,8 +1,10 @@
+import { assert } from '@hydrocut-trail-status/utilities';
 import * as twitter from '../clients/twitter';
 import { parseQuery } from '../requests';
 import { success, fail } from '../responses';
-import { BadRequestError } from '../HttpError';
-import { assert } from '@hydrocut-trail-status/utilities';
+import { BadRequestError, NotFoundError } from '../HttpError';
+import TrailAuthModel from '../models/TrailAuthModel';
+import TrailAuthSessionModel from '../models/TrailAuthSessionModel';
 
 interface AuthorizeTwitterCallback {
   oauth_token: string;
@@ -32,17 +34,31 @@ const assertAuthorizeTwitterCallback = (
 
 const handler: AWSLambda.APIGatewayProxyHandler = async event => {
   try {
-    const query = assertAuthorizeTwitterCallback(parseQuery(event));
+    const {
+      oauth_token: oauthToken,
+      oauth_verifier: oauthVerifier
+    } = assertAuthorizeTwitterCallback(parseQuery(event));
 
     const { accessToken, accessTokenSecret } = await twitter.getAccessToken(
-      query.oauth_token,
-      query.oauth_verifier
+      oauthToken,
+      oauthVerifier
     );
 
-    // TODO: Lookup trail id for oauth_token, save access token and
-    // secret for trail id in database.
+    const trailSessionAuth = await TrailAuthSessionModel.get(
+      `twitter|${oauthToken}`
+    );
+    if (!trailSessionAuth)
+      throw new NotFoundError('Trail auth session not found.');
 
-    return success({ accessToken, accessTokenSecret });
+    const trailAuth = new TrailAuthModel({
+      trailAuthId: `twitter|${trailSessionAuth.trailId}`,
+      sessionId: trailSessionAuth.sessionId,
+      accessToken,
+      accessTokenSecret
+    });
+    await trailAuth.save();
+
+    return success(trailAuth);
   } catch (err) {
     return fail(err);
   }

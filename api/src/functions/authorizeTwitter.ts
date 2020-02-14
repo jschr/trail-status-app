@@ -1,12 +1,16 @@
 import * as twitter from '../clients/twitter';
 import { redirect, fail } from '../responses';
+import TrailAuthSessionModel from '../models/TrailAuthSessionModel';
 
 const handler: AWSLambda.APIGatewayProxyHandler = async () => {
   try {
     const { authorizeUrl, oauthToken } = await twitter.getAuthorizeUrl();
 
-    // TODO: Save trail id with oauthToken to lookup trail id in the callback.
-    console.log(oauthToken);
+    const trailAuthSession = new TrailAuthSessionModel({
+      sessionId: `twitter|${oauthToken}`,
+      trailId: 'hydrocut'
+    });
+    await trailAuthSession.save();
 
     return redirect(authorizeUrl);
   } catch (err) {

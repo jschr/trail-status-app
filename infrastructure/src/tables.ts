@@ -9,5 +9,9 @@ export default {
   trailAuth: {
     name: `${env('PROJECT')}-trailAuth`,
     partitionKey: { name: 'trailAuthId', type: dynamodb.AttributeType.STRING }
+  },
+  trailAuthSession: {
+    name: `${env('PROJECT')}-trailAuthSession`,
+    partitionKey: { name: 'sessionId', type: dynamodb.AttributeType.STRING }
   }
 };
