@@ -2,6 +2,8 @@ import bodyParser from 'body-parser';
 import express from 'express';
 import getTrailStatus from '../functions/getTrailStatus';
 import updateTrailStatus from '../functions/updateTrailStatus';
+import authorizeFacebook from '../functions/authorizeFacebook';
+import authorizeFacebookCallback from '../functions/authorizeFacebookCallback';
 import authorizeTwitter from '../functions/authorizeTwitter';
 import authorizeTwitterCallback from '../functions/authorizeTwitterCallback';
 import toExpressHandler from './toExpressHandler';
@@ -19,6 +21,12 @@ server.get('/twitter/authorize', toExpressHandler(authorizeTwitter));
 server.get(
   '/twitter/authorize/callback',
   toExpressHandler(authorizeTwitterCallback)
+);
+
+server.get('/facebook/authorize', toExpressHandler(authorizeFacebook));
+server.get(
+  '/facebook/authorize/callback',
+  toExpressHandler(authorizeFacebookCallback)
 );
 
 server.listen(4000, () => {

@@ -10,8 +10,10 @@
   },
   "dependencies": {
     "@hydrocut-trail-status/utilities": "",
+    "@types/uuid": "^3.4.7",
     "node-fetch": "^2.6.0",
-    "oauth": "^0.9.15"
+    "oauth": "^0.9.15",
+    "uuid": "^3.4.0"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.39",
