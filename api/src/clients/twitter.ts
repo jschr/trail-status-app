@@ -13,8 +13,6 @@ const client = new oauth.OAuth(
   'HMAC-SHA1'
 );
 
-// https://gist.github.com/joshj/1933640
-
 export const getAuthorizeUrl = (): Promise<{
   authorizeUrl: string;
   oauthToken: string;

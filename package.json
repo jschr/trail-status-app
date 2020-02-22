@@ -9,15 +9,16 @@
     "infrastructure"
   ],
   "scripts": {
-    "dev": "wsrun --exclude-missing dev",
+    "dev": "dotenv -e .env -e .env.dev -- wsrun --exclude-missing dev",
     "build": "wsrun --exclude-missing --stages build",
     "watch": "wsrun --exclude-missing watch",
     "lint": "wsrun --exclude-missing lint",
     "package": "tasks/package.sh",
+    "deploy": "dotenv -e .env -e .env.production yarn infrastructure deploy",
     "--- workspaces ---": "",
-    "api": "dotenv yarn workspace @trail-status-app/api",
-    "utilities": "dotenv yarn workspace @trail-status-app/utilities",
-    "infrastructure": "dotenv yarn workspace @trail-status-app/infrastructure"
+    "api": "yarn workspace @trail-status-app/api",
+    "utilities": "yarn workspace @trail-status-app/utilities",
+    "infrastructure": "yarn workspace @trail-status-app/infrastructure"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^2.19.0",
