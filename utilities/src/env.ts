@@ -1,7 +1,9 @@
 import dotenv from 'dotenv';
+import dotenvExpand from 'dotenv-expand';
 import path from 'path';
 
-dotenv.config({ path: path.join(__dirname, '../../../.env') });
+const env = dotenv.config({ path: path.join(__dirname, '../../../.env') });
+dotenvExpand(env)
 
 export default (name: string, required = true): string => {
   const value = process.env[name];

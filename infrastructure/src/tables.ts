@@ -1,17 +1,17 @@
 import * as dynamodb from '@aws-cdk/aws-dynamodb';
-import { env } from '@hydrocut-trail-status/utilities';
+import projectPrefix from './projectPrefix'
 
 export default {
   trailStatus: {
-    name: `${env('PROJECT')}-trailStatus`,
+    name: projectPrefix('trailStatus'),
     partitionKey: { name: 'trailId', type: dynamodb.AttributeType.STRING }
   },
   trailAuth: {
-    name: `${env('PROJECT')}-trailAuth`,
+    name: projectPrefix('trailAuth'),
     partitionKey: { name: 'trailAuthId', type: dynamodb.AttributeType.STRING }
   },
   trailAuthSession: {
-    name: `${env('PROJECT')}-trailAuthSession`,
+    name: projectPrefix('trailAuthSession'),
     partitionKey: { name: 'sessionId', type: dynamodb.AttributeType.STRING }
   }
 };

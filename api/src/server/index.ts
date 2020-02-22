@@ -1,3 +1,4 @@
+import { env } from '@hydrocut-trail-status/utilities';
 import bodyParser from 'body-parser';
 import express from 'express';
 import getTrailStatus from '../functions/getTrailStatus';
@@ -29,7 +30,8 @@ server.get(
   toExpressHandler(authorizeFacebookCallback)
 );
 
-server.listen(4000, () => {
-  console.log('\x1b[36m%s\x1b[0m', '> API started on http://localhost:4000');
+const port = env('API_PORT')
+server.listen(port, () => {
+  console.log('\x1b[36m%s\x1b[0m', `> API started on ${env('API_ENDPOINT')}`);
   console.log();
 });

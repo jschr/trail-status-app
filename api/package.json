@@ -9,6 +9,7 @@
     "lint": "eslint -c ./.eslintrc src/**/*.ts"
   },
   "dependencies": {
+    "@hydrocut-trail-status/infrastructure": "",
     "@hydrocut-trail-status/utilities": "",
     "@types/uuid": "^3.4.7",
     "node-fetch": "^2.6.0",

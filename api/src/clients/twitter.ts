@@ -2,6 +2,7 @@ import oauth from 'oauth';
 import util from 'util';
 import { env } from '@hydrocut-trail-status/utilities';
 
+
 const client = new oauth.OAuth(
   'https://twitter.com/oauth/request_token',
   'https://twitter.com/oauth/access_token',

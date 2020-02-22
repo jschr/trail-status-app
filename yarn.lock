@@ -11,7 +11,7 @@
     "@aws-cdk/cx-api" "1.23.0"
     minimatch "^3.0.4"
 
-"@aws-cdk/aws-apigateway@^1.23.0":
+"@aws-cdk/aws-apigateway@1.23.0":
   version "1.23.0"
   resolved "https://registry.yarnpkg.com/@aws-cdk/aws-apigateway/-/aws-apigateway-1.23.0.tgz#d248dff556d4c88f6db0d14a51c0c8b7560c43a7"
   integrity sha512-s0WxB4JIlLRGZbE6Wqbxf2hd7y/sckxMz9fmFmP9Fi1DM5O6iTF9mS7P7ek+R5PWN4Kr3jztihVCbwkaL7L22g==
@@ -63,6 +63,18 @@
     "@aws-cdk/core" "1.23.0"
     "@aws-cdk/cx-api" "1.23.0"
 
+"@aws-cdk/aws-cloudfront@1.23.0":
+  version "1.23.0"
+  resolved "https://registry.yarnpkg.com/@aws-cdk/aws-cloudfront/-/aws-cloudfront-1.23.0.tgz#c348d545ef598d4f4f20902d3a45b386169c6d05"
+  integrity sha512-8SwnpVcKHOscOYEgdXbHUGMCiCmobT/3BEa3o6T0a/quhHZ3ywusPVVMd9BewhymJ318NbxCzX85azfXiH4ATg==
+  dependencies:
+    "@aws-cdk/aws-certificatemanager" "1.23.0"
+    "@aws-cdk/aws-iam" "1.23.0"
+    "@aws-cdk/aws-kms" "1.23.0"
+    "@aws-cdk/aws-lambda" "1.23.0"
+    "@aws-cdk/aws-s3" "1.23.0"
+    "@aws-cdk/core" "1.23.0"
+
 "@aws-cdk/aws-cloudwatch@1.23.0":
   version "1.23.0"
   resolved "https://registry.yarnpkg.com/@aws-cdk/aws-cloudwatch/-/aws-cloudwatch-1.23.0.tgz#6aea3ac124d5f53b59ad1a6494c8ab53a65fba7d"
@@ -90,6 +102,14 @@
     "@aws-cdk/aws-ssm" "1.23.0"
     "@aws-cdk/core" "1.23.0"
     "@aws-cdk/cx-api" "1.23.0"
+
+"@aws-cdk/aws-elasticloadbalancing@1.23.0":
+  version "1.23.0"
+  resolved "https://registry.yarnpkg.com/@aws-cdk/aws-elasticloadbalancing/-/aws-elasticloadbalancing-1.23.0.tgz#539c6d74721aba10e8a5ecb5def83abf40b29df0"
+  integrity sha512-bh+0dGSay1XmMDyyuB1E0Rf1J71ZNfmRamamc6U8ijt/vkyDcXr3RIIIoPnL6WE/oKJjI94TiSUUDRlFHUSzCQ==
+  dependencies:
+    "@aws-cdk/aws-ec2" "1.23.0"
+    "@aws-cdk/core" "1.23.0"
 
 "@aws-cdk/aws-elasticloadbalancingv2@1.23.0":
   version "1.23.0"
@@ -152,6 +172,22 @@
     "@aws-cdk/aws-cloudwatch" "1.23.0"
     "@aws-cdk/aws-iam" "1.23.0"
     "@aws-cdk/core" "1.23.0"
+
+"@aws-cdk/aws-route53-targets@1.23.0":
+  version "1.23.0"
+  resolved "https://registry.yarnpkg.com/@aws-cdk/aws-route53-targets/-/aws-route53-targets-1.23.0.tgz#5d77130eda4743cff0f743831c0c9877fa334b97"
+  integrity sha512-6Fq/XHEZtJjYveav5RSWrd0o80bdrlCdO8BWBhUgRdHUudzZfw79Uk8rL/K8z++sYs2BzTixhj80rO8Kwfd2Bw==
+  dependencies:
+    "@aws-cdk/aws-apigateway" "1.23.0"
+    "@aws-cdk/aws-cloudfront" "1.23.0"
+    "@aws-cdk/aws-ec2" "1.23.0"
+    "@aws-cdk/aws-elasticloadbalancing" "1.23.0"
+    "@aws-cdk/aws-elasticloadbalancingv2" "1.23.0"
+    "@aws-cdk/aws-iam" "1.23.0"
+    "@aws-cdk/aws-route53" "1.23.0"
+    "@aws-cdk/aws-s3" "1.23.0"
+    "@aws-cdk/core" "1.23.0"
+    "@aws-cdk/region-info" "1.23.0"
 
 "@aws-cdk/aws-route53@1.23.0":
   version "1.23.0"

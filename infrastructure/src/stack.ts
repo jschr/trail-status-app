@@ -1,10 +1,14 @@
 import { env } from '@hydrocut-trail-status/utilities';
 import * as cdk from '@aws-cdk/core';
 import * as apigateway from '@aws-cdk/aws-apigateway';
+import * as acm from '@aws-cdk/aws-certificatemanager';
+import * as route53 from '@aws-cdk/aws-route53';
+import * as route53Targets from '@aws-cdk/aws-route53-targets';
 import * as dynamodb from '@aws-cdk/aws-dynamodb';
 import * as lambda from '@aws-cdk/aws-lambda';
 import path from 'path';
 import tables from './tables';
+import projectPrefix from './projectPrefix';
 
 const packagePath = path.join(__dirname, '../../tmp/package.zip');
 
@@ -48,8 +52,33 @@ export default class extends cdk.Stack {
     );
 
     // API
-    const api = new apigateway.RestApi(this, `${env('PROJECT')}-api`, {
+    const hostedZone = route53.HostedZone.fromHostedZoneAttributes(
+      this,
+      projectPrefix('zone'),
+      {
+        hostedZoneId: env('HOSTED_ZONE_ID'),
+        zoneName: env('TLD')
+      }
+    );
+
+    const sslCertificate = acm.Certificate.fromCertificateArn(
+      this,
+      projectPrefix('ssl'),
+      env('SSL_ARN')
+    );
+
+    const api = new apigateway.RestApi(this, projectPrefix('api'), {
+      domainName: {
+        domainName: `${env('API_SUBDOMAIN')}.${env('TLD')}`,
+        certificate: sslCertificate
+      },
       deployOptions: { stageName: env('STAGE') }
+    });
+
+    new route53.ARecord(this, projectPrefix('api-record'), {
+      zone: hostedZone,
+      target: route53.RecordTarget.fromAlias(new route53Targets.ApiGateway(api)),
+      recordName: env('API_SUBDOMAIN'),
     });
 
     // /status
@@ -58,8 +87,9 @@ export default class extends cdk.Stack {
     // GET /status
     const getTrailStatusHandler = new lambda.Function(
       this,
-      `${env('PROJECT')}-getTrailStatus`,
+      projectPrefix('getTrailStatus'),
       {
+        functionName: projectPrefix('getTrailStatus'),
         runtime: lambda.Runtime.NODEJS_12_X,
         code: lambda.Code.fromAsset(packagePath),
         handler: 'api/build/src/functions/getTrailStatus.default',
@@ -81,8 +111,9 @@ export default class extends cdk.Stack {
     // PUT /status
     const updateTrailStatusHandler = new lambda.Function(
       this,
-      `${env('PROJECT')}-updateTrailStatus`,
+      projectPrefix('updateTrailStatus'),
       {
+        functionName: projectPrefix('updateTrailStatus'),
         runtime: lambda.Runtime.NODEJS_12_X,
         code: lambda.Code.fromAsset(packagePath),
         handler: 'api/build/src/functions/updateTrailStatus.default',
@@ -111,8 +142,9 @@ export default class extends cdk.Stack {
     // GET /twitter/authorize
     const authorizeTwitterHandler = new lambda.Function(
       this,
-      `${env('PROJECT')}-authorizeTwitter`,
+      projectPrefix('authorizeTwitter'),
       {
+        functionName: projectPrefix('authorizeTwitter'),
         runtime: lambda.Runtime.NODEJS_12_X,
         code: lambda.Code.fromAsset(packagePath),
         handler: 'api/build/src/functions/authorizeTwitter.default',
@@ -137,8 +169,9 @@ export default class extends cdk.Stack {
     // GET twitter/authorize/callback
     const authorizeTwitterCallbackHandler = new lambda.Function(
       this,
-      `${env('PROJECT')}-authorizeTwitterCallback`,
+      projectPrefix('authorizeTwitterCallback'),
       {
+        functionName: projectPrefix('authorizeTwitterCallback'),
         runtime: lambda.Runtime.NODEJS_12_X,
         code: lambda.Code.fromAsset(packagePath),
         handler: 'api/build/src/functions/authorizeTwitterCallback.default',
