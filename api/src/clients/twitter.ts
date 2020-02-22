@@ -1,6 +1,6 @@
 import oauth from 'oauth';
 import util from 'util';
-import { env } from '@hydrocut-trail-status/utilities';
+import { env } from '@trail-status-app/utilities';
 
 
 const client = new oauth.OAuth(

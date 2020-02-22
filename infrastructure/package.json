@@ -1,6 +1,6 @@
 {
   "private": true,
-  "name": "@hydrocut-trail-status/infrastructure",
+  "name": "@trail-status-app/infrastructure",
   "version": "0.1.0",
   "main": "build/src/index.js",
   "types": "build/src/index.d.ts",
@@ -20,7 +20,7 @@
     "@aws-cdk/aws-route53": "1.23.0",
     "@aws-cdk/aws-route53-targets": "1.23.0",
     "@aws-cdk/core": "1.23.0",
-    "@hydrocut-trail-status/utilities": "",
+    "@trail-status-app/utilities": "",
     "aws-cdk": "^1.23.0"
   }
 }

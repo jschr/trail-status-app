@@ -1,3 +1,3 @@
-import { env } from '@hydrocut-trail-status/utilities';
+import { env } from '@trail-status-app/utilities';
 
 export default (val: string) => `${env('PROJECT')}-${val}`

@@ -1,6 +1,6 @@
 {
   "private": true,
-  "name": "@hydrocut-trail-status/utilities",
+  "name": "@trail-status-app/utilities",
   "version": "0.1.0",
   "main": "build/src/index.js",
   "types": "build/src/index.d.ts",

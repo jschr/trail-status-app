@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import 'source-map-support/register';
-import { env } from '@hydrocut-trail-status/utilities';
+import { env } from '@trail-status-app/utilities';
 import * as cdk from '@aws-cdk/core';
 import Stack from './stack';
 

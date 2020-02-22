@@ -1,4 +1,4 @@
-import { env } from '@hydrocut-trail-status/utilities';
+import { env } from '@trail-status-app/utilities';
 import * as AWS from 'aws-sdk';
 
 export default new AWS.DynamoDB({

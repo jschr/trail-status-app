@@ -1,4 +1,4 @@
-import { env } from '@hydrocut-trail-status/utilities';
+import { env } from '@trail-status-app/utilities';
 import bodyParser from 'body-parser';
 import express from 'express';
 import getTrailStatus from '../functions/getTrailStatus';

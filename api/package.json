@@ -1,6 +1,6 @@
 {
   "private": true,
-  "name": "@hydrocut-trail-status/api",
+  "name": "@trail-status-app/api",
   "version": "0.1.0",
   "scripts": {
     "dev": "ts-node-dev --no-notify src/server/index.ts",
@@ -9,8 +9,8 @@
     "lint": "eslint -c ./.eslintrc src/**/*.ts"
   },
   "dependencies": {
-    "@hydrocut-trail-status/infrastructure": "",
-    "@hydrocut-trail-status/utilities": "",
+    "@trail-status-app/infrastructure": "",
+    "@trail-status-app/utilities": "",
     "@types/uuid": "^3.4.7",
     "node-fetch": "^2.6.0",
     "oauth": "^0.9.15",

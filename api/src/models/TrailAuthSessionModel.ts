@@ -1,5 +1,5 @@
 import * as AWS from 'aws-sdk';
-import tables from '@hydrocut-trail-status/infrastructure/build/src/tables';
+import tables from '@trail-status-app/infrastructure/build/src/tables';
 import dynamodb from './dynamodb';
 
 export interface TrailAuthSession {

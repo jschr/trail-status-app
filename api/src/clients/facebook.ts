@@ -1,6 +1,6 @@
 import fetch from 'node-fetch';
 import uuid from 'uuid/v4';
-import { env } from '@hydrocut-trail-status/utilities';
+import { env } from '@trail-status-app/utilities';
 
 const fbLoginUrl = 'https://www.facebook.com/v6.0';
 const fbApiUrl = 'https://graph.facebook.com/v6.0';

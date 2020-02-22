@@ -1,6 +1,6 @@
 {
   "private": true,
-  "name": "@hydrocut-trail-status/workspace",
+  "name": "@trail-status-app/workspace",
   "repository": "git@github.com:jschr/hydrocut-trail-status.git",
   "author": "Jordan Schroter <github@jschr.io>",
   "workspaces": [
@@ -15,9 +15,9 @@
     "lint": "wsrun --exclude-missing lint",
     "package": "tasks/package.sh",
     "--- workspaces ---": "",
-    "api": "dotenv yarn workspace @hydrocut-trail-status/api",
-    "utilities": "dotenv yarn workspace @hydrocut-trail-status/utilities",
-    "infrastructure": "dotenv yarn workspace @hydrocut-trail-status/infrastructure"
+    "api": "dotenv yarn workspace @trail-status-app/api",
+    "utilities": "dotenv yarn workspace @trail-status-app/utilities",
+    "infrastructure": "dotenv yarn workspace @trail-status-app/infrastructure"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^2.19.0",

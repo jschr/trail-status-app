@@ -1,6 +1,6 @@
 // import path from 'path';
 // import fs from 'fs';
-import { assert } from '@hydrocut-trail-status/utilities';
+import { assert } from '@trail-status-app/utilities';
 import TrailStatusModel from '../models/TrailStatusModel';
 import { parseBody } from '../requests';
 import { success, fail } from '../responses';

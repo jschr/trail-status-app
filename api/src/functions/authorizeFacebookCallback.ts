@@ -1,4 +1,4 @@
-import { assert } from '@hydrocut-trail-status/utilities';
+import { assert } from '@trail-status-app/utilities';
 import * as facebook from '../clients/facebook';
 import { parseQuery } from '../requests';
 import { success, fail } from '../responses';
