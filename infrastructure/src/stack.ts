@@ -72,7 +72,7 @@ export default class extends cdk.Stack {
         domainName: `${env('API_SUBDOMAIN')}.${env('TLD')}`,
         certificate: sslCertificate
       },
-      deployOptions: { stageName: env('STAGE') }
+      deployOptions: { stageName: 'stage' }
     });
 
     new route53.ARecord(this, projectPrefix('api-record'), {
@@ -195,5 +195,71 @@ export default class extends cdk.Stack {
     );
     trailAuthTable.grantReadWriteData(authorizeTwitterCallbackHandler);
     trailAuthSessionTable.grantReadWriteData(authorizeTwitterCallbackHandler);
+    
+
+    // facebook
+    const facebookApi = api.root.addResource('facebook');
+    const facebookAuthorizeApi = facebookApi.addResource('authorize');
+    const facebookAuthorizeCallbackApi = facebookAuthorizeApi.addResource(
+      'callback'
+    );
+
+    // GET /facebook/authorize
+    const authorizeFacebookHandler = new lambda.Function(
+      this,
+      projectPrefix('authorizeFacebook'),
+      {
+        functionName: projectPrefix('authorizeFacebook'),
+        runtime: lambda.Runtime.NODEJS_12_X,
+        code: lambda.Code.fromAsset(packagePath),
+        handler: 'api/build/src/functions/authorizeFacebook.default',
+        environment: {
+          PROJECT: env('PROJECT'),
+          DYNAMO_ENDPOINT: env('DYNAMO_ENDPOINT'),
+          API_ENDPOINT: env('API_ENDPOINT'),
+          FACEBOOK_APP_ID: env('FACEBOOK_APP_ID'),
+          FACEBOOK_APP_SECRET: env('FACEBOOK_APP_SECRET')
+        }
+      }
+    );
+
+    const authorizeFacebookIntegration = new apigateway.LambdaIntegration(
+      authorizeFacebookHandler
+    );
+
+    facebookAuthorizeApi.addMethod('GET', authorizeFacebookIntegration);
+    trailAuthTable.grantReadWriteData(authorizeFacebookHandler);
+    trailAuthSessionTable.grantReadWriteData(authorizeFacebookHandler);
+
+    // GET facebook/authorize/callback
+    const authorizeFacebookCallbackHandler = new lambda.Function(
+      this,
+      projectPrefix('authorizeFacebookCallback'),
+      {
+        functionName: projectPrefix('authorizeFacebookCallback'),
+        runtime: lambda.Runtime.NODEJS_12_X,
+        code: lambda.Code.fromAsset(packagePath),
+        handler: 'api/build/src/functions/authorizeFacebookCallback.default',
+        environment: {
+          PROJECT: env('PROJECT'),
+          DYNAMO_ENDPOINT: env('DYNAMO_ENDPOINT'),
+          API_ENDPOINT: env('API_ENDPOINT'),
+          FACEBOOK_APP_ID: env('FACEBOOK_APP_ID'),
+          FACEBOOK_APP_SECRET: env('FACEBOOK_APP_SECRET')
+        }
+      }
+    );
+
+    const authorizeFacebookCallbackIntegration = new apigateway.LambdaIntegration(
+      authorizeFacebookCallbackHandler
+    );
+
+    facebookAuthorizeCallbackApi.addMethod(
+      'GET',
+      authorizeFacebookCallbackIntegration
+    );
+    trailAuthTable.grantReadWriteData(authorizeFacebookCallbackHandler);
+    trailAuthSessionTable.grantReadWriteData(authorizeFacebookCallbackHandler);
+    
   }
 }
