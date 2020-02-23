@@ -77,8 +77,10 @@ export default class extends cdk.Stack {
 
     new route53.ARecord(this, projectPrefix('api-record'), {
       zone: hostedZone,
-      target: route53.RecordTarget.fromAlias(new route53Targets.ApiGateway(api)),
-      recordName: env('API_SUBDOMAIN'),
+      target: route53.RecordTarget.fromAlias(
+        new route53Targets.ApiGateway(api)
+      ),
+      recordName: env('API_SUBDOMAIN')
     });
 
     // /status
@@ -92,7 +94,7 @@ export default class extends cdk.Stack {
         functionName: projectPrefix('getTrailStatus'),
         runtime: lambda.Runtime.NODEJS_12_X,
         code: lambda.Code.fromAsset(packagePath),
-        handler: 'api/build/src/functions/getTrailStatus.default',
+        handler: 'api/build/src/handlers/getTrailStatus.default',
         environment: {
           PROJECT: env('PROJECT'),
           DYNAMO_ENDPOINT: env('DYNAMO_ENDPOINT'),
@@ -116,7 +118,7 @@ export default class extends cdk.Stack {
         functionName: projectPrefix('updateTrailStatus'),
         runtime: lambda.Runtime.NODEJS_12_X,
         code: lambda.Code.fromAsset(packagePath),
-        handler: 'api/build/src/functions/updateTrailStatus.default',
+        handler: 'api/build/src/handlers/updateTrailStatus.default',
         environment: {
           PROJECT: env('PROJECT'),
           DYNAMO_ENDPOINT: env('DYNAMO_ENDPOINT'),
@@ -147,7 +149,7 @@ export default class extends cdk.Stack {
         functionName: projectPrefix('authorizeTwitter'),
         runtime: lambda.Runtime.NODEJS_12_X,
         code: lambda.Code.fromAsset(packagePath),
-        handler: 'api/build/src/functions/authorizeTwitter.default',
+        handler: 'api/build/src/handlers/authorizeTwitter.default',
         environment: {
           PROJECT: env('PROJECT'),
           DYNAMO_ENDPOINT: env('DYNAMO_ENDPOINT'),
@@ -174,7 +176,7 @@ export default class extends cdk.Stack {
         functionName: projectPrefix('authorizeTwitterCallback'),
         runtime: lambda.Runtime.NODEJS_12_X,
         code: lambda.Code.fromAsset(packagePath),
-        handler: 'api/build/src/functions/authorizeTwitterCallback.default',
+        handler: 'api/build/src/handlers/authorizeTwitterCallback.default',
         environment: {
           PROJECT: env('PROJECT'),
           DYNAMO_ENDPOINT: env('DYNAMO_ENDPOINT'),
@@ -195,7 +197,6 @@ export default class extends cdk.Stack {
     );
     trailAuthTable.grantReadWriteData(authorizeTwitterCallbackHandler);
     trailAuthSessionTable.grantReadWriteData(authorizeTwitterCallbackHandler);
-    
 
     // facebook
     const facebookApi = api.root.addResource('facebook');
@@ -212,7 +213,7 @@ export default class extends cdk.Stack {
         functionName: projectPrefix('authorizeFacebook'),
         runtime: lambda.Runtime.NODEJS_12_X,
         code: lambda.Code.fromAsset(packagePath),
-        handler: 'api/build/src/functions/authorizeFacebook.default',
+        handler: 'api/build/src/handlers/authorizeFacebook.default',
         environment: {
           PROJECT: env('PROJECT'),
           DYNAMO_ENDPOINT: env('DYNAMO_ENDPOINT'),
@@ -239,7 +240,7 @@ export default class extends cdk.Stack {
         functionName: projectPrefix('authorizeFacebookCallback'),
         runtime: lambda.Runtime.NODEJS_12_X,
         code: lambda.Code.fromAsset(packagePath),
-        handler: 'api/build/src/functions/authorizeFacebookCallback.default',
+        handler: 'api/build/src/handlers/authorizeFacebookCallback.default',
         environment: {
           PROJECT: env('PROJECT'),
           DYNAMO_ENDPOINT: env('DYNAMO_ENDPOINT'),
@@ -260,6 +261,5 @@ export default class extends cdk.Stack {
     );
     trailAuthTable.grantReadWriteData(authorizeFacebookCallbackHandler);
     trailAuthSessionTable.grantReadWriteData(authorizeFacebookCallbackHandler);
-    
   }
 }
