@@ -36,7 +36,9 @@ const assertAuthorizeFacebookCallback = (
 const handler: AWSLambda.APIGatewayProxyHandler = async event => {
   const { code, state } = assertAuthorizeFacebookCallback(parseQuery(event));
 
-  const { accessToken } = await facebook.getAccessToken(code);
+  const { accessToken } = await facebook.getAccessToken(code).catch(err => {
+    throw new BadRequestError('Failed getting access token.', err);
+  });
 
   const trailSessionAuth = await TrailAuthSessionModel.get(`facebook|${state}`);
   if (!trailSessionAuth)

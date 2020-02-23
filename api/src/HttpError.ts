@@ -6,10 +6,16 @@ const statusCodes = Object.keys(STATUS_CODES).map(statusCode =>
 
 class HttpError extends Error {
   public statusCode: number;
+  public originalError: Error | undefined;
 
-  constructor(statusCode: number, message = STATUS_CODES[statusCode]) {
+  constructor(
+    statusCode: number,
+    message = STATUS_CODES[statusCode],
+    originalError?: Error
+  ) {
     super(message);
     this.statusCode = statusCode;
+    this.originalError = originalError;
     Error.captureStackTrace(this, this.constructor);
   }
 }
@@ -21,29 +27,29 @@ export const isHttpError = (err: any): err is HttpError =>
   statusCodes.includes(err.statusCode);
 
 export class BadRequestError extends HttpError {
-  constructor(message?: string) {
-    super(400, message);
+  constructor(message?: string, originalError?: Error) {
+    super(400, message, originalError);
     Error.captureStackTrace(this, this.constructor);
   }
 }
 
 export class UnauthorizedError extends HttpError {
-  constructor(message?: string) {
-    super(401, message);
+  constructor(message?: string, originalError?: Error) {
+    super(401, message, originalError);
     Error.captureStackTrace(this, this.constructor);
   }
 }
 
 export class NotFoundError extends HttpError {
-  constructor(message?: string) {
-    super(404, message);
+  constructor(message?: string, originalError?: Error) {
+    super(404, message, originalError);
     Error.captureStackTrace(this, this.constructor);
   }
 }
 
 export class InternalServerError extends HttpError {
-  constructor() {
-    super(500);
+  constructor(originalError?: Error) {
+    super(500, 'Internal Server Error', originalError);
     Error.captureStackTrace(this, this.constructor);
   }
 }

@@ -24,8 +24,12 @@ export const redirect = (
 export const fail = <E extends Error>(
   err: E
 ): AWSLambda.APIGatewayProxyResult => {
-  console.error(err);
-  const httpError = isHttpError(err) ? err : new InternalServerError();
+  const httpError = isHttpError(err) ? err : new InternalServerError(err);
+
+  if (httpError.originalError) {
+    console.error(httpError.originalError);
+  }
+
   return {
     statusCode: httpError.statusCode,
     body: JSON.stringify({ message: httpError.message }),
