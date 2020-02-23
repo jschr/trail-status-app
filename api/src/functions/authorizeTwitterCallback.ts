@@ -1,7 +1,8 @@
 import { assert } from '@trail-status-app/utilities';
 import * as twitter from '../clients/twitter';
 import { parseQuery } from '../requests';
-import { success, fail } from '../responses';
+import { json } from '../responses';
+import withApiHandler from '../withApiHandler';
 import { BadRequestError, NotFoundError } from '../HttpError';
 import TrailAuthModel from '../models/TrailAuthModel';
 import TrailAuthSessionModel from '../models/TrailAuthSessionModel';
@@ -33,35 +34,31 @@ const assertAuthorizeTwitterCallback = (
 };
 
 const handler: AWSLambda.APIGatewayProxyHandler = async event => {
-  try {
-    const {
-      oauth_token: oauthToken,
-      oauth_verifier: oauthVerifier
-    } = assertAuthorizeTwitterCallback(parseQuery(event));
+  const {
+    oauth_token: oauthToken,
+    oauth_verifier: oauthVerifier
+  } = assertAuthorizeTwitterCallback(parseQuery(event));
 
-    const { accessToken, accessTokenSecret } = await twitter.getAccessToken(
-      oauthToken,
-      oauthVerifier
-    );
+  const { accessToken, accessTokenSecret } = await twitter.getAccessToken(
+    oauthToken,
+    oauthVerifier
+  );
 
-    const trailSessionAuth = await TrailAuthSessionModel.get(
-      `twitter|${oauthToken}`
-    );
-    if (!trailSessionAuth)
-      throw new NotFoundError('Trail auth session not found.');
+  const trailSessionAuth = await TrailAuthSessionModel.get(
+    `twitter|${oauthToken}`
+  );
+  if (!trailSessionAuth)
+    throw new NotFoundError('Trail auth session not found.');
 
-    const trailAuth = new TrailAuthModel({
-      trailAuthId: `twitter|${trailSessionAuth.trailId}`,
-      sessionId: trailSessionAuth.sessionId,
-      accessToken,
-      accessTokenSecret
-    });
-    await trailAuth.save();
+  const trailAuth = new TrailAuthModel({
+    trailAuthId: `twitter|${trailSessionAuth.trailId}`,
+    sessionId: trailSessionAuth.sessionId,
+    accessToken,
+    accessTokenSecret
+  });
+  await trailAuth.save();
 
-    return success(trailAuth);
-  } catch (err) {
-    return fail(err);
-  }
+  return json(trailAuth);
 };
 
-export default handler;
+export default withApiHandler(handler);

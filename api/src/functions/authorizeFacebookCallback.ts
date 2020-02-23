@@ -1,7 +1,8 @@
 import { assert } from '@trail-status-app/utilities';
 import * as facebook from '../clients/facebook';
 import { parseQuery } from '../requests';
-import { success, fail } from '../responses';
+import { json } from '../responses';
+import withApiHandler from '../withApiHandler';
 import { BadRequestError, NotFoundError } from '../HttpError';
 import TrailAuthModel from '../models/TrailAuthModel';
 import TrailAuthSessionModel from '../models/TrailAuthSessionModel';
@@ -33,28 +34,23 @@ const assertAuthorizeFacebookCallback = (
 };
 
 const handler: AWSLambda.APIGatewayProxyHandler = async event => {
-  try {
-    const { code, state } = assertAuthorizeFacebookCallback(parseQuery(event));
+  const { code, state } = assertAuthorizeFacebookCallback(parseQuery(event));
 
-    const { accessToken } = await facebook.getAccessToken(code);
+  const { accessToken } = await facebook.getAccessToken(code);
 
-    const trailSessionAuth = await TrailAuthSessionModel.get(
-      `facebook|${state}`
-    );
-    if (!trailSessionAuth)
-      throw new NotFoundError('Trail auth session not found.');
+  const trailSessionAuth = await TrailAuthSessionModel.get(`facebook|${state}`);
+  if (!trailSessionAuth)
+    throw new NotFoundError('Trail auth session not found.');
 
-    const trailAuth = new TrailAuthModel({
-      trailAuthId: `facebook|${trailSessionAuth.trailId}`,
-      sessionId: trailSessionAuth.sessionId,
-      accessToken
-    });
-    await trailAuth.save();
+  const trailAuth = new TrailAuthModel({
+    trailAuthId: `facebook|${trailSessionAuth.trailId}`,
+    sessionId: trailSessionAuth.sessionId,
+    accessToken
+  });
 
-    return success(trailAuth);
-  } catch (err) {
-    return fail(err);
-  }
+  await trailAuth.save();
+
+  return json(trailAuth);
 };
 
-export default handler;
+export default withApiHandler(handler);

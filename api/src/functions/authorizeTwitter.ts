@@ -1,21 +1,19 @@
 import * as twitter from '../clients/twitter';
-import { redirect, fail } from '../responses';
+import { redirect } from '../responses';
+import withApiHandler from '../withApiHandler';
 import TrailAuthSessionModel from '../models/TrailAuthSessionModel';
 
 const handler: AWSLambda.APIGatewayProxyHandler = async () => {
-  try {
-    const { authorizeUrl, oauthToken } = await twitter.getAuthorizeUrl();
+  const { authorizeUrl, oauthToken } = await twitter.getAuthorizeUrl();
 
-    const trailAuthSession = new TrailAuthSessionModel({
-      sessionId: `twitter|${oauthToken}`,
-      trailId: 'hydrocut'
-    });
-    await trailAuthSession.save();
+  const trailAuthSession = new TrailAuthSessionModel({
+    sessionId: `twitter|${oauthToken}`,
+    trailId: 'hydrocut'
+  });
 
-    return redirect(authorizeUrl);
-  } catch (err) {
-    return fail(err);
-  }
+  await trailAuthSession.save();
+
+  return redirect(authorizeUrl);
 };
 
-export default handler;
+export default withApiHandler(handler);

@@ -7,7 +7,7 @@ const headers = {
   'Access-Control-Allow-Headers': '*'
 };
 
-export const success = (body: any): AWSLambda.APIGatewayProxyResult => ({
+export const json = (body: any): AWSLambda.APIGatewayProxyResult => ({
   statusCode: 200,
   body: JSON.stringify(body),
   headers

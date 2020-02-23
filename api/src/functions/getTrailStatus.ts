@@ -1,13 +1,10 @@
 import TrailStatusModel from '../models/TrailStatusModel';
-import { success, fail } from '../responses';
+import { json } from '../responses';
+import withApiHandler from '../withApiHandler';
 
 const handler: AWSLambda.APIGatewayProxyHandler = async () => {
-  try {
-    const trailStatus = await TrailStatusModel.get('hydrocut');
-    return success(trailStatus);
-  } catch (err) {
-    return fail(err);
-  }
+  const trailStatus = await TrailStatusModel.get('hydrocut');
+  return json(trailStatus);
 };
 
-export default handler;
+export default withApiHandler(handler);

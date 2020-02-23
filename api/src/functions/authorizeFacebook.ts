@@ -1,21 +1,18 @@
 import * as facebook from '../clients/facebook';
-import { redirect, fail } from '../responses';
+import { redirect } from '../responses';
+import withApiHandler from '../withApiHandler';
 import TrailAuthSessionModel from '../models/TrailAuthSessionModel';
 
 const handler: AWSLambda.APIGatewayProxyHandler = async () => {
-  try {
-    const { authorizeUrl, state } = await facebook.getAuthorizeUrl();
+  const { authorizeUrl, state } = await facebook.getAuthorizeUrl();
 
-    const trailAuthSession = new TrailAuthSessionModel({
-      sessionId: `facebook|${state}`,
-      trailId: 'hydrocut'
-    });
-    await trailAuthSession.save();
+  const trailAuthSession = new TrailAuthSessionModel({
+    sessionId: `facebook|${state}`,
+    trailId: 'hydrocut'
+  });
+  await trailAuthSession.save();
 
-    return redirect(authorizeUrl);
-  } catch (err) {
-    return fail(err);
-  }
+  return redirect(authorizeUrl);
 };
 
-export default handler;
+export default withApiHandler(handler);

@@ -3,7 +3,8 @@
 import { assert } from '@trail-status-app/utilities';
 import TrailStatusModel from '../models/TrailStatusModel';
 import { parseBody } from '../requests';
-import { success, fail } from '../responses';
+import { json } from '../responses';
+import withApiHandler from '../withApiHandler';
 import { BadRequestError } from '../HttpError';
 // import * as twitter from '../clients/twitter';
 
@@ -40,34 +41,30 @@ const assertUpdateTrailStatus = (body: any): UpdateTrailStatus => {
 // };
 
 const handler: AWSLambda.APIGatewayProxyHandler = async event => {
-  try {
-    const { status } = assertUpdateTrailStatus(parseBody(event));
+  const { status } = assertUpdateTrailStatus(parseBody(event));
 
-    let trailStatus = await TrailStatusModel.get('hydrocut');
-    if (!trailStatus) {
-      trailStatus = new TrailStatusModel({ trailId: 'hydrocut' });
-    }
-
-    const hasStatusChanged = status !== trailStatus.status;
-    await trailStatus.save({ status });
-
-    if (hasStatusChanged) {
-      // const trailStatusImage = getTrailStatusImage(status);
-      // const message = `Trails are ${status}.`;
-      // if (trailStatusImage) {
-      //   const media = await twitter.uploadMedia(trailStatusImage);
-      //   console.log(media);
-      //   await twitter.postStatus(message, [media.media_id_string]);
-      //   // await twitter.postStatus(message);
-      // } else {
-      //   await twitter.postStatus(message);
-      // }
-    }
-
-    return success(trailStatus);
-  } catch (err) {
-    return fail(err);
+  let trailStatus = await TrailStatusModel.get('hydrocut');
+  if (!trailStatus) {
+    trailStatus = new TrailStatusModel({ trailId: 'hydrocut' });
   }
+
+  const hasStatusChanged = status !== trailStatus.status;
+  await trailStatus.save({ status });
+
+  if (hasStatusChanged) {
+    // const trailStatusImage = getTrailStatusImage(status);
+    // const message = `Trails are ${status}.`;
+    // if (trailStatusImage) {
+    //   const media = await twitter.uploadMedia(trailStatusImage);
+    //   console.log(media);
+    //   await twitter.postStatus(message, [media.media_id_string]);
+    //   // await twitter.postStatus(message);
+    // } else {
+    //   await twitter.postStatus(message);
+    // }
+  }
+
+  return json(trailStatus);
 };
 
-export default handler;
+export default withApiHandler(handler);
