@@ -5,7 +5,6 @@
   "scripts": {
     "dev": "ts-node-dev --no-notify src/server/index.ts",
     "build": "tsc -b",
-    "watch": "tsc -b -w --preserveWatchOutput",
     "lint": "eslint -c ./.eslintrc src/**/*.ts"
   },
   "dependencies": {

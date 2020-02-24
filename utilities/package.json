@@ -5,8 +5,8 @@
   "main": "build/src/index.js",
   "types": "build/src/index.d.ts",
   "scripts": {
+    "dev": "tsc -b -w --preserveWatchOutput",
     "build": "tsc -b",
-    "watch": "tsc -b -w --preserveWatchOutput",
     "lint": "eslint -c ./.eslintrc src/**/*.ts"
   },
   "dependencies": {
