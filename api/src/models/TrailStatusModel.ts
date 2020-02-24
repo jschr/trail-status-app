@@ -90,9 +90,9 @@ export default class TrailStatusModel {
       throw new Error('Missing trailId parsing attribute map');
 
     return {
-      trailId: attrMap.trailId.S,
-      status: attrMap.status && attrMap.status.S,
-      updatedAt: attrMap.updatedAt && attrMap.updatedAt.S
+      trailId: attrMap.trailId?.S,
+      status: attrMap.status?.S,
+      updatedAt: attrMap.updatedAt?.S
     };
   }
 

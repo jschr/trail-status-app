@@ -99,11 +99,11 @@ export default class TrailAuthModel {
       throw new Error('Missing trailAuthId parsing attribute map');
 
     return {
-      trailAuthId: attrMap.trailAuthId && attrMap.trailAuthId.S,
-      sessionId: attrMap.sessionId.S,
-      accessToken: attrMap.accessToken.S,
-      accessTokenSecret: attrMap.accessTokenSecret.S,
-      updatedAt: attrMap.updatedAt && attrMap.updatedAt.S
+      trailAuthId: attrMap.trailAuthId?.S,
+      sessionId: attrMap.sessionId?.S,
+      accessToken: attrMap.accessToken?.S,
+      accessTokenSecret: attrMap.accessTokenSecret?.S,
+      updatedAt: attrMap.updatedAt?.S
     };
   }
 

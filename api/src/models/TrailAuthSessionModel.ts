@@ -93,9 +93,9 @@ export default class TrailAuthSessionModel {
       throw new Error('Missing sessionId parsing attribute map');
 
     return {
-      sessionId: attrMap.sessionId && attrMap.sessionId.S,
-      trailId: attrMap.trailId.S,
-      updatedAt: attrMap.updatedAt && attrMap.updatedAt.S
+      sessionId: attrMap.sessionId?.S,
+      trailId: attrMap.trailId?.S,
+      updatedAt: attrMap.updatedAt?.S
     };
   }
 
