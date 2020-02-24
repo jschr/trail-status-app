@@ -7,6 +7,7 @@ import authorizeFacebook from '../handlers/authorizeFacebook';
 import authorizeFacebookCallback from '../handlers/authorizeFacebookCallback';
 import authorizeTwitter from '../handlers/authorizeTwitter';
 import authorizeTwitterCallback from '../handlers/authorizeTwitterCallback';
+import syncTrailStatus from '../handlers/syncTrailStatus';
 import toExpressHandler from './toExpressHandler';
 
 const server = express();
@@ -17,6 +18,7 @@ server.put(
   bodyParser.text({ type: 'application/json' }),
   toExpressHandler(updateTrailStatus)
 );
+server.post('/status/sync', toExpressHandler(syncTrailStatus));
 
 server.get('/twitter/authorize', toExpressHandler(authorizeTwitter));
 server.get(
