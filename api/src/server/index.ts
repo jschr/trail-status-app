@@ -1,35 +1,53 @@
 import { env } from '@trail-status-app/utilities';
 import bodyParser from 'body-parser';
 import express from 'express';
+import fs from 'fs';
+import path from 'path';
+import https from 'https';
 import getTrailStatus from '../handlers/getTrailStatus';
 import updateTrailStatus from '../handlers/updateTrailStatus';
 import authorizeFacebook from '../handlers/authorizeFacebook';
 import authorizeFacebookCallback from '../handlers/authorizeFacebookCallback';
 import authorizeTwitter from '../handlers/authorizeTwitter';
 import authorizeTwitterCallback from '../handlers/authorizeTwitterCallback';
+import authorizeInstagram from '../handlers/authorizeInstagram';
+import authorizeInstagramCallback from '../handlers/authorizeInstagramCallback';
 import syncTrailStatus from '../handlers/syncTrailStatus';
 import toExpressHandler from './toExpressHandler';
 
-const server = express();
+const app = express();
+const server = https.createServer(
+  {
+    key: fs.readFileSync(path.join(__dirname, '../../../localhost-key.pem')),
+    cert: fs.readFileSync(path.join(__dirname, '../../../localhost.pem'))
+  },
+  app
+);
 
-server.get('/status', toExpressHandler(getTrailStatus));
-server.put(
+app.get('/status', toExpressHandler(getTrailStatus));
+app.put(
   '/status',
   bodyParser.text({ type: 'application/json' }),
   toExpressHandler(updateTrailStatus)
 );
-server.post('/status/sync', toExpressHandler(syncTrailStatus));
+app.post('/status/sync', toExpressHandler(syncTrailStatus));
 
-server.get('/twitter/authorize', toExpressHandler(authorizeTwitter));
-server.get(
+app.get('/twitter/authorize', toExpressHandler(authorizeTwitter));
+app.get(
   '/twitter/authorize/callback',
   toExpressHandler(authorizeTwitterCallback)
 );
 
-server.get('/facebook/authorize', toExpressHandler(authorizeFacebook));
-server.get(
+app.get('/facebook/authorize', toExpressHandler(authorizeFacebook));
+app.get(
   '/facebook/authorize/callback',
   toExpressHandler(authorizeFacebookCallback)
+);
+
+app.get('/instagram/authorize', toExpressHandler(authorizeInstagram));
+app.get(
+  '/instagram/authorize/callback',
+  toExpressHandler(authorizeInstagramCallback)
 );
 
 const port = env('API_PORT');

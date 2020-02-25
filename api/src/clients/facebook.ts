@@ -7,7 +7,7 @@ const fbApiUrl = 'https://graph.facebook.com/v6.0';
 const fbAppId = env('FACEBOOK_APP_ID');
 const fbAppSecret = env('FACEBOOK_APP_SECRET');
 const fbRedirectUri = `${env('API_ENDPOINT')}/facebook/authorize/callback`;
-const fbScopes = ['public_profile', 'instagram_basic', 'manage_pages'];
+const fbScopes = 'public_profile,instagram_basic,manage_pages';
 
 export const getAuthorizeUrl = (): {
   authorizeUrl: string;

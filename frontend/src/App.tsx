@@ -2,13 +2,13 @@ import React from 'react';
 import useMediaQuery from '@material-ui/core/useMediaQuery';
 import { createMuiTheme, ThemeProvider } from '@material-ui/core/styles';
 import CssBaseline from '@material-ui/core/CssBaseline';
+import blue from '@material-ui/core/colors/blue';
 import {
   BrowserRouter as Router,
   Switch,
   Route,
   Redirect
 } from 'react-router-dom';
-
 import LoginPage from './pages/LoginPage';
 import SetupPage from './pages/SetupPage';
 
@@ -19,6 +19,7 @@ export default function App() {
     () =>
       createMuiTheme({
         palette: {
+          primary: blue,
           type: prefersDarkMode ? 'dark' : 'light'
         }
       }),

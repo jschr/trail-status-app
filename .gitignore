@@ -13,3 +13,4 @@ out
 terraform.plan
 .netlify
 cdk.out
+*.pem
