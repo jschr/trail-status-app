@@ -1,15 +1,9 @@
 import { env } from '@trail-status-app/utilities';
-import bodyParser from 'body-parser';
 import express from 'express';
 import fs from 'fs';
 import path from 'path';
 import https from 'https';
 import getTrailStatus from '../handlers/getTrailStatus';
-import updateTrailStatus from '../handlers/updateTrailStatus';
-import authorizeFacebook from '../handlers/authorizeFacebook';
-import authorizeFacebookCallback from '../handlers/authorizeFacebookCallback';
-import authorizeTwitter from '../handlers/authorizeTwitter';
-import authorizeTwitterCallback from '../handlers/authorizeTwitterCallback';
 import authorizeInstagram from '../handlers/authorizeInstagram';
 import authorizeInstagramCallback from '../handlers/authorizeInstagramCallback';
 import syncTrailStatus from '../handlers/syncTrailStatus';
@@ -25,24 +19,7 @@ const server = https.createServer(
 );
 
 app.get('/status', toExpressHandler(getTrailStatus));
-app.put(
-  '/status',
-  bodyParser.text({ type: 'application/json' }),
-  toExpressHandler(updateTrailStatus)
-);
 app.post('/status/sync', toExpressHandler(syncTrailStatus));
-
-app.get('/twitter/authorize', toExpressHandler(authorizeTwitter));
-app.get(
-  '/twitter/authorize/callback',
-  toExpressHandler(authorizeTwitterCallback)
-);
-
-app.get('/facebook/authorize', toExpressHandler(authorizeFacebook));
-app.get(
-  '/facebook/authorize/callback',
-  toExpressHandler(authorizeFacebookCallback)
-);
 
 app.get('/instagram/authorize', toExpressHandler(authorizeInstagram));
 app.get(

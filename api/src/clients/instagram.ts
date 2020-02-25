@@ -19,9 +19,9 @@ export const getAuthorizeUrl = (): {
   return { authorizeUrl, state };
 };
 
-export const getAccessToken = async (
+export const handleRedirectCallback = async (
   code: string
-): Promise<{ accessToken: string }> => {
+): Promise<{ userId: number; accessToken: string; expiresIn: number }> => {
   const shortLivedAccessTokenUrl = `${igApiUrl}/oauth/access_token`;
   const shortLivedAccessTokenParams = new URLSearchParams();
   shortLivedAccessTokenParams.append('grant_type', 'authorization_code');
@@ -54,5 +54,9 @@ export const getAccessToken = async (
 
   const longLivedAccesTokenPayload = await longLivedAccessTokenResp.json();
 
-  return { accessToken: longLivedAccesTokenPayload.access_token };
+  return {
+    userId: shortLivedAccessTokenPayload.user_id,
+    accessToken: longLivedAccesTokenPayload.access_token,
+    expiresIn: longLivedAccesTokenPayload.expires_in
+  };
 };

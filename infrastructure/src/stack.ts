@@ -17,6 +17,16 @@ export default class extends cdk.Stack {
     super(scope, id, props);
 
     // Database
+    const userTable = new dynamodb.Table(this, tables.users.name, {
+      tableName: tables.users.name,
+      partitionKey: tables.users.partitionKey,
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      removalPolicy:
+        env('USER_RESOURCE_REMOVAL_POLICY') === 'destroy'
+          ? cdk.RemovalPolicy.DESTROY
+          : cdk.RemovalPolicy.RETAIN
+    });
+
     const trailStatusTable = new dynamodb.Table(this, tables.trailStatus.name, {
       tableName: tables.trailStatus.name,
       partitionKey: tables.trailStatus.partitionKey,
@@ -26,30 +36,6 @@ export default class extends cdk.Stack {
           ? cdk.RemovalPolicy.DESTROY
           : cdk.RemovalPolicy.RETAIN
     });
-
-    const trailAuthTable = new dynamodb.Table(this, tables.trailAuth.name, {
-      tableName: tables.trailAuth.name,
-      partitionKey: tables.trailAuth.partitionKey,
-      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
-      removalPolicy:
-        env('USER_RESOURCE_REMOVAL_POLICY') === 'destroy'
-          ? cdk.RemovalPolicy.DESTROY
-          : cdk.RemovalPolicy.RETAIN
-    });
-
-    const trailAuthSessionTable = new dynamodb.Table(
-      this,
-      tables.trailAuthSession.name,
-      {
-        tableName: tables.trailAuthSession.name,
-        partitionKey: tables.trailAuthSession.partitionKey,
-        billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
-        removalPolicy:
-          env('USER_RESOURCE_REMOVAL_POLICY') === 'destroy'
-            ? cdk.RemovalPolicy.DESTROY
-            : cdk.RemovalPolicy.RETAIN
-      }
-    );
 
     // API
     const hostedZone = route53.HostedZone.fromHostedZoneAttributes(
@@ -110,156 +96,65 @@ export default class extends cdk.Stack {
     trailStatusApi.addMethod('GET', getTrailStatusIntegration);
     trailStatusTable.grantReadData(getTrailStatusHandler);
 
-    // PUT /status
-    const updateTrailStatusHandler = new lambda.Function(
-      this,
-      projectPrefix('updateTrailStatus'),
-      {
-        functionName: projectPrefix('updateTrailStatus'),
-        runtime: lambda.Runtime.NODEJS_12_X,
-        code: lambda.Code.fromAsset(packagePath),
-        handler: 'api/build/src/handlers/updateTrailStatus.default',
-        environment: {
-          PROJECT: env('PROJECT'),
-          DYNAMO_ENDPOINT: env('DYNAMO_ENDPOINT'),
-          API_ENDPOINT: env('API_ENDPOINT')
-        }
-      }
-    );
-
-    const updateTrailStatusIntegration = new apigateway.LambdaIntegration(
-      updateTrailStatusHandler
-    );
-
-    trailStatusApi.addMethod('PUT', updateTrailStatusIntegration);
-    trailStatusTable.grantReadWriteData(updateTrailStatusHandler);
-
-    // twitter
-    const twitterApi = api.root.addResource('twitter');
-    const twitterAuthorizeApi = twitterApi.addResource('authorize');
-    const twitterAuthorizeCallbackApi = twitterAuthorizeApi.addResource(
+    // instagram
+    const instagramApi = api.root.addResource('instagram');
+    const instagramAuthorizeApi = instagramApi.addResource('authorize');
+    const instagramAuthorizeCallbackApi = instagramAuthorizeApi.addResource(
       'callback'
     );
 
-    // GET /twitter/authorize
-    const authorizeTwitterHandler = new lambda.Function(
+    // GET /instagram/authorize
+    const authorizeInstagramHandler = new lambda.Function(
       this,
-      projectPrefix('authorizeTwitter'),
+      projectPrefix('authorizeInstagram'),
       {
-        functionName: projectPrefix('authorizeTwitter'),
+        functionName: projectPrefix('authorizeInstagram'),
         runtime: lambda.Runtime.NODEJS_12_X,
         code: lambda.Code.fromAsset(packagePath),
-        handler: 'api/build/src/handlers/authorizeTwitter.default',
+        handler: 'api/build/src/handlers/authorizeInstagram.default',
         environment: {
           PROJECT: env('PROJECT'),
           DYNAMO_ENDPOINT: env('DYNAMO_ENDPOINT'),
           API_ENDPOINT: env('API_ENDPOINT'),
-          TWITTER_CONSUMER_KEY: env('TWITTER_CONSUMER_KEY'),
-          TWITTER_CONSUMER_SECRET: env('TWITTER_CONSUMER_SECRET')
+          INSTAGRAM_APP_ID: env('INSTAGRAM_APP_ID'),
+          INSTAGRAM_APP_SECRET: env('INSTAGRAM_APP_SECRET')
         }
       }
     );
 
-    const authorizeTwitterIntegration = new apigateway.LambdaIntegration(
-      authorizeTwitterHandler
+    const authorizeInstagramIntegration = new apigateway.LambdaIntegration(
+      authorizeInstagramHandler
     );
 
-    twitterAuthorizeApi.addMethod('GET', authorizeTwitterIntegration);
-    trailAuthTable.grantReadWriteData(authorizeTwitterHandler);
-    trailAuthSessionTable.grantReadWriteData(authorizeTwitterHandler);
+    instagramAuthorizeApi.addMethod('GET', authorizeInstagramIntegration);
 
-    // GET twitter/authorize/callback
-    const authorizeTwitterCallbackHandler = new lambda.Function(
+    // GET instagram/authorize/callback
+    const authorizeInstagramCallbackHandler = new lambda.Function(
       this,
-      projectPrefix('authorizeTwitterCallback'),
+      projectPrefix('authorizeInstagramCallback'),
       {
-        functionName: projectPrefix('authorizeTwitterCallback'),
+        functionName: projectPrefix('authorizeInstagramCallback'),
         runtime: lambda.Runtime.NODEJS_12_X,
         code: lambda.Code.fromAsset(packagePath),
-        handler: 'api/build/src/handlers/authorizeTwitterCallback.default',
+        handler: 'api/build/src/handlers/authorizeInstagramCallback.default',
         environment: {
           PROJECT: env('PROJECT'),
           DYNAMO_ENDPOINT: env('DYNAMO_ENDPOINT'),
           API_ENDPOINT: env('API_ENDPOINT'),
-          TWITTER_CONSUMER_KEY: env('TWITTER_CONSUMER_KEY'),
-          TWITTER_CONSUMER_SECRET: env('TWITTER_CONSUMER_SECRET')
+          INSTAGRAM_APP_ID: env('INSTAGRAM_APP_ID'),
+          INSTAGRAM_APP_SECRET: env('INSTAGRAM_APP_SECRET')
         }
       }
     );
 
-    const authorizeTwitterCallbackIntegration = new apigateway.LambdaIntegration(
-      authorizeTwitterCallbackHandler
+    const authorizeInstagramCallbackIntegration = new apigateway.LambdaIntegration(
+      authorizeInstagramCallbackHandler
     );
 
-    twitterAuthorizeCallbackApi.addMethod(
+    instagramAuthorizeCallbackApi.addMethod(
       'GET',
-      authorizeTwitterCallbackIntegration
+      authorizeInstagramCallbackIntegration
     );
-    trailAuthTable.grantReadWriteData(authorizeTwitterCallbackHandler);
-    trailAuthSessionTable.grantReadWriteData(authorizeTwitterCallbackHandler);
-
-    // facebook
-    const facebookApi = api.root.addResource('facebook');
-    const facebookAuthorizeApi = facebookApi.addResource('authorize');
-    const facebookAuthorizeCallbackApi = facebookAuthorizeApi.addResource(
-      'callback'
-    );
-
-    // GET /facebook/authorize
-    const authorizeFacebookHandler = new lambda.Function(
-      this,
-      projectPrefix('authorizeFacebook'),
-      {
-        functionName: projectPrefix('authorizeFacebook'),
-        runtime: lambda.Runtime.NODEJS_12_X,
-        code: lambda.Code.fromAsset(packagePath),
-        handler: 'api/build/src/handlers/authorizeFacebook.default',
-        environment: {
-          PROJECT: env('PROJECT'),
-          DYNAMO_ENDPOINT: env('DYNAMO_ENDPOINT'),
-          API_ENDPOINT: env('API_ENDPOINT'),
-          FACEBOOK_APP_ID: env('FACEBOOK_APP_ID'),
-          FACEBOOK_APP_SECRET: env('FACEBOOK_APP_SECRET')
-        }
-      }
-    );
-
-    const authorizeFacebookIntegration = new apigateway.LambdaIntegration(
-      authorizeFacebookHandler
-    );
-
-    facebookAuthorizeApi.addMethod('GET', authorizeFacebookIntegration);
-    trailAuthTable.grantReadWriteData(authorizeFacebookHandler);
-    trailAuthSessionTable.grantReadWriteData(authorizeFacebookHandler);
-
-    // GET facebook/authorize/callback
-    const authorizeFacebookCallbackHandler = new lambda.Function(
-      this,
-      projectPrefix('authorizeFacebookCallback'),
-      {
-        functionName: projectPrefix('authorizeFacebookCallback'),
-        runtime: lambda.Runtime.NODEJS_12_X,
-        code: lambda.Code.fromAsset(packagePath),
-        handler: 'api/build/src/handlers/authorizeFacebookCallback.default',
-        environment: {
-          PROJECT: env('PROJECT'),
-          DYNAMO_ENDPOINT: env('DYNAMO_ENDPOINT'),
-          API_ENDPOINT: env('API_ENDPOINT'),
-          FACEBOOK_APP_ID: env('FACEBOOK_APP_ID'),
-          FACEBOOK_APP_SECRET: env('FACEBOOK_APP_SECRET')
-        }
-      }
-    );
-
-    const authorizeFacebookCallbackIntegration = new apigateway.LambdaIntegration(
-      authorizeFacebookCallbackHandler
-    );
-
-    facebookAuthorizeCallbackApi.addMethod(
-      'GET',
-      authorizeFacebookCallbackIntegration
-    );
-    trailAuthTable.grantReadWriteData(authorizeFacebookCallbackHandler);
-    trailAuthSessionTable.grantReadWriteData(authorizeFacebookCallbackHandler);
+    userTable.grantReadWriteData(authorizeInstagramCallbackHandler);
   }
 }

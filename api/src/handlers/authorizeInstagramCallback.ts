@@ -1,11 +1,11 @@
-import { assert } from '@trail-status-app/utilities';
+import { assert, env } from '@trail-status-app/utilities';
 import * as instagram from '../clients/instagram';
 import { parseQuery } from '../requests';
-import { json } from '../responses';
+import { redirect } from '../responses';
 import withApiHandler from '../withApiHandler';
-import { BadRequestError, NotFoundError } from '../HttpError';
-import TrailAuthModel from '../models/TrailAuthModel';
-import TrailAuthSessionModel from '../models/TrailAuthSessionModel';
+import { BadRequestError } from '../HttpError';
+import UserModel from '../models/UserModel';
+import * as jwt from '../jwt';
 
 interface AuthorizeInstagramCallback {
   code: string;
@@ -34,27 +34,31 @@ const assertAuthorizeInstagramCallback = (
 };
 
 const handler: AWSLambda.APIGatewayProxyHandler = async event => {
-  const { code, state } = assertAuthorizeInstagramCallback(parseQuery(event));
+  const { code } = assertAuthorizeInstagramCallback(parseQuery(event));
 
-  const { accessToken } = await instagram.getAccessToken(code).catch(err => {
+  const {
+    userId: igUserId,
+    accessToken,
+    expiresIn
+  } = await instagram.handleRedirectCallback(code).catch(err => {
     throw new BadRequestError('Failed getting access token.', err);
   });
 
-  const trailSessionAuth = await TrailAuthSessionModel.get(
-    `instagram|${state}`
-  );
-  if (!trailSessionAuth)
-    throw new NotFoundError('Trail auth session not found.');
+  const userId = `instagram|${igUserId}`;
+  let user = await UserModel.get(userId);
+  if (!user) user = new UserModel({ userId });
 
-  const trailAuth = new TrailAuthModel({
-    trailAuthId: `instagram|${trailSessionAuth.trailId}`,
-    sessionId: trailSessionAuth.sessionId,
-    accessToken
+  const now = new Date();
+  const expiresAt = new Date(+now + expiresIn * 1000);
+
+  await user.save({
+    accessToken,
+    lastLoginAt: now.toISOString(),
+    expiresAt: expiresAt.toISOString()
   });
 
-  await trailAuth.save();
-
-  return json(trailAuth);
+  const sessionToken = jwt.createUserSession(userId);
+  return redirect(`${env('FRONTEND_ENDPOINT')}?sessionToken=${sessionToken}`);
 };
 
 export default withApiHandler(handler);

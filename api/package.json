@@ -11,6 +11,7 @@
     "@trail-status-app/infrastructure": "",
     "@trail-status-app/utilities": "",
     "@types/uuid": "^3.4.7",
+    "jsonwebtoken": "^8.5.1",
     "node-fetch": "^2.6.0",
     "oauth": "^0.9.15",
     "uuid": "^3.4.0"
@@ -18,6 +19,7 @@
   "devDependencies": {
     "@types/aws-lambda": "^8.10.39",
     "@types/express": "^4.17.2",
+    "@types/jsonwebtoken": "^8.3.7",
     "@types/node-fetch": "^2.5.4",
     "@types/oauth": "^0.9.1",
     "aws-sdk": "^2.614.0",
