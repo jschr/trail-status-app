@@ -27,6 +27,20 @@ export default class extends cdk.Stack {
           : cdk.RemovalPolicy.RETAIN
     });
 
+    const trailSettingsTable = new dynamodb.Table(
+      this,
+      tables.trailSettings.name,
+      {
+        tableName: tables.trailSettings.name,
+        partitionKey: tables.trailSettings.partitionKey,
+        billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+        removalPolicy:
+          env('USER_RESOURCE_REMOVAL_POLICY') === 'destroy'
+            ? cdk.RemovalPolicy.DESTROY
+            : cdk.RemovalPolicy.RETAIN
+      }
+    );
+
     const trailStatusTable = new dynamodb.Table(this, tables.trailStatus.name, {
       tableName: tables.trailStatus.name,
       partitionKey: tables.trailStatus.partitionKey,
@@ -156,5 +170,6 @@ export default class extends cdk.Stack {
       authorizeInstagramCallbackIntegration
     );
     userTable.grantReadWriteData(authorizeInstagramCallbackHandler);
+    trailSettingsTable.grantReadWriteData(authorizeInstagramCallbackHandler);
   }
 }

@@ -15,8 +15,11 @@ export interface User {
 }
 
 export interface Settings {
-  openTrailHashtag: string;
-  closeTrailHashtag: string;
+  trailId: string;
+  openHashtag: string;
+  closeHashtag: string;
+  updatedAt: string;
+  createdAt: string;
 }
 
 export default class ApiClient {

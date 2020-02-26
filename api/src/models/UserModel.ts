@@ -7,6 +7,7 @@ export interface User {
   accessToken: string;
   expiresAt: string;
   lastLoginAt: string;
+  createdAt: string;
 }
 
 export default class UserModel {
@@ -79,6 +80,7 @@ export default class UserModel {
     if (user.expiresAt !== undefined) attrMap.expiresAt = { S: user.expiresAt };
     if (user.lastLoginAt !== undefined)
       attrMap.lastLoginAt = { S: user.lastLoginAt };
+    if (user.createdAt !== undefined) attrMap.createdAt = { S: user.createdAt };
 
     return attrMap;
   }
@@ -93,7 +95,8 @@ export default class UserModel {
       userId: attrMap.userId?.S,
       accessToken: attrMap.accessToken?.S,
       expiresAt: attrMap.expiresAt?.S,
-      lastLoginAt: attrMap.lastLoginAt?.S
+      lastLoginAt: attrMap.lastLoginAt?.S,
+      createdAt: attrMap.createdAt?.S
     };
   }
 
@@ -139,12 +142,17 @@ export default class UserModel {
     return this.attrs.lastLoginAt || '';
   }
 
+  get createdAt() {
+    return this.attrs.createdAt || '';
+  }
+
   public toJSON() {
     return {
       userId: this.userId,
       accessToken: this.accessToken,
       expiresAt: this.expiresAt,
-      lastLoginAt: this.lastLoginAt
+      lastLoginAt: this.lastLoginAt,
+      createdAt: this.createdAt
     };
   }
 }

@@ -16,12 +16,8 @@ import api from '../api';
 const user = api.getUser();
 
 const Settings: React.FunctionComponent = () => {
-  const [hasChanged, setHasChanged] = useState(false);
   const [error, setError] = useState<Error>();
-  const [settings, setSettings] = useState<ApiClient.Settings>({
-    openTrailHashtag: '',
-    closeTrailHashtag: ''
-  });
+  const [settings, setSettings] = useState<ApiClient.Settings>();
 
   useEffect(() => {
     api
@@ -29,6 +25,12 @@ const Settings: React.FunctionComponent = () => {
       .then(setSettings)
       .catch(setError);
   }, []);
+
+  const updateSettings = (params: Partial<ApiClient.Settings>) => {
+    if (settings) {
+      setSettings({ ...settings, ...params });
+    }
+  };
 
   return (
     <Container>
@@ -54,7 +56,7 @@ const Settings: React.FunctionComponent = () => {
         }
       />
       <Divider />
-      <CardContent onChange={() => setHasChanged(true)}>
+      <CardContent>
         <Typography color="textSecondary" variant="overline">
           Hashtag Settings
         </Typography>
@@ -64,10 +66,8 @@ const Settings: React.FunctionComponent = () => {
             variant="filled"
             label="Open trails"
             helperText="Tag your post with this hashtag to open the trails."
-            value={settings.openTrailHashtag}
-            onChange={e =>
-              setSettings({ ...settings, openTrailHashtag: e.target.value })
-            }
+            value={settings?.openHashtag ?? ''}
+            onChange={e => updateSettings({ openHashtag: e.target.value })}
           />
         </Box>
         <Box mt={2}>
@@ -76,20 +76,13 @@ const Settings: React.FunctionComponent = () => {
             variant="filled"
             label="Close trails"
             helperText="Tag your post with this hashtag to close the trails."
-            value={settings.closeTrailHashtag}
-            onChange={e =>
-              setSettings({ ...settings, closeTrailHashtag: e.target.value })
-            }
+            value={settings?.closeHashtag ?? ''}
+            onChange={e => updateSettings({ closeHashtag: e.target.value })}
           />
         </Box>
       </CardContent>
       <Box p={2}>
-        <Button
-          fullWidth
-          variant="contained"
-          color="primary"
-          disabled={!hasChanged}
-        >
+        <Button fullWidth variant="contained" color="primary">
           Save Hashtag Settings
         </Button>
       </Box>

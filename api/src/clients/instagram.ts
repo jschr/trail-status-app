@@ -95,8 +95,7 @@ export const getProfilePictureUrl = async (
   if (!userPayload || typeof userPayload !== 'object') return null;
   if (typeof userPayload.graphql !== 'object') return null;
   if (typeof userPayload.graphql.user !== 'object') return null;
-  if (typeof userPayload.graphql.user.profile_pic_url_hd !== 'string')
-    return null;
+  if (typeof userPayload.graphql.user.profile_pic_url !== 'string') return null;
 
-  return userPayload.graphql.user.profile_pic_url_hd;
+  return userPayload.graphql.user.profile_pic_url;
 };

@@ -2,27 +2,28 @@ import * as AWS from 'aws-sdk';
 import tables from '@trail-status-app/infrastructure/build/src/tables';
 import dynamodb from './dynamodb';
 
-export interface TrailStatus {
+export interface TrailSettings {
   trailId: string;
-  status: string;
+  openHashtag: string;
+  closeHashtag: string;
   updatedAt: string;
   createdAt: string;
 }
 
-export default class TrailStatusModel {
-  public static async get(trailId: string): Promise<TrailStatusModel | null> {
+export default class TrailSettingsModel {
+  public static async get(trailId: string): Promise<TrailSettingsModel | null> {
     try {
       const params: AWS.DynamoDB.GetItemInput = {
-        TableName: tables.trailStatus.name,
+        TableName: tables.trailSettings.name,
         Key: this.toAttributeMap({ trailId })
       };
       const res = await dynamodb.getItem(params).promise();
       if (!res.Item) return null;
 
-      return new TrailStatusModel(this.fromAttributeMap(res.Item));
+      return new TrailSettingsModel(this.fromAttributeMap(res.Item));
     } catch (err) {
       throw new Error(
-        `TrailStatusModel.get for trailId '${trailId}' failed with '${err.message}'`
+        `TrailSettingsModel.get for trailId '${trailId}' failed with '${err.message}'`
       );
     }
   }
@@ -31,13 +32,13 @@ export default class TrailStatusModel {
     items: Array<{
       trailId: string;
     }>
-  ): Promise<Array<TrailStatusModel | null>> {
+  ): Promise<Array<TrailSettingsModel | null>> {
     const requestKeys = items.filter(i => i.trailId).map(this.toAttributeMap);
     if (requestKeys.length === 0) return [];
 
     const params: AWS.DynamoDB.BatchGetItemInput = {
       RequestItems: {
-        [tables.trailStatus.name]: {
+        [tables.trailSettings.name]: {
           Keys: requestKeys
         }
       }
@@ -49,68 +50,71 @@ export default class TrailStatusModel {
         return [];
       }
 
-      const tableResults = res.Responses[tables.trailStatus.name];
+      const tableResults = res.Responses[tables.trailSettings.name];
       if (!tableResults) {
         return [];
       }
 
-      const TrailStatusModels = tableResults.map(
-        attrMap => new TrailStatusModel(this.fromAttributeMap(attrMap))
+      const TrailSettingsModels = tableResults.map(
+        attrMap => new TrailSettingsModel(this.fromAttributeMap(attrMap))
       );
 
       return items.map(
         item =>
-          TrailStatusModels.find(tm => tm.trailId === item.trailId) || null
+          TrailSettingsModels.find(tm => tm.trailId === item.trailId) || null
       );
     } catch (err) {
       throw new Error(
-        `TrailStatusModel.batchGet with params '${JSON.stringify(
+        `TrailSettingsModel.batchGet with params '${JSON.stringify(
           params
         )}' failed with '${err.message}'`
       );
     }
   }
 
-  private static toAttributeMap(trailStatus: Partial<TrailStatus>) {
+  private static toAttributeMap(trailSettings: Partial<TrailSettings>) {
     const attrMap: AWS.DynamoDB.AttributeMap = {};
 
-    if (trailStatus.trailId !== undefined)
-      attrMap.trailId = { S: trailStatus.trailId };
-    if (trailStatus.status !== undefined)
-      attrMap.status = { S: trailStatus.status };
-    if (trailStatus.updatedAt !== undefined)
-      attrMap.updatedAt = { S: trailStatus.updatedAt };
-    if (trailStatus.createdAt !== undefined)
-      attrMap.createdAt = { S: trailStatus.createdAt };
+    if (trailSettings.trailId !== undefined)
+      attrMap.trailId = { S: trailSettings.trailId };
+    if (trailSettings.openHashtag !== undefined)
+      attrMap.openHashtag = { S: trailSettings.openHashtag };
+    if (trailSettings.closeHashtag !== undefined)
+      attrMap.closeHashtag = { S: trailSettings.closeHashtag };
+    if (trailSettings.updatedAt !== undefined)
+      attrMap.updatedAt = { S: trailSettings.updatedAt };
+    if (trailSettings.createdAt !== undefined)
+      attrMap.createdAt = { S: trailSettings.createdAt };
 
     return attrMap;
   }
 
   private static fromAttributeMap(
     attrMap: AWS.DynamoDB.AttributeMap
-  ): Partial<TrailStatus> {
+  ): Partial<TrailSettings> {
     if (!attrMap.trailId || !attrMap.trailId.S)
       throw new Error('Missing trailId parsing attribute map');
 
     return {
       trailId: attrMap.trailId?.S,
-      status: attrMap.status?.S,
+      openHashtag: attrMap.openHashtag?.S,
+      closeHashtag: attrMap.closeHashtag?.S,
       updatedAt: attrMap.updatedAt?.S,
       createdAt: attrMap.createdAt?.S
     };
   }
 
-  constructor(private attrs: Partial<TrailStatus>) {}
+  constructor(private attrs: Partial<TrailSettings>) {}
 
-  public async save(updatedAttrs: Partial<TrailStatus> = {}): Promise<void> {
+  public async save(updatedAttrs: Partial<TrailSettings> = {}): Promise<void> {
     const newAttrs = {
       ...this.attrs,
       ...updatedAttrs,
       updatedAt: new Date().toISOString()
     };
     const params: AWS.DynamoDB.PutItemInput = {
-      TableName: tables.trailStatus.name,
-      Item: TrailStatusModel.toAttributeMap(newAttrs)
+      TableName: tables.trailSettings.name,
+      Item: TrailSettingsModel.toAttributeMap(newAttrs)
     };
 
     try {
@@ -119,7 +123,7 @@ export default class TrailStatusModel {
       this.attrs = newAttrs;
     } catch (err) {
       throw new Error(
-        `TrailStatusModel.save failed for Item '${JSON.stringify(
+        `TrailSettingsModel.save failed for Item '${JSON.stringify(
           params.Item
         )}' with '${err.message}'`
       );
@@ -130,12 +134,12 @@ export default class TrailStatusModel {
     return this.attrs.trailId || '';
   }
 
-  get status() {
-    return this.attrs.status || '';
+  get openHashtag() {
+    return this.attrs.openHashtag || '';
   }
 
-  set status(status: string) {
-    this.attrs.status = status;
+  get closeHashtag() {
+    return this.attrs.closeHashtag || '';
   }
 
   get updatedAt() {
@@ -148,7 +152,9 @@ export default class TrailStatusModel {
 
   public toJSON() {
     return {
-      status: this.status,
+      trailId: this.trailId,
+      openHashtag: this.openHashtag,
+      closeHashtag: this.closeHashtag,
       updatedAt: this.updatedAt,
       createdAt: this.createdAt
     };

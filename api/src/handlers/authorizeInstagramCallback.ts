@@ -5,7 +5,9 @@ import { redirect } from '../responses';
 import withApiHandler from '../withApiHandler';
 import { BadRequestError } from '../HttpError';
 import UserModel from '../models/UserModel';
+import TrailSettingsModel from '../models/TrailSettingsModel';
 import * as jwt from '../jwt';
+import getDefaultTrailId from '../getDefaultTrailId';
 
 interface AuthorizeInstagramCallback {
   code: string;
@@ -49,7 +51,12 @@ const handler: AWSLambda.APIGatewayProxyHandler = async event => {
 
   const userId = `instagram|${igUserId}`;
   let user = await UserModel.get(userId);
-  if (!user) user = new UserModel({ userId });
+  if (!user) {
+    user = new UserModel({
+      userId,
+      createdAt: new Date().toISOString()
+    });
+  }
 
   const now = new Date();
   const expiresAt = new Date(+now + expiresIn * 1000);
@@ -59,6 +66,20 @@ const handler: AWSLambda.APIGatewayProxyHandler = async event => {
     lastLoginAt: now.toISOString(),
     expiresAt: expiresAt.toISOString()
   });
+
+  // Create default trail settings.
+  const defaultTrailId = getDefaultTrailId(userId);
+  let defaultSettings = await TrailSettingsModel.get(defaultTrailId);
+  if (!defaultSettings) {
+    defaultSettings = new TrailSettingsModel({
+      trailId: defaultTrailId,
+      openHashtag: '#open-trails',
+      closeHashtag: '#close-trails',
+      createdAt: new Date().toISOString()
+    });
+
+    await defaultSettings.save();
+  }
 
   const sessionToken = jwt.createUserSession(
     userId,

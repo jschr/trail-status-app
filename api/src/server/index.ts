@@ -1,5 +1,6 @@
 import { env } from '@trail-status-app/utilities';
 import express from 'express';
+import cors from 'cors';
 import fs from 'fs';
 import path from 'path';
 import https from 'https';
@@ -19,6 +20,8 @@ const server = https.createServer(
   },
   app
 );
+
+app.use(cors());
 
 app.get('/instagram/authorize', toExpressHandler(authorizeInstagram));
 app.get(
