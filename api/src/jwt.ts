@@ -4,10 +4,13 @@ import jwt from 'jsonwebtoken';
 export enum Permissions {
   SettingsRead = 'settings:read',
   SettingsUpdate = 'settings:update',
-  StatusRead = 'status:read'
+  StatusRead = 'status:read',
+  StatusUpdate = 'status:update'
 }
 
 export interface DecodedToken {
+  username: string;
+  profilePictureUrl: string | null;
   permissions: string[];
   iat: number;
   exp: number;
@@ -27,9 +30,15 @@ if (env('API_SUBDOMAIN', false)) {
   apiDomain = `${env('API_SUBDOMAIN', false)}.${apiDomain}`;
 }
 
-export const createUserSession = (userId: string) => {
+export const createUserSession = (
+  userId: string,
+  username: string,
+  profilePictureUrl: string | null
+) => {
   return jwt.sign(
     {
+      username,
+      profilePictureUrl,
       permissions: [
         Permissions.SettingsRead,
         Permissions.SettingsUpdate,

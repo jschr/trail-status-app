@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import Container from '../components/Container';
 import Avatar from '@material-ui/core/Avatar';
 import Box from '@material-ui/core/Box';
 import CardHeader from '@material-ui/core/CardHeader';
@@ -9,11 +8,22 @@ import Button from '@material-ui/core/Button';
 import Link from '@material-ui/core/Link';
 import TextField from '@material-ui/core/TextField';
 import Typography from '@material-ui/core/Typography';
+import jwtDecode from 'jwt-decode';
+import Container from '../components/Container';
 import api from '../api';
 
-console.log(api);
+const accessToken = api.getAccessToken();
 
-const SetupPage: React.FunctionComponent = () => {
+let username: string = '';
+let profilePictureUrl: string = '';
+
+try {
+  const decodedToken = jwtDecode(accessToken);
+  username = decodedToken.username;
+  profilePictureUrl = decodedToken.profilePictureUrl;
+} catch (err) {}
+
+const Settings: React.FunctionComponent = () => {
   const [hasChanged, setHasChanged] = useState(false);
   const [openHashtag, setOpenHashtag] = useState('#trails-open');
   const [closedHashtag, setClosedHashtag] = useState('#trails-closed');
@@ -21,18 +31,16 @@ const SetupPage: React.FunctionComponent = () => {
   return (
     <Container>
       <CardHeader
-        avatar={
-          <Avatar src="https://scontent-yyz1-1.cdninstagram.com/v/t51.2885-19/21042217_125936164713332_2569638204021932032_a.jpg?_nc_ht=scontent-yyz1-1.cdninstagram.com&_nc_ohc=IzVty7dKv6QAX-Hheoz&oh=912c08c852d6d16e87b5f266d7174d88&oe=5E8B6178" />
-        }
+        avatar={<Avatar src={profilePictureUrl} />}
         title={
           <>
             Open or close the trails by posting to{' '}
             <Link
-              href="https://www.instagram.com/the_hydrocut/"
+              href={`https://www.instagram.com/${username}/`}
               target="_blank"
               color="textPrimary"
             >
-              <strong>@the_hydrocut</strong>
+              <strong>@{username}</strong>
             </Link>
             .
           </>
@@ -78,4 +86,4 @@ const SetupPage: React.FunctionComponent = () => {
   );
 };
 
-export default SetupPage;
+export default Settings;

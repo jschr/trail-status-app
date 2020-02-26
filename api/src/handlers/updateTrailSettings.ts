@@ -1,10 +1,7 @@
-// import TrailSettingsModel from '../models/TrailSettingsModel';
 import { json } from '../responses';
 import withApiHandler from '../withApiHandler';
+import { Permissions as P } from '../jwt';
 
-const handler: AWSLambda.APIGatewayProxyHandler = async event => {
-  // const trailSettings = await TrailSettingsModel.get('hydrocut');
-  return json(event);
-};
-
-export default withApiHandler([], handler);
+export default withApiHandler([P.StatusUpdate], async event => {
+  return json(event.decodedToken);
+});

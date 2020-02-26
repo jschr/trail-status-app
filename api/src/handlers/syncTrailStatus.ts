@@ -1,8 +1,7 @@
 import { json } from '../responses';
 import withApiHandler from '../withApiHandler';
+import { Permissions as P } from '../jwt';
 
-const handler: AWSLambda.APIGatewayProxyHandler = async () => {
-  return json(true);
-};
-
-export default withApiHandler([], handler);
+export default withApiHandler([P.StatusUpdate], async event => {
+  return json(event.decodedToken);
+});

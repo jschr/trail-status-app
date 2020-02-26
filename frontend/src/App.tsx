@@ -10,7 +10,7 @@ import {
   Redirect
 } from 'react-router-dom';
 import LoginPage from './pages/LoginPage';
-import SetupPage from './pages/SetupPage';
+import SettingsPage from './pages/SettingsPage';
 
 export default function App() {
   const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)');
@@ -32,7 +32,7 @@ export default function App() {
       <Router>
         <Switch>
           <Route exact path="/">
-            <SetupPage />
+            <SettingsPage />
           </Route>
           <Route path="/login">
             <LoginPage />

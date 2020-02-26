@@ -44,6 +44,9 @@ const handler: AWSLambda.APIGatewayProxyHandler = async event => {
     throw new BadRequestError('Failed getting access token.', err);
   });
 
+  const username = await instagram.getUsername(accessToken);
+  const profilePictureUrl = await instagram.getProfilePictureUrl(username);
+
   const userId = `instagram|${igUserId}`;
   let user = await UserModel.get(userId);
   if (!user) user = new UserModel({ userId });
@@ -57,7 +60,12 @@ const handler: AWSLambda.APIGatewayProxyHandler = async event => {
     expiresAt: expiresAt.toISOString()
   });
 
-  const sessionToken = jwt.createUserSession(userId);
+  const sessionToken = jwt.createUserSession(
+    userId,
+    username,
+    profilePictureUrl
+  );
+
   return redirect(`${env('FRONTEND_ENDPOINT')}?sessionToken=${sessionToken}`);
 };
 
