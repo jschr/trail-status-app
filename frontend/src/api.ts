@@ -16,4 +16,6 @@ if (typeof querystring.sessionToken === 'string') {
   sessionToken = localStorage.getItem('sessionToken');
 }
 
-export default new ApiClient(sessionToken);
+export default new ApiClient(sessionToken, () => {
+  history.push('/login');
+});

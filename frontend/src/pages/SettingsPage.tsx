@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Avatar from '@material-ui/core/Avatar';
 import Box from '@material-ui/core/Box';
 import CardHeader from '@material-ui/core/CardHeader';
@@ -8,39 +8,46 @@ import Button from '@material-ui/core/Button';
 import Link from '@material-ui/core/Link';
 import TextField from '@material-ui/core/TextField';
 import Typography from '@material-ui/core/Typography';
-import jwtDecode from 'jwt-decode';
+import Alert from '@material-ui/lab/Alert';
 import Container from '../components/Container';
+import * as ApiClient from '../clients/ApiClient';
 import api from '../api';
 
-const accessToken = api.getAccessToken();
-
-let username: string = '';
-let profilePictureUrl: string = '';
-
-try {
-  const decodedToken = jwtDecode(accessToken);
-  username = decodedToken.username;
-  profilePictureUrl = decodedToken.profilePictureUrl;
-} catch (err) {}
+const user = api.getUser();
 
 const Settings: React.FunctionComponent = () => {
   const [hasChanged, setHasChanged] = useState(false);
-  const [openHashtag, setOpenHashtag] = useState('#trails-open');
-  const [closedHashtag, setClosedHashtag] = useState('#trails-closed');
+  const [error, setError] = useState<Error>();
+  const [settings, setSettings] = useState<ApiClient.Settings>({
+    openTrailHashtag: '',
+    closeTrailHashtag: ''
+  });
+
+  useEffect(() => {
+    api
+      .getSettings()
+      .then(setSettings)
+      .catch(setError);
+  }, []);
 
   return (
     <Container>
+      {error && (
+        <CardContent>
+          <Alert severity="error">Oops! Something went wrong.</Alert>
+        </CardContent>
+      )}
       <CardHeader
-        avatar={<Avatar src={profilePictureUrl} />}
+        avatar={<Avatar src={user.profilePictureUrl} />}
         title={
           <>
             Open or close the trails by posting to{' '}
             <Link
-              href={`https://www.instagram.com/${username}/`}
+              href={`https://www.instagram.com/${user.username}/`}
               target="_blank"
               color="textPrimary"
             >
-              <strong>@{username}</strong>
+              <strong>@{user.username}</strong>
             </Link>
             .
           </>
@@ -55,20 +62,24 @@ const Settings: React.FunctionComponent = () => {
           <TextField
             fullWidth
             variant="filled"
-            label="Trails open"
+            label="Open trails"
             helperText="Tag your post with this hashtag to open the trails."
-            value={openHashtag}
-            onChange={e => setOpenHashtag(e.target.value)}
+            value={settings.openTrailHashtag}
+            onChange={e =>
+              setSettings({ ...settings, openTrailHashtag: e.target.value })
+            }
           />
         </Box>
         <Box mt={2}>
           <TextField
             fullWidth
             variant="filled"
-            label="Trails closed"
+            label="Close trails"
             helperText="Tag your post with this hashtag to close the trails."
-            value={closedHashtag}
-            onChange={e => setClosedHashtag(e.target.value)}
+            value={settings.closeTrailHashtag}
+            onChange={e =>
+              setSettings({ ...settings, closeTrailHashtag: e.target.value })
+            }
           />
         </Box>
       </CardContent>

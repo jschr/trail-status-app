@@ -3,14 +3,10 @@ import useMediaQuery from '@material-ui/core/useMediaQuery';
 import { createMuiTheme, ThemeProvider } from '@material-ui/core/styles';
 import CssBaseline from '@material-ui/core/CssBaseline';
 import blue from '@material-ui/core/colors/blue';
-import {
-  BrowserRouter as Router,
-  Switch,
-  Route,
-  Redirect
-} from 'react-router-dom';
+import { Router, Switch, Route, Redirect } from 'react-router-dom';
 import LoginPage from './pages/LoginPage';
 import SettingsPage from './pages/SettingsPage';
+import history from './history';
 
 export default function App() {
   const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)');
@@ -29,7 +25,7 @@ export default function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Router>
+      <Router history={history}>
         <Switch>
           <Route exact path="/">
             <SettingsPage />

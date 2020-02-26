@@ -5,11 +5,8 @@ import InstagramIcon from '@material-ui/icons/Instagram';
 import Divider from '@material-ui/core/Divider';
 import Typography from '@material-ui/core/Typography';
 import Box from '@material-ui/core/Box';
-import { env } from '@trail-status-app/utilities';
 import Container from '../components/Container';
-
-const apiEndpoint = env('REACT_APP_API_ENDPOINT');
-const authorizeUrl = `${apiEndpoint}/instagram/authorize`;
+import api from '../api';
 
 const LoginPage: React.FunctionComponent = () => {
   return (
@@ -29,7 +26,7 @@ const LoginPage: React.FunctionComponent = () => {
           variant="contained"
           startIcon={<InstagramIcon />}
           color="primary"
-          href={authorizeUrl}
+          href={api.getAuthorizeUrl()}
         >
           Log in With Instagram
         </Button>
