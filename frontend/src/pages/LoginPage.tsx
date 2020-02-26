@@ -18,7 +18,7 @@ const LoginPage: React.FunctionComponent = () => {
         <Box textAlign="center">
           <Typography variant="overline">Trail Status App</Typography>
           <Typography variant="caption" component="div">
-            Update trail status by posting to Instagram.
+            Automatically open or close the trails by posting to Instagram.
           </Typography>
         </Box>
       </CardContent>

@@ -6,8 +6,12 @@ import CardHeader from '@material-ui/core/CardHeader';
 import CardContent from '@material-ui/core/CardContent';
 import Divider from '@material-ui/core/Divider';
 import Button from '@material-ui/core/Button';
+import Link from '@material-ui/core/Link';
 import TextField from '@material-ui/core/TextField';
 import Typography from '@material-ui/core/Typography';
+import api from '../api';
+
+console.log(api);
 
 const SetupPage: React.FunctionComponent = () => {
   const [hasChanged, setHasChanged] = useState(false);
@@ -18,19 +22,26 @@ const SetupPage: React.FunctionComponent = () => {
     <Container>
       <CardHeader
         avatar={
-          <Avatar src="https://scontent-yyz1-1.cdninstagram.com/v/t51.2885-19/s150x150/44866784_317418545527632_4964076424227979264_n.jpg?_nc_ht=scontent-yyz1-1.cdninstagram.com&_nc_ohc=P_ScHihTuOQAX_R0Fgz&oh=f22a5d9404b3b2b0ee0966e933e40637&oe=5E88C564" />
+          <Avatar src="https://scontent-yyz1-1.cdninstagram.com/v/t51.2885-19/21042217_125936164713332_2569638204021932032_a.jpg?_nc_ht=scontent-yyz1-1.cdninstagram.com&_nc_ohc=IzVty7dKv6QAX-Hheoz&oh=912c08c852d6d16e87b5f266d7174d88&oe=5E8B6178" />
         }
         title={
           <>
-            Trail status will be updated by posting to{' '}
-            <strong>@jordanschroter</strong>.
+            Open or close the trails by posting to{' '}
+            <Link
+              href="https://www.instagram.com/the_hydrocut/"
+              target="_blank"
+              color="textPrimary"
+            >
+              <strong>@the_hydrocut</strong>
+            </Link>
+            .
           </>
         }
       />
       <Divider />
       <CardContent onChange={() => setHasChanged(true)}>
-        <Typography color="textSecondary" gutterBottom>
-          Hashtags
+        <Typography color="textSecondary" variant="overline">
+          Hashtag Settings
         </Typography>
         <Box mt={2}>
           <TextField

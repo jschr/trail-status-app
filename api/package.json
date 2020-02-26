@@ -14,6 +14,7 @@
     "jsonwebtoken": "^8.5.1",
     "node-fetch": "^2.6.0",
     "oauth": "^0.9.15",
+    "query-string": "^6.11.0",
     "uuid": "^3.4.0"
   },
   "devDependencies": {
