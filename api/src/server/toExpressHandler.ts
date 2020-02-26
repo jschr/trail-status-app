@@ -7,10 +7,18 @@ export default (
 ): express.RequestHandler => {
   return async (req, res) => {
     try {
+      const requestHeaders: { [key: string]: string } = {};
+      if (req.headers) {
+        for (const [header, value] of Object.entries(req.headers)) {
+          requestHeaders[header] = String(value);
+        }
+      }
+
       const result = await fn(
         mockApiGatewayEvent({
           queryStringParameters: req.query,
-          body: req.body && String(req.body)
+          body: req.body && String(req.body),
+          headers: requestHeaders
         }),
         mockLambdaContext(),
         () => {}

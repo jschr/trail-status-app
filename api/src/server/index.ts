@@ -7,6 +7,8 @@ import getTrailStatus from '../handlers/getTrailStatus';
 import authorizeInstagram from '../handlers/authorizeInstagram';
 import authorizeInstagramCallback from '../handlers/authorizeInstagramCallback';
 import syncTrailStatus from '../handlers/syncTrailStatus';
+import getTrailSettings from '../handlers/getTrailSettings';
+import updateTrailSettings from '../handlers/updateTrailSettings';
 import toExpressHandler from './toExpressHandler';
 
 const app = express();
@@ -18,14 +20,17 @@ const server = https.createServer(
   app
 );
 
-app.get('/status', toExpressHandler(getTrailStatus));
-app.post('/status/sync', toExpressHandler(syncTrailStatus));
-
 app.get('/instagram/authorize', toExpressHandler(authorizeInstagram));
 app.get(
   '/instagram/authorize/callback',
   toExpressHandler(authorizeInstagramCallback)
 );
+
+app.get('/status', toExpressHandler(getTrailStatus));
+app.post('/status/sync', toExpressHandler(syncTrailStatus));
+
+app.get('/settings', toExpressHandler(getTrailSettings));
+app.post('/settings', toExpressHandler(updateTrailSettings));
 
 const port = env('API_PORT');
 server.listen(port, () => {

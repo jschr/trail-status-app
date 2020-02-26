@@ -61,4 +61,4 @@ const handler: AWSLambda.APIGatewayProxyHandler = async event => {
   return redirect(`${env('FRONTEND_ENDPOINT')}?sessionToken=${sessionToken}`);
 };
 
-export default withApiHandler(handler);
+export default withApiHandler([], handler);

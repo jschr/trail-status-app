@@ -2,9 +2,18 @@ import { env } from '@trail-status-app/utilities';
 import jwt from 'jsonwebtoken';
 
 export enum Permissions {
-  UserRead = 'user:read',
-  UserUpdate = 'user:update',
+  SettingsRead = 'settings:read',
+  SettingsUpdate = 'settings:update',
   StatusRead = 'status:read'
+}
+
+export interface DecodedToken {
+  permissions: string[];
+  iat: number;
+  exp: number;
+  aud: string;
+  iss: string;
+  sub: string;
 }
 
 const jwtSecret = env('JWT_SECRET');
@@ -22,8 +31,8 @@ export const createUserSession = (userId: string) => {
   return jwt.sign(
     {
       permissions: [
-        Permissions.UserRead,
-        Permissions.UserUpdate,
+        Permissions.SettingsRead,
+        Permissions.SettingsUpdate,
         Permissions.StatusRead
       ]
     },
@@ -35,4 +44,18 @@ export const createUserSession = (userId: string) => {
       expiresIn: jwtExpiresIn
     }
   );
+};
+
+export const verify = (token: string): DecodedToken => {
+  const decodedToken = jwt.verify(token, jwtSecret, {
+    audience: apiDomain
+  }) as any;
+  if (!decodedToken || typeof decodedToken !== 'object') {
+    throw new Error('Invalid token');
+  }
+
+  if (!Array.isArray(decodedToken.permissions)) {
+    throw new Error('Invalid permissions');
+  }
+  return decodedToken;
 };

@@ -7,4 +7,4 @@ const handler: AWSLambda.APIGatewayProxyHandler = async () => {
   return redirect(authorizeUrl);
 };
 
-export default withApiHandler(handler);
+export default withApiHandler([], handler);

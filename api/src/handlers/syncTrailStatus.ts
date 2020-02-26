@@ -5,4 +5,4 @@ const handler: AWSLambda.APIGatewayProxyHandler = async () => {
   return json(true);
 };
 
-export default withApiHandler(handler);
+export default withApiHandler([], handler);
