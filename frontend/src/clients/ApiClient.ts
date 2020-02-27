@@ -50,13 +50,24 @@ export default class ApiClient {
     return await this.makeProtectedRequest(`${apiEndpoint}/settings`);
   }
 
+  async putSettings(body: Settings): Promise<Settings> {
+    return await this.makeProtectedRequest(`${apiEndpoint}/settings`, {
+      method: 'PUT',
+      body
+    });
+  }
+
   async makeProtectedRequest(
     url: string,
     opts: RequestOptions = { method: 'GET' }
   ) {
     const resp = await fetch(url, {
       method: opts.method,
-      headers: { Authorization: `Bearer ${this.accessToken}` }
+      headers: {
+        Authorization: `Bearer ${this.accessToken}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(opts.body)
     });
 
     if (!resp.ok) {

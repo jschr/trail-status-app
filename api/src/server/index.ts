@@ -1,6 +1,7 @@
 import { env } from '@trail-status-app/utilities';
 import express from 'express';
 import cors from 'cors';
+import bodyParser from 'body-parser';
 import fs from 'fs';
 import path from 'path';
 import https from 'https';
@@ -9,7 +10,7 @@ import authorizeInstagram from '../handlers/authorizeInstagram';
 import authorizeInstagramCallback from '../handlers/authorizeInstagramCallback';
 import syncTrailStatus from '../handlers/syncTrailStatus';
 import getTrailSettings from '../handlers/getTrailSettings';
-import updateTrailSettings from '../handlers/updateTrailSettings';
+import putTrailSettings from '../handlers/putTrailSettings';
 import toExpressHandler from './toExpressHandler';
 
 const app = express();
@@ -22,6 +23,7 @@ const server = https.createServer(
 );
 
 app.use(cors());
+app.use(bodyParser.text({ type: 'application/json' }));
 
 app.get('/instagram/authorize', toExpressHandler(authorizeInstagram));
 app.get(
@@ -33,7 +35,7 @@ app.get('/status', toExpressHandler(getTrailStatus));
 app.post('/status/sync', toExpressHandler(syncTrailStatus));
 
 app.get('/settings', toExpressHandler(getTrailSettings));
-app.post('/settings', toExpressHandler(updateTrailSettings));
+app.put('/settings', toExpressHandler(putTrailSettings));
 
 const port = env('API_PORT');
 server.listen(port, () => {

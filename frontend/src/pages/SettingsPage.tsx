@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Avatar from '@material-ui/core/Avatar';
 import Box from '@material-ui/core/Box';
 import CardHeader from '@material-ui/core/CardHeader';
@@ -18,6 +18,7 @@ const user = api.getUser();
 const Settings: React.FunctionComponent = () => {
   const [error, setError] = useState<Error>();
   const [settings, setSettings] = useState<ApiClient.Settings>();
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     api
@@ -26,11 +27,20 @@ const Settings: React.FunctionComponent = () => {
       .catch(setError);
   }, []);
 
-  const updateSettings = (params: Partial<ApiClient.Settings>) => {
+  const updateSettingsState = (params: Partial<ApiClient.Settings>) => {
     if (settings) {
       setSettings({ ...settings, ...params });
     }
   };
+
+  const saveSettings = useCallback(() => {
+    if (!settings) return;
+    setIsSaving(true);
+    api
+      .putSettings(settings)
+      .catch(setError)
+      .finally(() => setIsSaving(false));
+  }, [settings]);
 
   return (
     <Container>
@@ -67,7 +77,7 @@ const Settings: React.FunctionComponent = () => {
             label="Open trails"
             helperText="Tag your post with this hashtag to open the trails."
             value={settings?.openHashtag ?? ''}
-            onChange={e => updateSettings({ openHashtag: e.target.value })}
+            onChange={e => updateSettingsState({ openHashtag: e.target.value })}
           />
         </Box>
         <Box mt={2}>
@@ -77,13 +87,21 @@ const Settings: React.FunctionComponent = () => {
             label="Close trails"
             helperText="Tag your post with this hashtag to close the trails."
             value={settings?.closeHashtag ?? ''}
-            onChange={e => updateSettings({ closeHashtag: e.target.value })}
+            onChange={e =>
+              updateSettingsState({ closeHashtag: e.target.value })
+            }
           />
         </Box>
       </CardContent>
       <Box p={2}>
-        <Button fullWidth variant="contained" color="primary">
-          Save Hashtag Settings
+        <Button
+          fullWidth
+          variant="contained"
+          color="primary"
+          disabled={isSaving}
+          onClick={saveSettings}
+        >
+          {isSaving ? 'Saving...' : 'Save Hashtag Settings'}
         </Button>
       </Box>
     </Container>
