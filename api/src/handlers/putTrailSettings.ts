@@ -12,25 +12,6 @@ interface PutTrailSettings {
   closeHashtag: string;
 }
 
-const assertPutTrailSetting = (body: any): PutTrailSettings => {
-  assert(
-    !body || typeof body !== 'object',
-    new BadRequestError('Invalid body.')
-  );
-
-  assert(
-    typeof body.openHashtag !== 'string',
-    new BadRequestError('Invalid openHashtag provided in body.')
-  );
-
-  assert(
-    typeof body.closeHashtag !== 'string',
-    new BadRequestError('Invalid closeHashtag provided in body.')
-  );
-
-  return body as PutTrailSettings;
-};
-
 export default withApiHandler([P.SettingsRead], async event => {
   const { openHashtag, closeHashtag } = assertPutTrailSetting(parseBody(event));
   const defaultTrailId = getDefaultTrailId(event.decodedToken?.sub ?? '');
@@ -50,3 +31,22 @@ export default withApiHandler([P.SettingsRead], async event => {
 
   return json(trailSettings);
 });
+
+const assertPutTrailSetting = (body: any): PutTrailSettings => {
+  assert(
+    !body || typeof body !== 'object',
+    new BadRequestError('Invalid body.')
+  );
+
+  assert(
+    typeof body.openHashtag !== 'string',
+    new BadRequestError('Invalid openHashtag provided in body.')
+  );
+
+  assert(
+    typeof body.closeHashtag !== 'string',
+    new BadRequestError('Invalid closeHashtag provided in body.')
+  );
+
+  return body as PutTrailSettings;
+};

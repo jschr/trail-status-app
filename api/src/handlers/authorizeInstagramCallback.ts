@@ -14,28 +14,7 @@ interface AuthorizeInstagramCallback {
   state: string;
 }
 
-const assertAuthorizeInstagramCallback = (
-  query: any
-): AuthorizeInstagramCallback => {
-  assert(
-    !query || typeof query !== 'object',
-    new BadRequestError('Invalid query.')
-  );
-
-  assert(
-    typeof query.code !== 'string',
-    new BadRequestError('Invalid code provided in query.')
-  );
-
-  assert(
-    typeof query.state !== 'string',
-    new BadRequestError('Invalid state provided in query.')
-  );
-
-  return query as AuthorizeInstagramCallback;
-};
-
-const handler: AWSLambda.APIGatewayProxyHandler = async event => {
+export default withApiHandler([], async event => {
   const { code } = assertAuthorizeInstagramCallback(parseQuery(event));
 
   const {
@@ -88,6 +67,25 @@ const handler: AWSLambda.APIGatewayProxyHandler = async event => {
   );
 
   return redirect(`${env('FRONTEND_ENDPOINT')}?sessionToken=${sessionToken}`);
-};
+});
 
-export default withApiHandler([], handler);
+const assertAuthorizeInstagramCallback = (
+  query: any
+): AuthorizeInstagramCallback => {
+  assert(
+    !query || typeof query !== 'object',
+    new BadRequestError('Invalid query.')
+  );
+
+  assert(
+    typeof query.code !== 'string',
+    new BadRequestError('Invalid code provided in query.')
+  );
+
+  assert(
+    typeof query.state !== 'string',
+    new BadRequestError('Invalid state provided in query.')
+  );
+
+  return query as AuthorizeInstagramCallback;
+};

@@ -1,6 +1,4 @@
-import TrailSettingsModel, {
-  TrailSettings
-} from '../models/TrailSettingsModel';
+import TrailSettingsModel from '../models/TrailSettingsModel';
 import { json } from '../responses';
 import withApiHandler from '../withApiHandler';
 import { Permissions as P } from '../jwt';

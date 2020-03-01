@@ -59,6 +59,7 @@ export const verify = (token: string): DecodedToken => {
   const decodedToken = jwt.verify(token, jwtSecret, {
     audience: apiDomain
   }) as any;
+
   if (!decodedToken || typeof decodedToken !== 'object') {
     throw new Error('Invalid token');
   }
