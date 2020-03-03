@@ -5,7 +5,8 @@ export enum Permissions {
   SettingsRead = 'settings:read',
   SettingsUpdate = 'settings:update',
   StatusRead = 'status:read',
-  StatusUpdate = 'status:update'
+  StatusUpdate = 'status:update',
+  StatusSync = 'status:sync',
 }
 
 export interface DecodedToken {
@@ -33,7 +34,7 @@ if (env('API_SUBDOMAIN', false)) {
 export const createUserSession = (
   userId: string,
   username: string,
-  profilePictureUrl: string | null
+  profilePictureUrl: string | null,
 ) => {
   return jwt.sign(
     {
@@ -42,22 +43,22 @@ export const createUserSession = (
       permissions: [
         Permissions.SettingsRead,
         Permissions.SettingsUpdate,
-        Permissions.StatusRead
-      ]
+        Permissions.StatusRead,
+      ],
     },
     jwtSecret,
     {
       audience: apiDomain,
       issuer: apiDomain,
       subject: userId,
-      expiresIn: jwtExpiresIn
-    }
+      expiresIn: jwtExpiresIn,
+    },
   );
 };
 
 export const verify = (token: string): DecodedToken => {
   const decodedToken = jwt.verify(token, jwtSecret, {
-    audience: apiDomain
+    audience: apiDomain,
   }) as any;
 
   if (!decodedToken || typeof decodedToken !== 'object') {
@@ -68,4 +69,18 @@ export const verify = (token: string): DecodedToken => {
     throw new Error('Invalid permissions');
   }
   return decodedToken;
+};
+
+export const createStatusSyncToken = () => {
+  return jwt.sign(
+    {
+      permissions: [Permissions.StatusSync],
+    },
+    jwtSecret,
+    {
+      audience: apiDomain,
+      issuer: apiDomain,
+      expiresIn: jwtExpiresIn,
+    },
+  );
 };

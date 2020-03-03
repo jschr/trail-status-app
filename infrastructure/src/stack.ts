@@ -16,7 +16,7 @@ export default class extends cdk.Stack {
   constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
-    // Database
+    // User table
     const userTable = new dynamodb.Table(this, tables.users.name, {
       tableName: tables.users.name,
       partitionKey: tables.users.partitionKey,
@@ -24,9 +24,10 @@ export default class extends cdk.Stack {
       removalPolicy:
         env('USER_RESOURCE_REMOVAL_POLICY') === 'destroy'
           ? cdk.RemovalPolicy.DESTROY
-          : cdk.RemovalPolicy.RETAIN
+          : cdk.RemovalPolicy.RETAIN,
     });
 
+    // Trail settings table
     const trailSettingsTable = new dynamodb.Table(
       this,
       tables.trailSettings.name,
@@ -37,10 +38,18 @@ export default class extends cdk.Stack {
         removalPolicy:
           env('USER_RESOURCE_REMOVAL_POLICY') === 'destroy'
             ? cdk.RemovalPolicy.DESTROY
-            : cdk.RemovalPolicy.RETAIN
-      }
+            : cdk.RemovalPolicy.RETAIN,
+      },
     );
 
+    const trailSyncIndex = tables.trailSettings.indexes.trailSync;
+    trailSettingsTable.addGlobalSecondaryIndex({
+      indexName: trailSyncIndex.name,
+      partitionKey: trailSyncIndex.partitionKey,
+      sortKey: trailSyncIndex.sortKey,
+    });
+
+    // Trail status table
     const trailStatusTable = new dynamodb.Table(this, tables.trailStatus.name, {
       tableName: tables.trailStatus.name,
       partitionKey: tables.trailStatus.partitionKey,
@@ -48,7 +57,7 @@ export default class extends cdk.Stack {
       removalPolicy:
         env('USER_RESOURCE_REMOVAL_POLICY') === 'destroy'
           ? cdk.RemovalPolicy.DESTROY
-          : cdk.RemovalPolicy.RETAIN
+          : cdk.RemovalPolicy.RETAIN,
     });
 
     // API
@@ -57,31 +66,43 @@ export default class extends cdk.Stack {
       projectPrefix('zone'),
       {
         hostedZoneId: env('HOSTED_ZONE_ID'),
-        zoneName: env('TLD')
-      }
+        zoneName: env('TLD'),
+      },
     );
 
     const sslCertificate = acm.Certificate.fromCertificateArn(
       this,
       projectPrefix('ssl'),
-      env('SSL_ARN')
+      env('SSL_ARN'),
     );
 
     const api = new apigateway.RestApi(this, projectPrefix('api'), {
       domainName: {
         domainName: `${env('API_SUBDOMAIN')}.${env('TLD')}`,
-        certificate: sslCertificate
+        certificate: sslCertificate,
       },
-      deployOptions: { stageName: 'stage' }
+      deployOptions: { stageName: 'stage' },
     });
 
     new route53.ARecord(this, projectPrefix('api-record'), {
       zone: hostedZone,
       target: route53.RecordTarget.fromAlias(
-        new route53Targets.ApiGateway(api)
+        new route53Targets.ApiGateway(api),
       ),
-      recordName: env('API_SUBDOMAIN')
+      recordName: env('API_SUBDOMAIN'),
     });
+
+    const apiEnvVars = {
+      PROJECT: env('PROJECT'),
+      DYNAMO_ENDPOINT: env('DYNAMO_ENDPOINT'),
+      API_ENDPOINT: env('API_ENDPOINT'),
+      API_SUBDOMAIN: env('API_SUBDOMAIN'),
+      INSTAGRAM_APP_ID: env('INSTAGRAM_APP_ID'),
+      INSTAGRAM_APP_SECRET: env('INSTAGRAM_APP_SECRET'),
+      TLD: env('TLD'),
+      JWT_SECRET: env('JWT_SECRET'),
+      JWT_EXPIRES_IN: env('JWT_EXPIRES_IN'),
+    };
 
     // /status
     const trailStatusApi = api.root.addResource('status');
@@ -95,26 +116,46 @@ export default class extends cdk.Stack {
         runtime: lambda.Runtime.NODEJS_12_X,
         code: lambda.Code.fromAsset(packagePath),
         handler: 'api/build/src/handlers/getTrailStatus.default',
-        environment: {
-          PROJECT: env('PROJECT'),
-          DYNAMO_ENDPOINT: env('DYNAMO_ENDPOINT'),
-          API_ENDPOINT: env('API_ENDPOINT')
-        }
-      }
+        environment: apiEnvVars,
+      },
     );
 
     const getTrailStatusIntegration = new apigateway.LambdaIntegration(
-      getTrailStatusHandler
+      getTrailStatusHandler,
     );
 
     trailStatusApi.addMethod('GET', getTrailStatusIntegration);
     trailStatusTable.grantReadData(getTrailStatusHandler);
 
+    // POST /status/sync
+    const trailStatusSyncApi = trailStatusApi.addResource('sync');
+
+    const syncTrailStatusHandler = new lambda.Function(
+      this,
+      projectPrefix('syncTrailStatus'),
+      {
+        functionName: projectPrefix('syncTrailStatus'),
+        runtime: lambda.Runtime.NODEJS_12_X,
+        code: lambda.Code.fromAsset(packagePath),
+        handler: 'api/build/src/handlers/syncTrailStatus.default',
+        environment: apiEnvVars,
+      },
+    );
+
+    const syncTrailStatusIntegration = new apigateway.LambdaIntegration(
+      syncTrailStatusHandler,
+    );
+
+    trailStatusSyncApi.addMethod('POST', syncTrailStatusIntegration);
+    trailStatusTable.grantReadWriteData(syncTrailStatusHandler);
+    trailSettingsTable.grantReadWriteData(syncTrailStatusHandler);
+    userTable.grantReadData(syncTrailStatusHandler);
+
     // instagram
     const instagramApi = api.root.addResource('instagram');
     const instagramAuthorizeApi = instagramApi.addResource('authorize');
     const instagramAuthorizeCallbackApi = instagramAuthorizeApi.addResource(
-      'callback'
+      'callback',
     );
 
     // GET /instagram/authorize
@@ -126,18 +167,12 @@ export default class extends cdk.Stack {
         runtime: lambda.Runtime.NODEJS_12_X,
         code: lambda.Code.fromAsset(packagePath),
         handler: 'api/build/src/handlers/authorizeInstagram.default',
-        environment: {
-          PROJECT: env('PROJECT'),
-          DYNAMO_ENDPOINT: env('DYNAMO_ENDPOINT'),
-          API_ENDPOINT: env('API_ENDPOINT'),
-          INSTAGRAM_APP_ID: env('INSTAGRAM_APP_ID'),
-          INSTAGRAM_APP_SECRET: env('INSTAGRAM_APP_SECRET')
-        }
-      }
+        environment: apiEnvVars,
+      },
     );
 
     const authorizeInstagramIntegration = new apigateway.LambdaIntegration(
-      authorizeInstagramHandler
+      authorizeInstagramHandler,
     );
 
     instagramAuthorizeApi.addMethod('GET', authorizeInstagramIntegration);
@@ -151,23 +186,17 @@ export default class extends cdk.Stack {
         runtime: lambda.Runtime.NODEJS_12_X,
         code: lambda.Code.fromAsset(packagePath),
         handler: 'api/build/src/handlers/authorizeInstagramCallback.default',
-        environment: {
-          PROJECT: env('PROJECT'),
-          DYNAMO_ENDPOINT: env('DYNAMO_ENDPOINT'),
-          API_ENDPOINT: env('API_ENDPOINT'),
-          INSTAGRAM_APP_ID: env('INSTAGRAM_APP_ID'),
-          INSTAGRAM_APP_SECRET: env('INSTAGRAM_APP_SECRET')
-        }
-      }
+        environment: apiEnvVars,
+      },
     );
 
     const authorizeInstagramCallbackIntegration = new apigateway.LambdaIntegration(
-      authorizeInstagramCallbackHandler
+      authorizeInstagramCallbackHandler,
     );
 
     instagramAuthorizeCallbackApi.addMethod(
       'GET',
-      authorizeInstagramCallbackIntegration
+      authorizeInstagramCallbackIntegration,
     );
     userTable.grantReadWriteData(authorizeInstagramCallbackHandler);
     trailSettingsTable.grantReadWriteData(authorizeInstagramCallbackHandler);

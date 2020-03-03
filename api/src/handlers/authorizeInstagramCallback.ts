@@ -20,7 +20,7 @@ export default withApiHandler([], async event => {
   const {
     userId: igUserId,
     accessToken,
-    expiresIn
+    expiresIn,
   } = await instagram.handleRedirectCallback(code).catch(err => {
     throw new BadRequestError('Failed getting access token.', err);
   });
@@ -33,7 +33,7 @@ export default withApiHandler([], async event => {
   if (!user) {
     user = new UserModel({
       userId,
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
     });
   }
 
@@ -43,7 +43,7 @@ export default withApiHandler([], async event => {
   await user.save({
     accessToken,
     lastLoginAt: now.toISOString(),
-    expiresAt: expiresAt.toISOString()
+    expiresAt: expiresAt.toISOString(),
   });
 
   // Create default trail settings.
@@ -51,40 +51,46 @@ export default withApiHandler([], async event => {
   let defaultSettings = await TrailSettingsModel.get(defaultTrailId);
   if (!defaultSettings) {
     defaultSettings = new TrailSettingsModel({
+      userId,
       trailId: defaultTrailId,
       openHashtag: '#open-trails',
       closeHashtag: '#close-trails',
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
     });
-
-    await defaultSettings.save();
   }
+
+  // Enable sync whenever user logs in.
+  // TODO: Disable sync after X days of not finding any trail updates.
+  await defaultSettings.save({
+    syncPriority: +new Date(),
+    enableSync: 1,
+  });
 
   const sessionToken = jwt.createUserSession(
     userId,
     username,
-    profilePictureUrl
+    profilePictureUrl,
   );
 
   return redirect(`${env('FRONTEND_ENDPOINT')}?sessionToken=${sessionToken}`);
 });
 
 const assertAuthorizeInstagramCallback = (
-  query: any
+  query: any,
 ): AuthorizeInstagramCallback => {
   assert(
     !query || typeof query !== 'object',
-    new BadRequestError('Invalid query.')
+    new BadRequestError('Invalid query.'),
   );
 
   assert(
     typeof query.code !== 'string',
-    new BadRequestError('Invalid code provided in query.')
+    new BadRequestError('Invalid code provided in query.'),
   );
 
   assert(
     typeof query.state !== 'string',
-    new BadRequestError('Invalid state provided in query.')
+    new BadRequestError('Invalid state provided in query.'),
   );
 
   return query as AuthorizeInstagramCallback;

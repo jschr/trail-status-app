@@ -20,7 +20,7 @@ export const getAuthorizeUrl = (): {
 };
 
 export const handleRedirectCallback = async (
-  code: string
+  code: string,
 ): Promise<{ userId: number; accessToken: string; expiresIn: number }> => {
   const shortLivedAccessTokenUrl = `${igApiUrl}/oauth/access_token`;
   const shortLivedAccessTokenParams = new URLSearchParams();
@@ -32,12 +32,12 @@ export const handleRedirectCallback = async (
 
   const shortLivedAccessTokenResp = await fetch(shortLivedAccessTokenUrl, {
     method: 'POST',
-    body: shortLivedAccessTokenParams
+    body: shortLivedAccessTokenParams,
   });
   if (!shortLivedAccessTokenResp.ok) {
     const payload = await shortLivedAccessTokenResp.text();
     throw new Error(
-      `InstagramClient error getting short lived access token: ${payload}`
+      `InstagramClient error getting short lived access token: ${payload}`,
     );
   }
 
@@ -48,7 +48,7 @@ export const handleRedirectCallback = async (
   if (!longLivedAccessTokenResp.ok) {
     const payload = await longLivedAccessTokenResp.text();
     throw new Error(
-      `InstagramClient error getting long lived access token: ${payload}`
+      `InstagramClient error getting long lived access token: ${payload}`,
     );
   }
 
@@ -57,7 +57,7 @@ export const handleRedirectCallback = async (
   return {
     userId: shortLivedAccessTokenPayload.user_id,
     accessToken: longLivedAccesTokenPayload.access_token,
-    expiresIn: longLivedAccesTokenPayload.expires_in
+    expiresIn: longLivedAccesTokenPayload.expires_in,
   };
 };
 
@@ -80,14 +80,14 @@ export const getUsername = async (accessToken: string): Promise<string> => {
 };
 
 export const getProfilePictureUrl = async (
-  username: string
+  username: string,
 ): Promise<string | null> => {
   const profilePictureUrl = `https://www.instagram.com/${username}/?__a=1`;
   const userResp = await fetch(profilePictureUrl);
 
   if (!userResp.ok) {
     throw new Error(
-      `InstagramClient error getting user profile picture at '${profilePictureUrl}'`
+      `InstagramClient error getting user profile picture at '${profilePictureUrl}'`,
     );
   }
 
@@ -98,4 +98,26 @@ export const getProfilePictureUrl = async (
   if (typeof userPayload.graphql.user.profile_pic_url !== 'string') return null;
 
   return userPayload.graphql.user.profile_pic_url;
+};
+
+interface UserMedia {
+  id: string;
+  caption: string;
+}
+
+export const getUserMedia = async (
+  accessToken: string,
+): Promise<UserMedia[]> => {
+  const userUrl = `${igGraphUrl}/me?fields=media,media.caption&access_token=${accessToken}`;
+  const userResp = await fetch(userUrl);
+
+  if (!userResp.ok) {
+    const payload = await userResp.text();
+    throw new Error(`InstagramClient error getting user: ${payload}`);
+  }
+
+  const userPayload = await userResp.json();
+  const userMedia = userPayload?.media?.data ?? [];
+
+  return userMedia;
 };

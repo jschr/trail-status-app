@@ -60,7 +60,7 @@ export default class UserModel {
       );
 
       return items.map(
-        item => UserModels.find(um => um.userId === item.userId) || null
+        item => UserModels.find(um => um.userId === item.userId) ?? null
       );
     } catch (err) {
       throw new Error(
@@ -88,7 +88,7 @@ export default class UserModel {
   private static fromAttributeMap(
     attrMap: AWS.DynamoDB.AttributeMap
   ): Partial<User> {
-    if (!attrMap.userId || !attrMap.userId.S)
+    if (!attrMap.userId ?? !attrMap.userId.S)
       throw new Error('Missing userId parsing attribute map');
 
     return {
@@ -127,23 +127,23 @@ export default class UserModel {
   }
 
   get userId() {
-    return this.attrs.userId || '';
+    return this.attrs.userId ?? '';
   }
 
   get accessToken() {
-    return this.attrs.accessToken || '';
+    return this.attrs.accessToken ?? '';
   }
 
   get expiresAt() {
-    return this.attrs.expiresAt || '';
+    return this.attrs.expiresAt ?? '';
   }
 
   get lastLoginAt() {
-    return this.attrs.lastLoginAt || '';
+    return this.attrs.lastLoginAt ?? '';
   }
 
   get createdAt() {
-    return this.attrs.createdAt || '';
+    return this.attrs.createdAt ?? '';
   }
 
   public toJSON() {

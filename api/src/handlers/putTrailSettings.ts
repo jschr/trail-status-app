@@ -25,8 +25,7 @@ export default withApiHandler([P.SettingsRead], async event => {
 
   await trailSettings.save({
     openHashtag,
-    closeHashtag,
-    updatedAt: new Date().toISOString()
+    closeHashtag
   });
 
   return json(trailSettings);

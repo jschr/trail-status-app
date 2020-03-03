@@ -3,7 +3,7 @@ import mockApiGatewayEvent from './mockApiGatewayEvent';
 import mockLambdaContext from './mockLambdaContext';
 
 export default (
-  fn: AWSLambda.APIGatewayProxyHandler
+  fn: AWSLambda.APIGatewayProxyHandler,
 ): express.RequestHandler => {
   return async (req, res) => {
     try {
@@ -14,14 +14,18 @@ export default (
         }
       }
 
+      // Express coverts headers to lowercase but APIG doesn't.
+      // TODO: Figure out how to turn off the auto lowercase or switch from Express
+      requestHeaders.Authorization = requestHeaders.authorization;
+
       const result = await fn(
         mockApiGatewayEvent({
           queryStringParameters: req.query,
           body: req.body && String(req.body),
-          headers: requestHeaders
+          headers: requestHeaders,
         }),
         mockLambdaContext(),
-        () => {}
+        () => {},
       );
 
       if (result) {

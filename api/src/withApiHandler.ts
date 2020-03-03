@@ -13,21 +13,21 @@ type WithApiHandler = AWSLambda.Handler<
 
 export default (
   scopes: jwt.Permissions[],
-  fn: WithApiHandler
+  fn: WithApiHandler,
 ): AWSLambda.APIGatewayProxyHandler => (
   event: WithApiEvent,
   context,
-  callback
+  callback,
 ) => {
   if (scopes.length > 0) {
-    const authHeader = event.headers.authorization || '';
-    const [_, token] = authHeader.split(' ');
+    const authHeader = event.headers.Authorization || '';
+    const [, token] = authHeader.split(' ');
 
     try {
       const decodedToken = jwt.verify(token);
 
       const hasPermission = scopes.every(scope =>
-        decodedToken.permissions.some(perm => perm === scope)
+        decodedToken.permissions.some(perm => perm === scope),
       );
 
       if (!hasPermission) {
@@ -37,7 +37,7 @@ export default (
       event.decodedToken = decodedToken;
     } catch (err) {
       return Promise.resolve(
-        fail(new UnauthorizedError('Invalid or missing JWT', err))
+        fail(new UnauthorizedError('Invalid or missing JWT', err)),
       );
     }
   }

@@ -60,7 +60,7 @@ export default class TrailStatusModel {
 
       return items.map(
         item =>
-          TrailStatusModels.find(tm => tm.trailId === item.trailId) || null
+          TrailStatusModels.find(tm => tm.trailId === item.trailId) ?? null
       );
     } catch (err) {
       throw new Error(
@@ -89,7 +89,7 @@ export default class TrailStatusModel {
   private static fromAttributeMap(
     attrMap: AWS.DynamoDB.AttributeMap
   ): Partial<TrailStatus> {
-    if (!attrMap.trailId || !attrMap.trailId.S)
+    if (!attrMap.trailId ?? !attrMap.trailId.S)
       throw new Error('Missing trailId parsing attribute map');
 
     return {
@@ -127,11 +127,11 @@ export default class TrailStatusModel {
   }
 
   get trailId() {
-    return this.attrs.trailId || '';
+    return this.attrs.trailId ?? '';
   }
 
   get status() {
-    return this.attrs.status || '';
+    return this.attrs.status ?? '';
   }
 
   set status(status: string) {
@@ -139,11 +139,11 @@ export default class TrailStatusModel {
   }
 
   get updatedAt() {
-    return this.attrs.updatedAt || '';
+    return this.attrs.updatedAt ?? '';
   }
 
   get createdAt() {
-    return this.attrs.createdAt || '';
+    return this.attrs.createdAt ?? '';
   }
 
   public toJSON() {

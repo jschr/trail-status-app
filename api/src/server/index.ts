@@ -17,9 +17,9 @@ const app = express();
 const server = https.createServer(
   {
     key: fs.readFileSync(path.join(__dirname, '../../../localhost-key.pem')),
-    cert: fs.readFileSync(path.join(__dirname, '../../../localhost.pem'))
+    cert: fs.readFileSync(path.join(__dirname, '../../../localhost.pem')),
   },
-  app
+  app,
 );
 
 app.use(cors());
@@ -28,7 +28,7 @@ app.use(bodyParser.text({ type: 'application/json' }));
 app.get('/instagram/authorize', toExpressHandler(authorizeInstagram));
 app.get(
   '/instagram/authorize/callback',
-  toExpressHandler(authorizeInstagramCallback)
+  toExpressHandler(authorizeInstagramCallback),
 );
 
 app.get('/status', toExpressHandler(getTrailStatus));
