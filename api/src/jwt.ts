@@ -6,7 +6,6 @@ export enum Permissions {
   SettingsUpdate = 'settings:update',
   StatusRead = 'status:read',
   StatusUpdate = 'status:update',
-  StatusSync = 'status:sync',
 }
 
 export interface DecodedToken {
@@ -69,18 +68,4 @@ export const verify = (token: string): DecodedToken => {
     throw new Error('Invalid permissions');
   }
   return decodedToken;
-};
-
-export const createStatusSyncToken = () => {
-  return jwt.sign(
-    {
-      permissions: [Permissions.StatusSync],
-    },
-    jwtSecret,
-    {
-      audience: apiDomain,
-      issuer: apiDomain,
-      expiresIn: jwtExpiresIn,
-    },
-  );
 };

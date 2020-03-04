@@ -11,7 +11,7 @@ export default withApiHandler([P.SettingsRead], async event => {
 
   if (!trailSettings) {
     throw new NotFoundError(
-      `Could not find trail settings for '${defaultTrailId}'`
+      `Could not find trail settings for '${defaultTrailId}'`,
     );
   }
 

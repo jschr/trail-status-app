@@ -5,8 +5,7 @@
   "scripts": {
     "dev": "ts-node-dev --no-notify src/server/index.ts",
     "build": "tsc -b",
-    "lint": "eslint -c ./.eslintrc src/**/*.ts",
-    "create-status-sync-token": "ts-node -e 'console.log(require(`./src/jwt`).createStatusSyncToken())'"
+    "lint": "eslint -c ./.eslintrc src/**/*.ts"
   },
   "dependencies": {
     "@trail-status-app/infrastructure": "",

@@ -11,7 +11,8 @@ import authorizeInstagramCallback from '../handlers/authorizeInstagramCallback';
 import syncTrailStatus from '../handlers/syncTrailStatus';
 import getTrailSettings from '../handlers/getTrailSettings';
 import putTrailSettings from '../handlers/putTrailSettings';
-import toExpressHandler from './toExpressHandler';
+import toExpressApiHandler from './toExpressApiHandler';
+import toExpressScheduledHandler from './toExpressScheduledHandler';
 
 const app = express();
 const server = https.createServer(
@@ -25,17 +26,18 @@ const server = https.createServer(
 app.use(cors());
 app.use(bodyParser.text({ type: 'application/json' }));
 
-app.get('/instagram/authorize', toExpressHandler(authorizeInstagram));
+app.get('/instagram/authorize', toExpressApiHandler(authorizeInstagram));
 app.get(
   '/instagram/authorize/callback',
-  toExpressHandler(authorizeInstagramCallback),
+  toExpressApiHandler(authorizeInstagramCallback),
 );
 
-app.get('/status', toExpressHandler(getTrailStatus));
-app.post('/status/sync', toExpressHandler(syncTrailStatus));
+app.get('/status', toExpressApiHandler(getTrailStatus));
 
-app.get('/settings', toExpressHandler(getTrailSettings));
-app.put('/settings', toExpressHandler(putTrailSettings));
+app.get('/settings', toExpressApiHandler(getTrailSettings));
+app.put('/settings', toExpressApiHandler(putTrailSettings));
+
+app.post('/scheduled/sync-status', toExpressScheduledHandler(syncTrailStatus));
 
 const port = env('API_PORT');
 server.listen(port, () => {

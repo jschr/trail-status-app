@@ -6,6 +6,8 @@ import * as route53 from '@aws-cdk/aws-route53';
 import * as route53Targets from '@aws-cdk/aws-route53-targets';
 import * as dynamodb from '@aws-cdk/aws-dynamodb';
 import * as lambda from '@aws-cdk/aws-lambda';
+import * as events from '@aws-cdk/aws-events';
+import * as eventTargets from '@aws-cdk/aws-events-targets';
 import path from 'path';
 import tables from './tables';
 import projectPrefix from './projectPrefix';
@@ -127,30 +129,6 @@ export default class extends cdk.Stack {
     trailStatusApi.addMethod('GET', getTrailStatusIntegration);
     trailStatusTable.grantReadData(getTrailStatusHandler);
 
-    // POST /status/sync
-    const trailStatusSyncApi = trailStatusApi.addResource('sync');
-
-    const syncTrailStatusHandler = new lambda.Function(
-      this,
-      projectPrefix('syncTrailStatus'),
-      {
-        functionName: projectPrefix('syncTrailStatus'),
-        runtime: lambda.Runtime.NODEJS_12_X,
-        code: lambda.Code.fromAsset(packagePath),
-        handler: 'api/build/src/handlers/syncTrailStatus.default',
-        environment: apiEnvVars,
-      },
-    );
-
-    const syncTrailStatusIntegration = new apigateway.LambdaIntegration(
-      syncTrailStatusHandler,
-    );
-
-    trailStatusSyncApi.addMethod('POST', syncTrailStatusIntegration);
-    trailStatusTable.grantReadWriteData(syncTrailStatusHandler);
-    trailSettingsTable.grantReadWriteData(syncTrailStatusHandler);
-    userTable.grantReadData(syncTrailStatusHandler);
-
     // instagram
     const instagramApi = api.root.addResource('instagram');
     const instagramAuthorizeApi = instagramApi.addResource('authorize');
@@ -200,5 +178,37 @@ export default class extends cdk.Stack {
     );
     userTable.grantReadWriteData(authorizeInstagramCallbackHandler);
     trailSettingsTable.grantReadWriteData(authorizeInstagramCallbackHandler);
+
+    // Schedules
+
+    // Sync trail status
+
+    const syncTrailStatusRule = new events.Rule(
+      this,
+      projectPrefix('syncTrailStatusRule'),
+      {
+        schedule: events.Schedule.rate(cdk.Duration.minutes(1)),
+      },
+    );
+
+    const syncTrailStatusHandler = new lambda.Function(
+      this,
+      projectPrefix('syncTrailStatus'),
+      {
+        functionName: projectPrefix('syncTrailStatus'),
+        runtime: lambda.Runtime.NODEJS_12_X,
+        code: lambda.Code.fromAsset(packagePath),
+        handler: 'api/build/src/handlers/syncTrailStatus.default',
+        environment: apiEnvVars,
+      },
+    );
+
+    trailStatusTable.grantReadWriteData(syncTrailStatusHandler);
+    trailSettingsTable.grantReadWriteData(syncTrailStatusHandler);
+    userTable.grantReadData(syncTrailStatusHandler);
+
+    syncTrailStatusRule.addTarget(
+      new eventTargets.LambdaFunction(syncTrailStatusHandler),
+    );
   }
 }

@@ -16,8 +16,6 @@
     "lint": "wsrun --exclude-missing lint",
     "package": "tasks/package.sh",
     "deploy": "dotenv -e .env -e .env.production yarn infrastructure deploy",
-    "create-status-sync-token:dev": "dotenv -e .env -e .env.dev yarn api create-status-sync-token",
-    "create-status-sync-token:production": "dotenv -e .env -e .env.production yarn api create-status-sync-token",
     "--- workspaces ---": "",
     "api": "yarn workspace @trail-status-app/api",
     "frontend": "yarn workspace @trail-status-app/frontend",

@@ -13,14 +13,15 @@
     "lint": "eslint -c ./.eslintrc src/**/*.ts"
   },
   "dependencies": {
-    "@aws-cdk/aws-apigateway": "1.23.0",
-    "@aws-cdk/aws-dynamodb": "1.23.0",
-    "@aws-cdk/aws-lambda": "1.23.0",
-    "@aws-cdk/aws-certificatemanager": "1.23.0",
-    "@aws-cdk/aws-route53": "1.23.0",
-    "@aws-cdk/aws-route53-targets": "1.23.0",
-    "@aws-cdk/core": "1.23.0",
     "@trail-status-app/utilities": "",
-    "aws-cdk": "^1.23.0"
+    "@aws-cdk/aws-apigateway": "1.27.0",
+    "@aws-cdk/aws-certificatemanager": "1.27.0",
+    "@aws-cdk/aws-dynamodb": "1.27.0",
+    "@aws-cdk/aws-events-targets": "1.27.0",
+    "@aws-cdk/aws-lambda": "1.27.0",
+    "@aws-cdk/aws-route53": "1.27.0",
+    "@aws-cdk/aws-route53-targets": "1.27.0",
+    "@aws-cdk/core": "1.27.0",
+    "aws-cdk": "^1.27.0"
   }
 }

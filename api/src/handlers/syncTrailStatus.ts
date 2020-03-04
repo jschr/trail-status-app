@@ -1,10 +1,8 @@
-import { json } from '../responses';
-import withApiHandler from '../withApiHandler';
-import { Permissions as P } from '../jwt';
 import TrailSettingsModel from '../models/TrailSettingsModel';
 import TrailStatusModel from '../models/TrailStatusModel';
 import UserModel from '../models/UserModel';
 import * as instagram from '../clients/instagram';
+import withScheduledHandler from '../withScheduledHandler';
 
 interface TrailUpdateResult {
   trailId: string;
@@ -14,14 +12,14 @@ interface TrailUpdateResult {
   reason?: string;
 }
 
-export default withApiHandler([P.StatusSync], async () => {
+export default withScheduledHandler(async () => {
   const trailSettingsToUpdate = await TrailSettingsModel.getNextBatchToSync();
 
   const updateResults = await Promise.all(
     trailSettingsToUpdate.map(updateTrailStatus),
   );
 
-  return json(updateResults);
+  console.log(`Sync results: ${JSON.stringify(updateResults, null, '  ')}`);
 });
 
 const updateTrailStatus = async (
