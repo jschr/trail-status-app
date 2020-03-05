@@ -13,12 +13,12 @@ import Container from '../components/Container';
 import * as ApiClient from '../clients/ApiClient';
 import api from '../api';
 
-const user = api.getUser();
-
 const Settings: React.FunctionComponent = () => {
   const [error, setError] = useState<Error>();
   const [settings, setSettings] = useState<ApiClient.Settings>();
   const [isSaving, setIsSaving] = useState(false);
+
+  const user = api.getUser();
 
   useEffect(() => {
     api

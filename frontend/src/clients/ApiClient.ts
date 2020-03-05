@@ -26,7 +26,9 @@ export default class ApiClient {
   constructor(
     private accessToken: string | null,
     private onUnauthorized: () => void,
-  ) {}
+  ) {
+    if (!this.accessToken) this.onUnauthorized();
+  }
 
   getAuthorizeUrl() {
     return `${apiEndpoint}/instagram/authorize`;
@@ -35,13 +37,13 @@ export default class ApiClient {
   getUser(): User {
     try {
       const decodedToken = jwtDecode(this.accessToken);
+
       return {
         userId: decodedToken.sub,
         username: decodedToken.username,
         profilePictureUrl: decodedToken.profilePictureUrl,
       };
     } catch (err) {
-      this.onUnauthorized();
       throw err;
     }
   }
