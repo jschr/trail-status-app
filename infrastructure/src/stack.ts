@@ -104,6 +104,7 @@ export default class extends cdk.Stack {
       TLD: env('TLD'),
       JWT_SECRET: env('JWT_SECRET'),
       JWT_EXPIRES_IN: env('JWT_EXPIRES_IN'),
+      FRONTEND_ENDPOINT: env('FRONTEND_ENDPOINT'),
     };
 
     // /status
