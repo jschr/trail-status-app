@@ -25,8 +25,7 @@ export default withApiHandler([], async event => {
     throw new BadRequestError('Failed getting access token.', err);
   });
 
-  const username = await instagram.getUsername(accessToken);
-  const profilePictureUrl = await instagram.getProfilePictureUrl(username);
+  const { username } = await instagram.getUser(accessToken);
 
   const userId = `instagram|${igUserId}`;
   let user = await UserModel.get(userId);
@@ -66,11 +65,7 @@ export default withApiHandler([], async event => {
     enableSync: 1,
   });
 
-  const sessionToken = jwt.createUserSession(
-    userId,
-    username,
-    profilePictureUrl,
-  );
+  const sessionToken = jwt.createUserSession(userId, username);
 
   return redirect(`${env('FRONTEND_ENDPOINT')}?sessionToken=${sessionToken}`);
 });

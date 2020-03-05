@@ -30,15 +30,10 @@ if (env('API_SUBDOMAIN', false)) {
   apiDomain = `${env('API_SUBDOMAIN', false)}.${apiDomain}`;
 }
 
-export const createUserSession = (
-  userId: string,
-  username: string,
-  profilePictureUrl: string | null,
-) => {
+export const createUserSession = (userId: string, username: string) => {
   return jwt.sign(
     {
       username,
-      profilePictureUrl,
       permissions: [
         Permissions.SettingsRead,
         Permissions.SettingsUpdate,

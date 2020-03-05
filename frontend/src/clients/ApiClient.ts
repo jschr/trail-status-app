@@ -11,7 +11,6 @@ interface RequestOptions {
 export interface User {
   userId: string;
   username: string;
-  profilePictureUrl: string;
 }
 
 export interface Settings {
@@ -35,16 +34,27 @@ export default class ApiClient {
   }
 
   getUser(): User {
-    try {
-      const decodedToken = jwtDecode(this.accessToken);
+    const decodedToken = jwtDecode(this.accessToken);
 
-      return {
-        userId: decodedToken.sub,
-        username: decodedToken.username,
-        profilePictureUrl: decodedToken.profilePictureUrl,
-      };
+    return {
+      userId: decodedToken.sub,
+      username: decodedToken.username,
+    };
+  }
+
+  async getProfilePictureUrl(username: string): Promise<string> {
+    try {
+      const profilePictureUrl = `https://www.instagram.com/${username}/?__a=1`;
+      const userResp = await fetch(profilePictureUrl);
+
+      if (!userResp.ok)
+        throw new Error('Bad response fetching profile picture');
+
+      const userPayload = await userResp.json();
+      return userPayload.graphql.user.profile_pic_url;
     } catch (err) {
-      throw err;
+      console.error(err);
+      return '';
     }
   }
 

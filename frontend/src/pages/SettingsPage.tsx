@@ -16,9 +16,14 @@ import api from '../api';
 const Settings: React.FunctionComponent = () => {
   const [error, setError] = useState<Error>();
   const [settings, setSettings] = useState<ApiClient.Settings>();
+  const [profilePictureUrl, setProfilePicture] = useState('');
   const [isSaving, setIsSaving] = useState(false);
 
   const user = api.getUser();
+
+  useEffect(() => {
+    api.getProfilePictureUrl(user.username).then(setProfilePicture);
+  }, []);
 
   useEffect(() => {
     api
@@ -50,7 +55,7 @@ const Settings: React.FunctionComponent = () => {
         </CardContent>
       )}
       <CardHeader
-        avatar={<Avatar src={user.profilePictureUrl} />}
+        avatar={<Avatar src={profilePictureUrl} />}
         title={
           <>
             Open or close the trails by posting to{' '}
