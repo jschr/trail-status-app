@@ -25,7 +25,7 @@ export interface Settings {
 export default class ApiClient {
   constructor(
     private accessToken: string | null,
-    private onUnauthorized: () => void
+    private onUnauthorized: () => void,
   ) {}
 
   getAuthorizeUrl() {
@@ -38,7 +38,7 @@ export default class ApiClient {
       return {
         userId: decodedToken.sub,
         username: decodedToken.username,
-        profilePictureUrl: decodedToken.profilePictureUrl
+        profilePictureUrl: decodedToken.profilePictureUrl,
       };
     } catch (err) {
       this.onUnauthorized();
@@ -53,21 +53,21 @@ export default class ApiClient {
   async putSettings(body: Settings): Promise<Settings> {
     return await this.makeProtectedRequest(`${apiEndpoint}/settings`, {
       method: 'PUT',
-      body
+      body,
     });
   }
 
   async makeProtectedRequest(
     url: string,
-    opts: RequestOptions = { method: 'GET' }
+    opts: RequestOptions = { method: 'GET' },
   ) {
     const resp = await fetch(url, {
       method: opts.method,
       headers: {
         Authorization: `Bearer ${this.accessToken}`,
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
       },
-      body: JSON.stringify(opts.body)
+      body: JSON.stringify(opts.body),
     });
 
     if (!resp.ok) {
@@ -77,8 +77,8 @@ export default class ApiClient {
 
       throw new Error(
         `ApiClient error from ${url}: ${resp.statusText} — ${JSON.stringify(
-          await resp.text()
-        )}`
+          await resp.text(),
+        )}`,
       );
     }
 
