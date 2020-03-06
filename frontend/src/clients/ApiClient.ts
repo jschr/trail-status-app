@@ -21,11 +21,25 @@ export interface Settings {
   createdAt: string;
 }
 
+interface ApiOptions {
+  accessToken?: string | null;
+  onUnauthorized: () => void;
+  onRequestStart: () => void;
+  onRequestEnd: () => void;
+}
+
 export default class ApiClient {
-  constructor(
-    private accessToken: string | null,
-    private onUnauthorized: () => void,
-  ) {
+  private accessToken?: string | null;
+  private onUnauthorized: () => void;
+  private onRequestStart: () => void;
+  private onRequestEnd: () => void;
+
+  constructor(options: ApiOptions) {
+    this.accessToken = options.accessToken;
+    this.onUnauthorized = options.onUnauthorized;
+    this.onRequestStart = options.onRequestStart;
+    this.onRequestEnd = options.onRequestEnd;
+
     if (!this.accessToken) this.onUnauthorized();
   }
 
@@ -44,14 +58,26 @@ export default class ApiClient {
 
   async getProfilePictureUrl(username: string): Promise<string> {
     try {
-      const profilePictureUrl = `https://www.instagram.com/${username}/?__a=1`;
-      const userResp = await fetch(profilePictureUrl);
+      this.onRequestStart();
+      const profilePictureApiUrl = `https://www.instagram.com/${username}/?__a=1`;
+      const userResp = await fetch(profilePictureApiUrl);
 
       if (!userResp.ok)
         throw new Error('Bad response fetching profile picture');
 
       const userPayload = await userResp.json();
-      return userPayload.graphql.user.profile_pic_url;
+      const profilePictureUrl = userPayload.graphql.user.profile_pic_url;
+
+      this.onRequestEnd();
+
+      const image = new Image();
+      image.src = profilePictureUrl;
+      return new Promise((resolve, reject) => {
+        image.onload = () => {
+          resolve(profilePictureUrl);
+        };
+        image.onerror = () => reject();
+      });
     } catch (err) {
       console.error(err);
       return '';
@@ -73,6 +99,8 @@ export default class ApiClient {
     url: string,
     opts: RequestOptions = { method: 'GET' },
   ) {
+    this.onRequestStart();
+
     const resp = await fetch(url, {
       method: opts.method,
       headers: {
@@ -94,7 +122,11 @@ export default class ApiClient {
       );
     }
 
-    return await resp.json();
+    const data = await resp.json();
+
+    this.onRequestEnd();
+
+    return data;
   }
 
   getAccessToken() {

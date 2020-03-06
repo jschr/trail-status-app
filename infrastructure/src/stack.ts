@@ -109,6 +109,7 @@ export default class extends cdk.Stack {
 
     // /status
     const trailStatusApi = api.root.addResource('status');
+    trailStatusApi.addCorsPreflight({ allowOrigins: ['*'] });
 
     // GET /status
     const getTrailStatusHandler = new lambda.Function(
@@ -129,6 +130,50 @@ export default class extends cdk.Stack {
 
     trailStatusApi.addMethod('GET', getTrailStatusIntegration);
     trailStatusTable.grantReadData(getTrailStatusHandler);
+
+    // /settings
+    const trailSettingsApi = api.root.addResource('settings');
+    trailSettingsApi.addCorsPreflight({ allowOrigins: ['*'] });
+
+    // GET /settings
+    const getTrailSettingsHandler = new lambda.Function(
+      this,
+      projectPrefix('getTrailSettings'),
+      {
+        functionName: projectPrefix('getTrailSettings'),
+        runtime: lambda.Runtime.NODEJS_12_X,
+        code: lambda.Code.fromAsset(packagePath),
+        handler: 'api/build/src/handlers/getTrailSettings.default',
+        environment: apiEnvVars,
+      },
+    );
+
+    const getTrailSettingsIntegration = new apigateway.LambdaIntegration(
+      getTrailSettingsHandler,
+    );
+
+    trailSettingsApi.addMethod('GET', getTrailSettingsIntegration);
+    trailSettingsTable.grantReadData(getTrailSettingsHandler);
+
+    // PUT /settings
+    const putTrailSettingsHandler = new lambda.Function(
+      this,
+      projectPrefix('putTrailSettings'),
+      {
+        functionName: projectPrefix('putTrailSettings'),
+        runtime: lambda.Runtime.NODEJS_12_X,
+        code: lambda.Code.fromAsset(packagePath),
+        handler: 'api/build/src/handlers/putTrailSettings.default',
+        environment: apiEnvVars,
+      },
+    );
+
+    const putTrailSettingsIntegration = new apigateway.LambdaIntegration(
+      putTrailSettingsHandler,
+    );
+
+    trailSettingsApi.addMethod('PUT', putTrailSettingsIntegration);
+    trailSettingsTable.grantReadWriteData(putTrailSettingsHandler);
 
     // instagram
     const instagramApi = api.root.addResource('instagram');

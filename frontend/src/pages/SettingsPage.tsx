@@ -23,7 +23,7 @@ const Settings: React.FunctionComponent = () => {
 
   useEffect(() => {
     api.getProfilePictureUrl(user.username).then(setProfilePicture);
-  }, []);
+  }, [user.username]);
 
   useEffect(() => {
     api
