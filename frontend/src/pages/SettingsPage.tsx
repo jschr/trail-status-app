@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import Avatar from '@material-ui/core/Avatar';
 import Box from '@material-ui/core/Box';
 import CardHeader from '@material-ui/core/CardHeader';
 import CardContent from '@material-ui/core/CardContent';
@@ -8,6 +7,7 @@ import Button from '@material-ui/core/Button';
 import Link from '@material-ui/core/Link';
 import TextField from '@material-ui/core/TextField';
 import Typography from '@material-ui/core/Typography';
+import InstagramIcon from '@material-ui/icons/Instagram';
 import Alert from '@material-ui/lab/Alert';
 import Container from '../components/Container';
 import * as ApiClient from '../clients/ApiClient';
@@ -19,15 +19,10 @@ const Settings: React.FunctionComponent = () => {
   const [error, setError] = useState<Error>();
   const [settings, setSettings] = useState<ApiClient.Settings>();
   const [trailStatus, setTrailStatus] = useState<ApiClient.Status>();
-  const [profilePictureUrl, setProfilePicture] = useState('');
   const [isSaving, setIsSaving] = useState(false);
 
   const trailId = settings?.trailId;
   const user = api.getUser();
-
-  useEffect(() => {
-    api.getProfilePictureUrl(user.username).then(setProfilePicture);
-  }, [user.username]);
 
   useEffect(() => {
     if (!trailId) return;
@@ -82,7 +77,7 @@ const Settings: React.FunctionComponent = () => {
         </CardContent>
       )}
       <CardHeader
-        avatar={<Avatar src={profilePictureUrl} />}
+        avatar={<InstagramIcon fontSize="large" />}
         title={
           <>
             Open or close the trails by posting to{' '}
