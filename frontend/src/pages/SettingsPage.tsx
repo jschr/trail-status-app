@@ -13,17 +13,41 @@ import Container from '../components/Container';
 import * as ApiClient from '../clients/ApiClient';
 import api from '../api';
 
+let fetchTimeout: number;
+
 const Settings: React.FunctionComponent = () => {
   const [error, setError] = useState<Error>();
   const [settings, setSettings] = useState<ApiClient.Settings>();
+  const [trailStatus, setTrailStatus] = useState<ApiClient.Status>();
   const [profilePictureUrl, setProfilePicture] = useState('');
   const [isSaving, setIsSaving] = useState(false);
 
+  const trailId = settings?.trailId;
   const user = api.getUser();
 
   useEffect(() => {
     api.getProfilePictureUrl(user.username).then(setProfilePicture);
   }, [user.username]);
+
+  useEffect(() => {
+    if (!trailId) return;
+
+    const fetchTrailStatus = () => {
+      api
+        .getStatus(trailId)
+        .then(payload => {
+          setTrailStatus(payload);
+          fetchTimeout = window.setTimeout(fetchTrailStatus, 30 * 1000);
+        })
+        .catch(setError);
+    };
+
+    fetchTrailStatus();
+
+    return () => {
+      clearTimeout(fetchTimeout);
+    };
+  }, [trailId]);
 
   useEffect(() => {
     api
@@ -32,11 +56,14 @@ const Settings: React.FunctionComponent = () => {
       .catch(setError);
   }, []);
 
-  const updateSettingsState = (params: Partial<ApiClient.Settings>) => {
-    if (settings) {
-      setSettings({ ...settings, ...params });
-    }
-  };
+  const updateSettingsState = useCallback(
+    (params: Partial<ApiClient.Settings>) => {
+      if (settings) {
+        setSettings({ ...settings, ...params });
+      }
+    },
+    [settings],
+  );
 
   const saveSettings = useCallback(() => {
     if (!settings) return;
@@ -109,6 +136,19 @@ const Settings: React.FunctionComponent = () => {
           {isSaving ? 'Saving...' : 'Save Hashtag Settings'}
         </Button>
       </Box>
+      {trailStatus && (
+        <>
+          <Divider />
+          <CardContent>
+            {trailStatus.status === 'open' && (
+              <Alert severity="success">The trails are open.</Alert>
+            )}
+            {trailStatus.status === 'closed' && (
+              <Alert severity="warning">The trails are closed.</Alert>
+            )}
+          </CardContent>
+        </>
+      )}
     </Container>
   );
 };

@@ -13,6 +13,13 @@ export interface User {
   username: string;
 }
 
+export interface Status {
+  trailId: string;
+  status: string;
+  updatedAt: string;
+  createdAt: string;
+}
+
 export interface Settings {
   trailId: string;
   openHashtag: string;
@@ -84,6 +91,12 @@ export default class ApiClient {
     }
   }
 
+  async getStatus(trailId: string): Promise<Status> {
+    return await this.makeProtectedRequest(
+      `${apiEndpoint}/status?trailId=${trailId}`,
+    );
+  }
+
   async getSettings(): Promise<Settings> {
     return await this.makeProtectedRequest(`${apiEndpoint}/settings`);
   }
@@ -101,32 +114,37 @@ export default class ApiClient {
   ) {
     this.onRequestStart();
 
-    const resp = await fetch(url, {
-      method: opts.method,
-      headers: {
-        Authorization: `Bearer ${this.accessToken}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(opts.body),
-    });
+    try {
+      const resp = await fetch(url, {
+        method: opts.method,
+        headers: {
+          Authorization: `Bearer ${this.accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(opts.body),
+      });
 
-    if (!resp.ok) {
-      if (resp.status === 401 && this.onUnauthorized) {
-        this.onUnauthorized();
+      if (!resp.ok) {
+        if (resp.status === 401 && this.onUnauthorized) {
+          this.onUnauthorized();
+        }
+
+        throw new Error(
+          `ApiClient error from ${url}: ${resp.statusText} — ${JSON.stringify(
+            await resp.text(),
+          )}`,
+        );
       }
 
-      throw new Error(
-        `ApiClient error from ${url}: ${resp.statusText} — ${JSON.stringify(
-          await resp.text(),
-        )}`,
-      );
+      const data = await resp.json();
+
+      this.onRequestEnd();
+
+      return data;
+    } catch (err) {
+      this.onRequestEnd();
+      throw err;
     }
-
-    const data = await resp.json();
-
-    this.onRequestEnd();
-
-    return data;
   }
 
   getAccessToken() {
