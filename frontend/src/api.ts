@@ -5,6 +5,8 @@ import history from './history';
 
 let accessToken: string | null = null;
 
+nprogress.configure({ showSpinner: false });
+
 const querystring = qs.parse(window.location.search.replace(/^\?/, ''));
 if (typeof querystring.sessionToken === 'string') {
   accessToken = querystring.sessionToken;
