@@ -136,14 +136,11 @@ export default class ApiClient {
         );
       }
 
-      const data = await resp.json();
-
-      this.onRequestEnd();
-
-      return data;
+      return await resp.json();
     } catch (err) {
-      this.onRequestEnd();
       throw err;
+    } finally {
+      this.onRequestEnd();
     }
   }
 
