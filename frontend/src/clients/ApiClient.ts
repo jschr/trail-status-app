@@ -86,6 +86,7 @@ export default class ApiClient {
         image.onerror = () => reject();
       });
     } catch (err) {
+      this.onRequestEnd();
       console.error(err);
       return '';
     }
