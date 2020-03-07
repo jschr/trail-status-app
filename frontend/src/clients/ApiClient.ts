@@ -93,7 +93,7 @@ export default class ApiClient {
 
   async getStatus(trailId: string): Promise<Status> {
     return await this.makeProtectedRequest(
-      `${apiEndpoint}/status?trailId=${trailId}`,
+      `${apiEndpoint}/status?trailId=${encodeURIComponent(trailId)}`,
     );
   }
 
