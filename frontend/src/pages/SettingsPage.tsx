@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Box from '@material-ui/core/Box';
+import Grid from '@material-ui/core/Grid';
+import Card from '@material-ui/core/Card';
 import CardHeader from '@material-ui/core/CardHeader';
 import CardContent from '@material-ui/core/CardContent';
 import Divider from '@material-ui/core/Divider';
@@ -13,41 +15,21 @@ import Container from '../components/Container';
 import * as ApiClient from '../clients/ApiClient';
 import api from '../api';
 
-let fetchTimeout: number;
-
 const Settings: React.FunctionComponent = () => {
   const [error, setError] = useState<Error>();
   const [settings, setSettings] = useState<ApiClient.Settings>();
-  const [trailStatus, setTrailStatus] = useState<ApiClient.Status>();
   const [isSaving, setIsSaving] = useState(false);
 
   const trailId = settings?.trailId;
   const user = api.getUser();
 
   useEffect(() => {
-    if (!trailId) return;
-
-    const fetchTrailStatus = () => {
-      api
-        .getStatus(trailId)
-        .then(payload => {
-          setTrailStatus(payload);
-          fetchTimeout = window.setTimeout(fetchTrailStatus, 30 * 1000);
-        })
-        .catch(setError);
-    };
-
-    fetchTrailStatus();
-
-    return () => {
-      clearTimeout(fetchTimeout);
-    };
-  }, [trailId]);
-
-  useEffect(() => {
     api
       .getSettings()
-      .then(setSettings)
+      .then(settings => {
+        setSettings(settings);
+        (window as any).trailStatus.register();
+      })
       .catch(setError);
   }, []);
 
@@ -70,14 +52,19 @@ const Settings: React.FunctionComponent = () => {
   }, [settings]);
 
   return (
-    <Container>
+    <Container maxWidth="md">
       {error && (
         <CardContent>
           <Alert severity="error">Oops! Something went wrong.</Alert>
         </CardContent>
       )}
+
       <CardHeader
-        avatar={<InstagramIcon fontSize="large" />}
+        avatar={
+          <Box mt={0.5}>
+            <InstagramIcon fontSize="large" />
+          </Box>
+        }
         title={
           <>
             Open or close the trails by posting to{' '}
@@ -92,58 +79,86 @@ const Settings: React.FunctionComponent = () => {
           </>
         }
       />
+
       <Divider />
+
       <CardContent>
-        <Typography color="textSecondary" variant="overline">
-          Hashtag Settings
-        </Typography>
-        <Box mt={2}>
-          <TextField
-            fullWidth
-            variant="filled"
-            label="Open trails"
-            helperText="Tag your post with this hashtag to open the trails."
-            value={settings?.openHashtag ?? ''}
-            onChange={e => updateSettingsState({ openHashtag: e.target.value })}
-          />
-        </Box>
-        <Box mt={2}>
-          <TextField
-            fullWidth
-            variant="filled"
-            label="Close trails"
-            helperText="Tag your post with this hashtag to close the trails."
-            value={settings?.closeHashtag ?? ''}
-            onChange={e =>
-              updateSettingsState({ closeHashtag: e.target.value })
-            }
-          />
-        </Box>
+        <Grid container>
+          <Grid item xs={12} sm={5}>
+            <Box mt={2}>
+              <Typography color="textSecondary" variant="overline">
+                Hashtag Settings
+              </Typography>
+            </Box>
+
+            <Box mt={2}>
+              <TextField
+                fullWidth
+                variant="outlined"
+                label="Open trails"
+                helperText="Tag your post with this hashtag to open the trails."
+                value={settings?.openHashtag ?? ''}
+                onChange={e =>
+                  updateSettingsState({ openHashtag: e.target.value })
+                }
+              />
+            </Box>
+
+            <Box mt={3}>
+              <TextField
+                fullWidth
+                variant="outlined"
+                label="Close trails"
+                helperText="Tag your post with this hashtag to close the trails."
+                value={settings?.closeHashtag ?? ''}
+                onChange={e =>
+                  updateSettingsState({ closeHashtag: e.target.value })
+                }
+              />
+            </Box>
+
+            <Box mt={3}>
+              <Button
+                fullWidth
+                variant="contained"
+                color="primary"
+                disabled={isSaving}
+                onClick={saveSettings}
+              >
+                {isSaving ? 'Saving...' : 'Save Hashtag Settings'}
+              </Button>
+            </Box>
+          </Grid>
+        </Grid>
+        <Grid container>
+          <Grid item xs={12} sm={11}>
+            <Box mt={5}>
+              <Typography color="textSecondary" variant="overline">
+                Embed Code
+              </Typography>
+            </Box>
+
+            <Box mt={2}>
+              <Card elevation={2} variant="outlined">
+                <CardContent>
+                  <Box overflow="scroll" component="pre">
+                    {`<link rel="stylesheet" href="https://trailstatusapp.com/embed.css" />
+<div class="trailStatus" data-trail-status="${trailId}" />
+<script async src="https://trailstatusapp.com/embed.js"></script>
+`}
+                  </Box>
+                </CardContent>
+              </Card>
+            </Box>
+          </Grid>
+        </Grid>
       </CardContent>
-      <Box p={2}>
-        <Button
-          fullWidth
-          variant="contained"
-          color="primary"
-          disabled={isSaving}
-          onClick={saveSettings}
-        >
-          {isSaving ? 'Saving...' : 'Save Hashtag Settings'}
-        </Button>
+      <Box mt={4}>
+        <Divider />
       </Box>
-      {trailStatus && (
-        <>
-          <Divider />
-          <CardContent>
-            {trailStatus.status === 'open' && (
-              <Alert severity="success">The trails are open.</Alert>
-            )}
-            {trailStatus.status === 'closed' && (
-              <Alert severity="warning">The trails are closed.</Alert>
-            )}
-          </CardContent>
-        </>
-      )}
+      <Box mt={3}>
+        <div className="trailStatus" data-trail-status={trailId} />
+      </Box>
     </Container>
   );
 };

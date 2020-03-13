@@ -5,6 +5,7 @@ import dynamodb from './dynamodb';
 export interface TrailStatus {
   trailId: string;
   status: string;
+  message: string;
   updatedAt: string;
   createdAt: string;
 }
@@ -14,7 +15,7 @@ export default class TrailStatusModel {
     try {
       const params: AWS.DynamoDB.GetItemInput = {
         TableName: tables.trailStatus.name,
-        Key: this.toAttributeMap({ trailId })
+        Key: this.toAttributeMap({ trailId }),
       };
       const res = await dynamodb.getItem(params).promise();
       if (!res.Item) return null;
@@ -22,7 +23,7 @@ export default class TrailStatusModel {
       return new TrailStatusModel(this.fromAttributeMap(res.Item));
     } catch (err) {
       throw new Error(
-        `TrailStatusModel.get for trailId '${trailId}' failed with '${err.message}'`
+        `TrailStatusModel.get for trailId '${trailId}' failed with '${err.message}'`,
       );
     }
   }
@@ -30,7 +31,7 @@ export default class TrailStatusModel {
   public static async batchGet(
     items: Array<{
       trailId: string;
-    }>
+    }>,
   ): Promise<Array<TrailStatusModel | null>> {
     const requestKeys = items.filter(i => i.trailId).map(this.toAttributeMap);
     if (requestKeys.length === 0) return [];
@@ -38,9 +39,9 @@ export default class TrailStatusModel {
     const params: AWS.DynamoDB.BatchGetItemInput = {
       RequestItems: {
         [tables.trailStatus.name]: {
-          Keys: requestKeys
-        }
-      }
+          Keys: requestKeys,
+        },
+      },
     };
 
     try {
@@ -55,18 +56,18 @@ export default class TrailStatusModel {
       }
 
       const TrailStatusModels = tableResults.map(
-        attrMap => new TrailStatusModel(this.fromAttributeMap(attrMap))
+        attrMap => new TrailStatusModel(this.fromAttributeMap(attrMap)),
       );
 
       return items.map(
         item =>
-          TrailStatusModels.find(tm => tm.trailId === item.trailId) ?? null
+          TrailStatusModels.find(tm => tm.trailId === item.trailId) ?? null,
       );
     } catch (err) {
       throw new Error(
         `TrailStatusModel.batchGet with params '${JSON.stringify(
-          params
-        )}' failed with '${err.message}'`
+          params,
+        )}' failed with '${err.message}'`,
       );
     }
   }
@@ -78,6 +79,8 @@ export default class TrailStatusModel {
       attrMap.trailId = { S: trailStatus.trailId };
     if (trailStatus.status !== undefined)
       attrMap.status = { S: trailStatus.status };
+    if (trailStatus.message !== undefined)
+      attrMap.message = { S: trailStatus.message };
     if (trailStatus.updatedAt !== undefined)
       attrMap.updatedAt = { S: trailStatus.updatedAt };
     if (trailStatus.createdAt !== undefined)
@@ -87,7 +90,7 @@ export default class TrailStatusModel {
   }
 
   private static fromAttributeMap(
-    attrMap: AWS.DynamoDB.AttributeMap
+    attrMap: AWS.DynamoDB.AttributeMap,
   ): Partial<TrailStatus> {
     if (!attrMap.trailId ?? !attrMap.trailId.S)
       throw new Error('Missing trailId parsing attribute map');
@@ -95,8 +98,9 @@ export default class TrailStatusModel {
     return {
       trailId: attrMap.trailId?.S,
       status: attrMap.status?.S,
+      message: attrMap.message?.S,
       updatedAt: attrMap.updatedAt?.S,
-      createdAt: attrMap.createdAt?.S
+      createdAt: attrMap.createdAt?.S,
     };
   }
 
@@ -106,11 +110,11 @@ export default class TrailStatusModel {
     const newAttrs = {
       ...this.attrs,
       ...updatedAttrs,
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
     };
     const params: AWS.DynamoDB.PutItemInput = {
       TableName: tables.trailStatus.name,
-      Item: TrailStatusModel.toAttributeMap(newAttrs)
+      Item: TrailStatusModel.toAttributeMap(newAttrs),
     };
 
     try {
@@ -120,8 +124,8 @@ export default class TrailStatusModel {
     } catch (err) {
       throw new Error(
         `TrailStatusModel.save failed for Item '${JSON.stringify(
-          params.Item
-        )}' with '${err.message}'`
+          params.Item,
+        )}' with '${err.message}'`,
       );
     }
   }
@@ -132,6 +136,10 @@ export default class TrailStatusModel {
 
   get status() {
     return this.attrs.status ?? '';
+  }
+
+  get message() {
+    return this.attrs.message ?? '';
   }
 
   set status(status: string) {
@@ -149,8 +157,9 @@ export default class TrailStatusModel {
   public toJSON() {
     return {
       status: this.status,
+      message: this.message,
       updatedAt: this.updatedAt,
-      createdAt: this.createdAt
+      createdAt: this.createdAt,
     };
   }
 }

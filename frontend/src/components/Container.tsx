@@ -1,14 +1,14 @@
 import React from 'react';
-import Card from '@material-ui/core/Card';
-import MUIContainer from '@material-ui/core/Container';
+import MUIContainer, { ContainerProps } from '@material-ui/core/Container';
 import Box from '@material-ui/core/Box';
 
-const Container: React.FunctionComponent = ({ children }) => {
+const Container: React.FunctionComponent<ContainerProps> = ({
+  children,
+  ...props
+}) => {
   return (
-    <Box mt={[5, 10]} mb={[5, 10]}>
-      <MUIContainer maxWidth="xs">
-        <Card elevation={6}>{children}</Card>
-      </MUIContainer>
+    <Box mt={[4, 8]} mb={[4, 8]}>
+      <MUIContainer {...props}>{children}</MUIContainer>
     </Box>
   );
 };

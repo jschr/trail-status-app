@@ -5,19 +5,21 @@
   "author": "Jordan Schroter <github@jschr.io>",
   "workspaces": [
     "api",
+    "embed",
     "frontend",
     "utilities",
     "infrastructure"
   ],
   "scripts": {
     "dev": "dotenv -e .env -e .env.dev -- wsrun --exclude-missing dev",
-    "build": "wsrun --exclude-missing --stages build",
     "watch": "wsrun --exclude-missing watch",
     "lint": "wsrun --exclude-missing lint",
     "package": "tasks/package.sh",
+    "build": "dotenv -e .env -e .env.production -- wsrun --exclude-missing --stages build",
     "deploy": "dotenv -e .env -e .env.production yarn infrastructure deploy",
     "--- workspaces ---": "",
     "api": "yarn workspace @trail-status-app/api",
+    "embed": "yarn workspace @trail-status-app/embed",
     "frontend": "yarn workspace @trail-status-app/frontend",
     "infrastructure": "yarn workspace @trail-status-app/infrastructure",
     "utilities": "yarn workspace @trail-status-app/utilities"

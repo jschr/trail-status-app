@@ -10,7 +10,7 @@ import api from '../api';
 
 const LoginPage: React.FunctionComponent = () => {
   return (
-    <Container>
+    <Container maxWidth="xs">
       <CardContent>
         <Box textAlign="center">
           <Typography variant="overline">Trail Status App</Typography>

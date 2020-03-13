@@ -1,0 +1,43 @@
+.trailStatus {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.trailStatusMessage {
+  padding: 1em 1.5em 1em 1.25em;
+  line-height: 1.35;
+  border-radius: 4px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.trailStatus .trailStatusMessage::before {
+  content: ' ';
+  flex-shrink: 0;
+  width: 1.8em;
+  height: 1.8em;
+  margin-right: 0.8em;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover;
+}
+
+.trailStatus-isOpen .trailStatusMessage {
+  color: #1e4620;
+  background-color: #edf7d8;
+}
+
+.trailStatus-isOpen .trailStatusMessage::before {
+  background-image: url(./open.svg);
+}
+
+.trailStatus-isClosed .trailStatusMessage {
+  color: #663c00;
+  background-color: #fff4e5;
+}
+
+.trailStatus-isClosed .trailStatusMessage::before {
+  background-image: url(./closed.svg);
+}
