@@ -36,6 +36,8 @@ export default withApiHandler([], async event => {
     });
   }
 
+  await user.save({ username });
+
   const now = new Date();
   const expiresAt = new Date(+now + expiresIn * 1000);
 

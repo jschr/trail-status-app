@@ -41,3 +41,19 @@
 .trailStatus-isClosed .trailStatusMessage::before {
   background-image: url(./closed.svg);
 }
+
+.trailStatusCta {
+  margin-top: 0.5em;
+  margin-left: 1.25em;
+  line-height: 1.35;
+}
+
+.trailStatusCta a {
+  color: inherit;
+  font-weight: bold;
+  text-decoration: none;
+}
+
+.trailStatusCta a:hover {
+  text-decoration: underline;
+}

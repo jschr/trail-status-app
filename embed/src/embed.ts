@@ -38,6 +38,12 @@ export const fetchTrailStatus = async (trailId: string) => {
   if (!message) return;
 
   message.textContent = trailStatus.message;
+
+  const cta = container.querySelector('.trailStatusCta');
+  if (!cta || !trailStatus.user) return;
+
+  const { username } = trailStatus.user;
+  cta.innerHTML = `Follow us at <a href="https://www.instagram.com/${username}/" target="_black">@${username}</a> for trail updates.`;
 };
 
 export const register = () => {

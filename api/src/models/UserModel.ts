@@ -4,6 +4,7 @@ import dynamodb from './dynamodb';
 
 export interface User {
   userId: string;
+  username: string;
   accessToken: string;
   expiresAt: string;
   lastLoginAt: string;
@@ -15,7 +16,7 @@ export default class UserModel {
     try {
       const params: AWS.DynamoDB.GetItemInput = {
         TableName: tables.users.name,
-        Key: this.toAttributeMap({ userId })
+        Key: this.toAttributeMap({ userId }),
       };
       const res = await dynamodb.getItem(params).promise();
       if (!res.Item) return null;
@@ -23,7 +24,7 @@ export default class UserModel {
       return new UserModel(this.fromAttributeMap(res.Item));
     } catch (err) {
       throw new Error(
-        `UserModel.get for userId '${userId}' failed with '${err.message}'`
+        `UserModel.get for userId '${userId}' failed with '${err.message}'`,
       );
     }
   }
@@ -31,7 +32,7 @@ export default class UserModel {
   public static async batchGet(
     items: Array<{
       userId: string;
-    }>
+    }>,
   ): Promise<Array<UserModel | null>> {
     const requestKeys = items.filter(i => i.userId).map(this.toAttributeMap);
     if (requestKeys.length === 0) return [];
@@ -39,9 +40,9 @@ export default class UserModel {
     const params: AWS.DynamoDB.BatchGetItemInput = {
       RequestItems: {
         [tables.users.name]: {
-          Keys: requestKeys
-        }
-      }
+          Keys: requestKeys,
+        },
+      },
     };
 
     try {
@@ -56,17 +57,17 @@ export default class UserModel {
       }
 
       const UserModels = tableResults.map(
-        attrMap => new UserModel(this.fromAttributeMap(attrMap))
+        attrMap => new UserModel(this.fromAttributeMap(attrMap)),
       );
 
       return items.map(
-        item => UserModels.find(um => um.userId === item.userId) ?? null
+        item => UserModels.find(um => um.userId === item.userId) ?? null,
       );
     } catch (err) {
       throw new Error(
         `UserModel.batchGet with params '${JSON.stringify(
-          params
-        )}' failed with '${err.message}'`
+          params,
+        )}' failed with '${err.message}'`,
       );
     }
   }
@@ -75,6 +76,7 @@ export default class UserModel {
     const attrMap: AWS.DynamoDB.AttributeMap = {};
 
     if (user.userId !== undefined) attrMap.userId = { S: user.userId };
+    if (user.username !== undefined) attrMap.username = { S: user.username };
     if (user.accessToken !== undefined)
       attrMap.accessToken = { S: user.accessToken };
     if (user.expiresAt !== undefined) attrMap.expiresAt = { S: user.expiresAt };
@@ -86,17 +88,18 @@ export default class UserModel {
   }
 
   private static fromAttributeMap(
-    attrMap: AWS.DynamoDB.AttributeMap
+    attrMap: AWS.DynamoDB.AttributeMap,
   ): Partial<User> {
     if (!attrMap.userId ?? !attrMap.userId.S)
       throw new Error('Missing userId parsing attribute map');
 
     return {
       userId: attrMap.userId?.S,
+      username: attrMap.username?.S,
       accessToken: attrMap.accessToken?.S,
       expiresAt: attrMap.expiresAt?.S,
       lastLoginAt: attrMap.lastLoginAt?.S,
-      createdAt: attrMap.createdAt?.S
+      createdAt: attrMap.createdAt?.S,
     };
   }
 
@@ -106,11 +109,11 @@ export default class UserModel {
     const newAttrs = {
       ...this.attrs,
       ...updatedAttrs,
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
     };
     const params: AWS.DynamoDB.PutItemInput = {
       TableName: tables.users.name,
-      Item: UserModel.toAttributeMap(newAttrs)
+      Item: UserModel.toAttributeMap(newAttrs),
     };
 
     try {
@@ -120,14 +123,18 @@ export default class UserModel {
     } catch (err) {
       throw new Error(
         `UserModel.save failed for Item '${JSON.stringify(
-          params.Item
-        )}' with '${err.message}'`
+          params.Item,
+        )}' with '${err.message}'`,
       );
     }
   }
 
   get userId() {
     return this.attrs.userId ?? '';
+  }
+
+  get username() {
+    return this.attrs.username ?? '';
   }
 
   get accessToken() {
@@ -149,10 +156,7 @@ export default class UserModel {
   public toJSON() {
     return {
       userId: this.userId,
-      accessToken: this.accessToken,
-      expiresAt: this.expiresAt,
-      lastLoginAt: this.lastLoginAt,
-      createdAt: this.createdAt
+      username: this.username,
     };
   }
 }
