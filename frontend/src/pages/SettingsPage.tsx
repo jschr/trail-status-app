@@ -11,6 +11,7 @@ import TextField from '@material-ui/core/TextField';
 import Typography from '@material-ui/core/Typography';
 import InstagramIcon from '@material-ui/icons/Instagram';
 import Alert from '@material-ui/lab/Alert';
+import { Link as RouterLink } from 'react-router-dom';
 import Container from '../components/Container';
 import * as ApiClient from '../clients/ApiClient';
 import api from '../api';
@@ -66,17 +67,29 @@ const Settings: React.FunctionComponent = () => {
           </Box>
         }
         title={
-          <>
-            Open or close the trails by posting to{' '}
-            <Link
-              href={`https://www.instagram.com/${user.username}/`}
-              target="_blank"
-              color="textPrimary"
-            >
-              <strong>@{user.username}</strong>
-            </Link>
-            .
-          </>
+          <Grid container justify="space-between" alignItems="center">
+            <Grid item>
+              Open or close the trails by posting to{' '}
+              <Link
+                href={`https://www.instagram.com/${user.username}/`}
+                target="_blank"
+                color="textPrimary"
+              >
+                <strong>@{user.username}</strong>
+              </Link>
+              .
+            </Grid>{' '}
+            <Grid item>
+              <Button
+                size="small"
+                variant="text"
+                component={RouterLink}
+                to="/login"
+              >
+                Logout
+              </Button>
+            </Grid>
+          </Grid>
         }
       />
 

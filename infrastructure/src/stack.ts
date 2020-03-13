@@ -130,6 +130,8 @@ export default class extends cdk.Stack {
 
     trailStatusApi.addMethod('GET', getTrailStatusIntegration);
     trailStatusTable.grantReadData(getTrailStatusHandler);
+    trailSettingsTable.grantReadData(getTrailStatusHandler);
+    userTable.grantReadData(getTrailStatusHandler);
 
     // /settings
     const trailSettingsApi = api.root.addResource('settings');
