@@ -169,7 +169,7 @@ const Settings: React.FunctionComponent = () => {
       <Box mt={4}>
         <Divider />
       </Box>
-      <Box mt={3}>
+      <Box mt={3} mb={6}>
         <div className="trailStatus" data-trail-status={trailId} />
       </Box>
     </Container>
