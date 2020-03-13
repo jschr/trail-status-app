@@ -11,25 +11,27 @@ import api from '../api';
 const LoginPage: React.FunctionComponent = () => {
   return (
     <Container maxWidth="xs">
-      <CardContent>
-        <Box textAlign="center">
-          <Typography variant="overline">Trail Status App</Typography>
-          <Typography variant="caption" component="div">
-            Automatically open or close the trails by posting to Instagram.
-          </Typography>
+      <Box pt={20} pb={20}>
+        <CardContent>
+          <Box textAlign="center">
+            <Typography variant="overline">Trail Status App</Typography>
+            <Typography variant="caption" component="div">
+              Automatically open or close the trails by posting to Instagram.
+            </Typography>
+          </Box>
+        </CardContent>
+        <Divider />
+        <Box p={2}>
+          <Button
+            fullWidth
+            variant="contained"
+            startIcon={<InstagramIcon />}
+            color="primary"
+            href={api.getAuthorizeUrl()}
+          >
+            Log in With Instagram
+          </Button>
         </Box>
-      </CardContent>
-      <Divider />
-      <Box p={2}>
-        <Button
-          fullWidth
-          variant="contained"
-          startIcon={<InstagramIcon />}
-          color="primary"
-          href={api.getAuthorizeUrl()}
-        >
-          Log in With Instagram
-        </Button>
       </Box>
     </Container>
   );

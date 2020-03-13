@@ -7,7 +7,7 @@ const Container: React.FunctionComponent<ContainerProps> = ({
   ...props
 }) => {
   return (
-    <Box mt={[4, 8]} mb={[4, 8]}>
+    <Box mt={4} mb={4}>
       <MUIContainer {...props}>{children}</MUIContainer>
     </Box>
   );
