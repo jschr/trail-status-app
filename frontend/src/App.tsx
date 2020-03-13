@@ -6,6 +6,8 @@ import blue from '@material-ui/core/colors/blue';
 import { Router, Switch, Route, Redirect } from 'react-router-dom';
 import LoginPage from './pages/LoginPage';
 import SettingsPage from './pages/SettingsPage';
+import TermsOfService from './pages/TermsOfService';
+import PrivacyPolicy from './pages/PrivacyPolicy';
 import history from './history';
 
 export default function App() {
@@ -16,10 +18,10 @@ export default function App() {
       createMuiTheme({
         palette: {
           primary: blue,
-          type: prefersDarkMode ? 'dark' : 'light'
-        }
+          type: prefersDarkMode ? 'dark' : 'light',
+        },
       }),
-    [prefersDarkMode]
+    [prefersDarkMode],
   );
 
   return (
@@ -32,6 +34,12 @@ export default function App() {
           </Route>
           <Route path="/login">
             <LoginPage />
+          </Route>
+          <Route path="/tos">
+            <TermsOfService />
+          </Route>
+          <Route path="/privacy-policy">
+            <PrivacyPolicy />
           </Route>
           <Route path="*">
             <Redirect to="/" />
