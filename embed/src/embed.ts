@@ -1,5 +1,8 @@
-import './embed.css';
 import 'classlist-polyfill';
+import 'promise/polyfill';
+import 'whatwg-fetch';
+import './embed.css';
+
 const trailStatusApi = process.env.API_ENDPOINT;
 const trailStatusIds: { [key: string]: true } = {};
 const trailStatusAttribute = 'data-trail-status';
@@ -47,7 +50,10 @@ export const fetchTrailStatus = async (trailId: string) => {
 };
 
 export const register = () => {
-  document.querySelectorAll(`[${trailStatusAttribute}]`).forEach(container => {
+  const containers = document.querySelectorAll(`[${trailStatusAttribute}]`);
+
+  for (let i = 0; i < containers.length; i += 1) {
+    const container = containers[i];
     const trailStatusId = container.getAttribute(trailStatusAttribute);
     if (!trailStatusId) return;
 
@@ -63,11 +69,13 @@ export const register = () => {
 
       fetchTrailStatus(trailStatusId);
     }
-  });
+  }
 };
 
 register();
 
 window.setInterval(() => {
-  Object.keys(trailStatusIds).forEach(fetchTrailStatus);
+  for (const trailId of Object.keys(trailStatusIds)) {
+    fetchTrailStatus(trailId);
+  }
 }, 30 * 1000);
