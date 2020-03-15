@@ -85,6 +85,7 @@ const Settings: React.FunctionComponent = () => {
                 variant="text"
                 component={RouterLink}
                 to="/login"
+                onClick={() => localStorage.removeItem('accessToken')}
               >
                 Logout
               </Button>
