@@ -11,6 +11,7 @@ interface TrailUpdateResult {
   success?: boolean;
   failed?: boolean;
   reason?: string;
+  skipped?: boolean;
 }
 
 export default withScheduledHandler(async () => {
@@ -45,6 +46,7 @@ const updateTrailStatus = async (
     const userMedia = await instagram.getUserMedia(user.accessToken);
     let status: string | undefined;
     let message: string | undefined;
+    let skipped = true;
 
     for (const { caption } of userMedia) {
       if (caption.includes(trailSettings.openHashtag)) {
@@ -60,12 +62,13 @@ const updateTrailStatus = async (
       }
     }
 
-    if (status !== trailStatus.status || status !== trailStatus.message) {
+    if (status !== trailStatus.status || message !== trailStatus.message) {
       await trailStatus.save({ status, message });
       await trailSettings.save({
         syncPriority: +new Date(),
         lastSyncdAt: new Date().toISOString(),
       });
+      skipped = false;
     }
 
     return {
@@ -73,6 +76,7 @@ const updateTrailStatus = async (
       success: true,
       status,
       message,
+      skipped,
     };
   } catch (err) {
     return {
