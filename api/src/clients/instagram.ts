@@ -105,3 +105,24 @@ export const getUserMedia = async (
 
   return userMedia;
 };
+
+export const refreshAccessToken = async (
+  accessToken: string,
+): Promise<{ accessToken: string; expiresIn: number }> => {
+  const refreshTokenUrl = `${igGraphUrl}/refresh_access_token?grant_type=ig_refresh_token&access_token=${accessToken}`;
+  const refreshTokenResp = await fetch(refreshTokenUrl);
+
+  if (!refreshTokenResp.ok) {
+    const payload = await refreshTokenResp.text();
+    throw new Error(
+      `InstagramClient error refreshing access token: ${payload}`,
+    );
+  }
+
+  const refreshTokenPayload = await refreshTokenResp.json();
+
+  return {
+    accessToken: refreshTokenPayload?.access_token ?? '',
+    expiresIn: refreshTokenPayload?.expires_in ?? 0,
+  };
+};

@@ -35,6 +35,20 @@ const updateTrailStatus = async (
       );
     }
 
+    // Instagram long lived tokens expire after 60 days.
+    const accessTokenExpiresAt = +new Date(user.expiresAt);
+    const twoWeeks = 1000 * 60 * 60 * 24 * 14;
+    const now = +new Date();
+
+    // Refresh access token if it expires in two weeks or less.
+    if (accessTokenExpiresAt - now <= twoWeeks) {
+      const { accessToken, expiresIn } = await instagram.refreshAccessToken(
+        user.accessToken,
+      );
+      const expiresAt = new Date(+now + expiresIn * 1000);
+      await user.save({ accessToken, expiresAt: expiresAt.toISOString() });
+    }
+
     let trailStatus = await TrailStatusModel.get(trailSettings.trailId);
     if (!trailStatus) {
       trailStatus = new TrailStatusModel({
