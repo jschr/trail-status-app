@@ -11,6 +11,7 @@ import * as eventTargets from '@aws-cdk/aws-events-targets';
 import path from 'path';
 import tables from './tables';
 import projectPrefix from './projectPrefix';
+import { Duration } from '@aws-cdk/core';
 
 const packagePath = path.join(__dirname, '../../tmp/package.zip');
 
@@ -248,6 +249,7 @@ export default class extends cdk.Stack {
         code: lambda.Code.fromAsset(packagePath),
         handler: 'api/build/src/handlers/syncTrailStatus.default',
         environment: apiEnvVars,
+        timeout: Duration.seconds(10),
       },
     );
 
