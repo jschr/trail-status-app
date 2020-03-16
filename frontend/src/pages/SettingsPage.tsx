@@ -156,8 +156,8 @@ const Settings: React.FunctionComponent = () => {
               <Card elevation={2} variant="outlined">
                 <CardContent>
                   <Box overflow="scroll" component="pre">
-                    {`<link rel="stylesheet" href="https://trailstatusapp.com/embed.css" />
-<div class="trailStatus" data-trail-status="${trailId}" />
+                    {`<link rel="stylesheet" href="https://trailstatusapp.com/embed.css"></link>
+<div class="trailStatus" data-trail-status="${trailId}"></div>
 <script async src="https://trailstatusapp.com/embed.js"></script>
 `}
                   </Box>
