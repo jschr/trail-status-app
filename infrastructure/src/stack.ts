@@ -122,6 +122,7 @@ export default class extends cdk.Stack {
         code: lambda.Code.fromAsset(packagePath),
         handler: 'api/build/src/handlers/getTrailStatus.default',
         environment: apiEnvVars,
+        timeout: Duration.seconds(10),
       },
     );
 
@@ -148,6 +149,7 @@ export default class extends cdk.Stack {
         code: lambda.Code.fromAsset(packagePath),
         handler: 'api/build/src/handlers/getTrailSettings.default',
         environment: apiEnvVars,
+        timeout: Duration.seconds(10),
       },
     );
 
@@ -168,6 +170,7 @@ export default class extends cdk.Stack {
         code: lambda.Code.fromAsset(packagePath),
         handler: 'api/build/src/handlers/putTrailSettings.default',
         environment: apiEnvVars,
+        timeout: Duration.seconds(10),
       },
     );
 
@@ -195,6 +198,7 @@ export default class extends cdk.Stack {
         code: lambda.Code.fromAsset(packagePath),
         handler: 'api/build/src/handlers/authorizeInstagram.default',
         environment: apiEnvVars,
+        timeout: Duration.seconds(10),
       },
     );
 
@@ -214,6 +218,7 @@ export default class extends cdk.Stack {
         code: lambda.Code.fromAsset(packagePath),
         handler: 'api/build/src/handlers/authorizeInstagramCallback.default',
         environment: apiEnvVars,
+        timeout: Duration.seconds(10),
       },
     );
 
@@ -249,7 +254,7 @@ export default class extends cdk.Stack {
         code: lambda.Code.fromAsset(packagePath),
         handler: 'api/build/src/handlers/syncTrailStatus.default',
         environment: apiEnvVars,
-        timeout: Duration.seconds(10),
+        timeout: Duration.seconds(20),
       },
     );
 
