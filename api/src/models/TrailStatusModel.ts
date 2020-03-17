@@ -6,6 +6,7 @@ export interface TrailStatus {
   trailId: string;
   status: string;
   message: string;
+  imageUrl: string;
   updatedAt: string;
   createdAt: string;
 }
@@ -81,6 +82,8 @@ export default class TrailStatusModel {
       attrMap.status = { S: trailStatus.status };
     if (trailStatus.message !== undefined)
       attrMap.message = { S: trailStatus.message };
+    if (trailStatus.imageUrl !== undefined)
+      attrMap.imageUrl = { S: trailStatus.imageUrl };
     if (trailStatus.updatedAt !== undefined)
       attrMap.updatedAt = { S: trailStatus.updatedAt };
     if (trailStatus.createdAt !== undefined)
@@ -99,6 +102,7 @@ export default class TrailStatusModel {
       trailId: attrMap.trailId?.S,
       status: attrMap.status?.S,
       message: attrMap.message?.S,
+      imageUrl: attrMap.imageUrl?.S,
       updatedAt: attrMap.updatedAt?.S,
       createdAt: attrMap.createdAt?.S,
     };
@@ -142,6 +146,10 @@ export default class TrailStatusModel {
     return this.attrs.message ?? '';
   }
 
+  get imageUrl() {
+    return this.attrs.imageUrl ?? '';
+  }
+
   set status(status: string) {
     this.attrs.status = status;
   }
@@ -158,6 +166,7 @@ export default class TrailStatusModel {
     return {
       status: this.status,
       message: this.message,
+      imageUrl: this.imageUrl,
       updatedAt: this.updatedAt,
       createdAt: this.createdAt,
     };

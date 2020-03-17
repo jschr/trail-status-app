@@ -6,8 +6,9 @@ import withScheduledHandler from '../withScheduledHandler';
 
 interface TrailUpdateResult {
   trailId: string;
-  status?: any;
-  message?: any;
+  status?: string;
+  message?: string;
+  imageUrl?: string;
   success?: boolean;
   failed?: boolean;
   reason?: string;
@@ -60,28 +61,41 @@ const updateTrailStatus = async (
     const userMedia = await instagram.getUserMedia(user.accessToken);
     let status: string | undefined;
     let message: string | undefined;
+    let imageUrl: string | undefined;
     let skipped = true;
 
-    for (const { caption } of userMedia) {
+    for (const { caption, mediaUrl } of userMedia) {
       if (caption.includes(trailSettings.openHashtag)) {
         status = 'open';
         message = stripHashtags(caption) || 'The trails are opened.';
+        imageUrl = mediaUrl || '';
         break;
       }
 
       if (caption.includes(trailSettings.closeHashtag)) {
         status = 'closed';
         message = stripHashtags(caption) || 'The trails are closed.';
+        imageUrl = mediaUrl || '';
         break;
       }
     }
 
-    if (status !== trailStatus.status || message !== trailStatus.message) {
-      await trailStatus.save({ status, message });
+    if (
+      status !== trailStatus.status ||
+      message !== trailStatus.message ||
+      imageUrl !== trailStatus.imageUrl
+    ) {
+      await trailStatus.save({
+        status,
+        message,
+        imageUrl,
+      });
+
       await trailSettings.save({
         syncPriority: +new Date(),
         lastSyncdAt: new Date().toISOString(),
       });
+
       skipped = false;
     }
 
@@ -90,6 +104,7 @@ const updateTrailStatus = async (
       success: true,
       status,
       message,
+      imageUrl,
       skipped,
     };
   } catch (err) {

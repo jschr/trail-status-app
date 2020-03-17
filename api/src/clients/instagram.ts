@@ -87,12 +87,13 @@ export const getUser = async (accessToken: string): Promise<User> => {
 interface UserMedia {
   id: string;
   caption: string;
+  mediaUrl: string;
 }
 
 export const getUserMedia = async (
   accessToken: string,
 ): Promise<UserMedia[]> => {
-  const userUrl = `${igGraphUrl}/me?fields=media,media.caption&access_token=${accessToken}`;
+  const userUrl = `${igGraphUrl}/me?fields=media,media.caption,media.media_url&access_token=${accessToken}`;
   const userResp = await fetch(userUrl);
 
   if (!userResp.ok) {
@@ -103,7 +104,11 @@ export const getUserMedia = async (
   const userPayload = await userResp.json();
   const userMedia = userPayload?.media?.data ?? [];
 
-  return userMedia;
+  return userMedia.map((m: any) => ({
+    id: m.id,
+    caption: m.caption,
+    mediaUrl: m.media_url,
+  }));
 };
 
 export const refreshAccessToken = async (
