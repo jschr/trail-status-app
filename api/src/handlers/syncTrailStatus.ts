@@ -80,11 +80,13 @@ const updateTrailStatus = async (
       }
     }
 
-    if (
-      status !== trailStatus.status ||
-      message !== trailStatus.message ||
-      imageUrl !== trailStatus.imageUrl
-    ) {
+    if (status !== trailStatus.status || message !== trailStatus.message) {
+      console.info(`Updating status for trail id ${trailStatus.trailId}`, {
+        statusChanged: status !== trailStatus.status,
+        messageChanged: message !== trailStatus.message,
+        imageUrlChanged: imageUrl !== trailStatus.imageUrl,
+      });
+
       await trailStatus.save({
         status,
         message,
