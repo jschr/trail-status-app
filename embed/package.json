@@ -8,7 +8,9 @@
     "build": "tsc -b && webpack --mode=production",
     "lint": "eslint -c ./.eslintrc src/**/*.ts"
   },
-  "dependencies": {},
+  "dependencies": {
+    "timeago.js": "^4.0.2"
+  },
   "devDependencies": {
     "@trail-status-app/utilities": "",
     "classlist-polyfill": "^1.2.0",
