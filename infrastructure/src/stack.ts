@@ -123,6 +123,7 @@ export default class extends cdk.Stack {
         handler: 'api/build/src/handlers/getTrailStatus.default',
         environment: apiEnvVars,
         timeout: Duration.seconds(10),
+        memorySize: 512,
       },
     );
 
@@ -150,6 +151,7 @@ export default class extends cdk.Stack {
         handler: 'api/build/src/handlers/getTrailSettings.default',
         environment: apiEnvVars,
         timeout: Duration.seconds(10),
+        memorySize: 512,
       },
     );
 
@@ -171,6 +173,7 @@ export default class extends cdk.Stack {
         handler: 'api/build/src/handlers/putTrailSettings.default',
         environment: apiEnvVars,
         timeout: Duration.seconds(10),
+        memorySize: 512,
       },
     );
 
@@ -199,6 +202,7 @@ export default class extends cdk.Stack {
         handler: 'api/build/src/handlers/authorizeInstagram.default',
         environment: apiEnvVars,
         timeout: Duration.seconds(10),
+        memorySize: 512,
       },
     );
 
@@ -219,6 +223,7 @@ export default class extends cdk.Stack {
         handler: 'api/build/src/handlers/authorizeInstagramCallback.default',
         environment: apiEnvVars,
         timeout: Duration.seconds(10),
+        memorySize: 512,
       },
     );
 
@@ -255,6 +260,7 @@ export default class extends cdk.Stack {
         handler: 'api/build/src/handlers/syncTrailStatus.default',
         environment: apiEnvVars,
         timeout: Duration.seconds(20),
+        memorySize: 1024,
       },
     );
 
