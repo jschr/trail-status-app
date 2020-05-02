@@ -266,7 +266,7 @@ export default class extends cdk.Stack {
 
     trailStatusTable.grantReadWriteData(syncTrailStatusHandler);
     trailSettingsTable.grantReadWriteData(syncTrailStatusHandler);
-    userTable.grantReadData(syncTrailStatusHandler);
+    userTable.grantReadWriteData(syncTrailStatusHandler);
 
     syncTrailStatusRule.addTarget(
       new eventTargets.LambdaFunction(syncTrailStatusHandler),
