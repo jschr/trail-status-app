@@ -31,6 +31,10 @@
   background-color: #edf7d8;
 }
 
+.trailStatus-isOpen .trailStatusCallout a {
+  color: inherit;
+}
+
 .trailStatus-isClosed .trailStatusCallout {
   color: #611a15;
   background-color: #fdecea;

@@ -3,6 +3,7 @@ import 'promise/polyfill';
 import 'whatwg-fetch';
 import './embed.css';
 import * as timeago from 'timeago.js';
+import * as linkify from 'linkifyjs/html';
 
 const trailStatusApi = process.env.API_ENDPOINT;
 const trailStatusIds: { [key: string]: true } = {};
@@ -67,7 +68,9 @@ export const fetchTrailStatus = async (trailId: string) => {
     imageEl.removeAttribute('style');
   }
 
-  messageEl.textContent = trailStatus.message;
+  console.log('??', linkify, linkify(trailStatus.message));
+
+  messageEl.innerHTML = linkify(trailStatus.message).replace(/\n/g, '<br />');
 
   timeagoEl.setAttribute('datetime', trailStatus.updatedAt);
   timeago.render(timeagoEl as HTMLElement);

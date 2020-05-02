@@ -9,6 +9,7 @@
     "lint": "eslint -c ./.eslintrc src/**/*.ts"
   },
   "dependencies": {
+    "linkifyjs": "^2.1.9",
     "timeago.js": "^4.0.2"
   },
   "devDependencies": {
