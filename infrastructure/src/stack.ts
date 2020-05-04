@@ -246,7 +246,7 @@ export default class extends cdk.Stack {
       this,
       projectPrefix('syncTrailStatusRule'),
       {
-        schedule: events.Schedule.rate(cdk.Duration.minutes(1)),
+        schedule: events.Schedule.rate(cdk.Duration.minutes(2)),
       },
     );
 
