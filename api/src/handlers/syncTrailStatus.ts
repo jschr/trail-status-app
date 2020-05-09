@@ -67,7 +67,7 @@ const updateTrailStatus = async (
     for (const { caption, mediaUrl } of userMedia) {
       if (caption.includes(trailSettings.openHashtag)) {
         status = 'open';
-        message = stripHashtags(caption) || 'The trails are opened.';
+        message = stripHashtags(caption) || 'The trails are open.';
         imageUrl = mediaUrl || '';
         break;
       }

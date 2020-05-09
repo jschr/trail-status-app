@@ -63,6 +63,7 @@ export const fetchTrailStatus = async (trailId: string) => {
       'style',
       `background-image: url(${trailStatus.imageUrl})`,
     );
+    imageEl.setAttribute('href', trailStatus.imageUrl);
   } else if (imageEl) {
     container.classList.remove('trailStatus-hasImage');
     imageEl.removeAttribute('style');
@@ -95,7 +96,7 @@ export const register = () => {
       container.innerHTML = [
         `<div class="trailStatusInner">`,
         `<div class="trailStatusCallout">`,
-        `<div class="trailStatusImage"></div>`,
+        `<a class="trailStatusImage"></a>`,
         `<div class="trailStatusInfo">`,
         `<div class="trailStatusMessage"></div>`,
         `<div class="trailStatusTimestamp">`,
