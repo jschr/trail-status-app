@@ -60,6 +60,9 @@
   background-repeat: no-repeat;
   background-position: center;
   background-size: cover;
+  opacity: 1 !important;
+  text-decoration: none !important;
+  border: none !important;
 }
 
 @media (max-width: 400px) {
