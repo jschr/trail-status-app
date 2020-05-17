@@ -7,7 +7,8 @@ data
 .cache
 out
 *.env
-*.env.*
+*.env.dev
+*.env.production
 *.log
 .terraform
 terraform.plan
