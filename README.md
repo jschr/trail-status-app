@@ -38,4 +38,4 @@ Deploy the backend:
 yarn infrastructure deploy
 ```
 
-Netlify is connected to the repo and the frontend will be deployed whenever a change is pushed to `master`.
+Connect Netlify to your repository to deploy the frontend from `master`.
