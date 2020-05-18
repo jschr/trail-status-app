@@ -69,8 +69,6 @@ export const fetchTrailStatus = async (trailId: string) => {
     imageEl.removeAttribute('style');
   }
 
-  console.log('??', linkify, linkify(trailStatus.message));
-
   messageEl.innerHTML = linkify(trailStatus.message).replace(/\n/g, '<br />');
 
   timeagoEl.setAttribute('datetime', trailStatus.updatedAt);
