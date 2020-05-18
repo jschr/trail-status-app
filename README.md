@@ -22,8 +22,7 @@ mkcert localhost
 
 ```
 
-Rename `.env.sample` and `.env.dev.sample` and `.env.production.sample` and remove `.sample`. Open each file and modify to use
-your own env vars.
+Create `.env`, `env.dev` and `env.production` at the root of this project with the contents of the provided `.sample` files in this repo. Modify the env vars if you're own. 
 
 Run the app in development:
 
