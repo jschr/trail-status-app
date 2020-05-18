@@ -1,9 +1,9 @@
 # Trail Status App
 
-I created this app to automatically update my local trail commitee's website when they post trail status updates to their Instagram. Once you connect your Instagram account you will be given an embed code that you can paste into your website. Tagging your next Instagram post with #trails-open or #trails-closed will automatically update your website.
+I created this app to automatically update my local trail commitee's website when they post trail status updates to their Instagram. Once you connect your Instagram account you will be given an embed code that you can paste into your website. Tagging your next Instagram post with #trails-open or #trails-closed will automatically the embed.
 
-- 100% Typescript
-- React frontend hosted on Netlify
+**Built with**
+- React frontend, hosted on Netlify
 - Serverless backend with AWS Lambda and API Gateway
 - Infrastructure as code with AWS CDK
 
