@@ -62,13 +62,15 @@ const updateTrailStatus = async (
     let status: string | undefined;
     let message: string | undefined;
     let imageUrl: string | undefined;
+    let instagramPostId: string | undefined;
     let skipped = true;
 
-    for (const { caption, mediaUrl } of userMedia) {
+    for (const { id, caption, mediaUrl } of userMedia) {
       if (caption.includes(trailSettings.openHashtag)) {
         status = 'open';
         message = stripHashtags(caption) || 'The trails are open.';
         imageUrl = mediaUrl || '';
+        instagramPostId = id;
         break;
       }
 
@@ -76,21 +78,28 @@ const updateTrailStatus = async (
         status = 'closed';
         message = stripHashtags(caption) || 'The trails are closed.';
         imageUrl = mediaUrl || '';
+        instagramPostId = id;
         break;
       }
     }
 
-    if (status !== trailStatus.status || message !== trailStatus.message) {
+    if (
+      status !== trailStatus.status ||
+      message !== trailStatus.message ||
+      instagramPostId !== trailStatus.instagramPostId
+    ) {
       console.info(`Updating status for trail id ${trailStatus.trailId}`, {
         statusChanged: status !== trailStatus.status,
         messageChanged: message !== trailStatus.message,
         imageUrlChanged: imageUrl !== trailStatus.imageUrl,
+        instagramPostIdChange: instagramPostId !== trailStatus.instagramPostId,
       });
 
       await trailStatus.save({
         status,
         message,
         imageUrl,
+        instagramPostId,
       });
 
       await trailSettings.save({
