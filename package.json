@@ -11,7 +11,7 @@
     "infrastructure"
   ],
   "scripts": {
-    "dev": "dotenv -e .env -e .env.dev -- wsrun --exclude-missing dev",
+    "start": "dotenv -e .env -e .env.dev -- wsrun --exclude-missing dev",
     "watch": "wsrun --exclude-missing watch",
     "lint": "wsrun --exclude-missing lint",
     "package": "tasks/package.sh",

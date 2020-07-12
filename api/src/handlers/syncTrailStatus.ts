@@ -88,11 +88,23 @@ const updateTrailStatus = async (
       message !== trailStatus.message ||
       instagramPostId !== trailStatus.instagramPostId
     ) {
+      let instagramPermalink = trailStatus.instagramPermalink;
+      if (instagramPostId && instagramPostId !== trailStatus.instagramPostId) {
+        console.info(`Fetching instagram media for id ${instagramPostId}`);
+        const media = await instagram.getMedia(
+          instagramPostId,
+          user.accessToken,
+        );
+        instagramPermalink = media.permalink;
+      }
+
       console.info(`Updating status for trail id ${trailStatus.trailId}`, {
         statusChanged: status !== trailStatus.status,
         messageChanged: message !== trailStatus.message,
         imageUrlChanged: imageUrl !== trailStatus.imageUrl,
         instagramPostIdChange: instagramPostId !== trailStatus.instagramPostId,
+        instagramPermalinkChange:
+          instagramPermalink !== trailStatus.instagramPermalink,
       });
 
       await trailStatus.save({
@@ -100,6 +112,7 @@ const updateTrailStatus = async (
         message,
         imageUrl,
         instagramPostId,
+        instagramPermalink,
       });
 
       await trailSettings.save({

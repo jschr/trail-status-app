@@ -8,6 +8,7 @@ export interface TrailStatus {
   message: string;
   imageUrl: string;
   instagramPostId: string;
+  instagramPermalink: string;
   updatedAt: string;
   createdAt: string;
 }
@@ -87,6 +88,8 @@ export default class TrailStatusModel {
       attrMap.imageUrl = { S: trailStatus.imageUrl };
     if (trailStatus.instagramPostId !== undefined)
       attrMap.instagramPostId = { S: trailStatus.instagramPostId };
+    if (trailStatus.instagramPermalink !== undefined)
+      attrMap.instagramPermalink = { S: trailStatus.instagramPermalink };
     if (trailStatus.updatedAt !== undefined)
       attrMap.updatedAt = { S: trailStatus.updatedAt };
     if (trailStatus.createdAt !== undefined)
@@ -107,6 +110,7 @@ export default class TrailStatusModel {
       message: attrMap.message?.S,
       imageUrl: attrMap.imageUrl?.S,
       instagramPostId: attrMap.instagramPostId?.S,
+      instagramPermalink: attrMap.instagramPermalink?.S,
       updatedAt: attrMap.updatedAt?.S,
       createdAt: attrMap.createdAt?.S,
     };
@@ -158,6 +162,10 @@ export default class TrailStatusModel {
     return this.attrs.instagramPostId ?? '';
   }
 
+  get instagramPermalink() {
+    return this.attrs.instagramPermalink ?? '';
+  }
+
   set status(status: string) {
     this.attrs.status = status;
   }
@@ -176,6 +184,7 @@ export default class TrailStatusModel {
       message: this.message,
       imageUrl: this.imageUrl,
       instagramPostId: this.instagramPostId,
+      instagramPermalink: this.instagramPermalink,
       updatedAt: this.updatedAt,
       createdAt: this.createdAt,
     };

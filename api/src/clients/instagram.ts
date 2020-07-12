@@ -111,6 +111,42 @@ export const getUserMedia = async (
   }));
 };
 
+interface Media {
+  id: string;
+  caption: string;
+  mediaType: string;
+  mediaUrl: string;
+  permalink: string;
+  thumbnailUrl: string;
+  timestamp: string;
+  username: string;
+}
+export const getMedia = async (
+  mediaId: string,
+  accessToken: string,
+): Promise<Media> => {
+  const mediaUrl = `${igGraphUrl}/${mediaId}?fields=caption,id,media_type,media_url,permalink,thumbnail_url,timestamp,username&access_token=${accessToken}`;
+  const mediaResp = await fetch(mediaUrl);
+
+  if (!mediaResp.ok) {
+    const payload = await mediaResp.text();
+    throw new Error(`InstagramClient error getting media: ${payload}`);
+  }
+
+  const mediaPayload = await mediaResp.json();
+
+  return {
+    id: mediaPayload.id,
+    caption: mediaPayload.caption,
+    mediaType: mediaPayload.media_type,
+    mediaUrl: mediaPayload.media_url,
+    permalink: mediaPayload.permalink,
+    thumbnailUrl: mediaPayload.thumbnail_url,
+    timestamp: mediaPayload.timestamp,
+    username: mediaPayload.username,
+  };
+};
+
 export const refreshAccessToken = async (
   accessToken: string,
 ): Promise<{ accessToken: string; expiresIn: number }> => {
