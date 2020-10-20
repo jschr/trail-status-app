@@ -126,7 +126,7 @@ export default class WebhookModel {
       attrMap.lastRanAt = { S: webhook.lastRanAt };
     }
     if (webhook.error !== undefined) {
-      attrMap.error = { N: String(webhook.error) };
+      attrMap.error = { S: webhook.error };
     }
 
     return attrMap;

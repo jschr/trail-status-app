@@ -47,10 +47,19 @@ export default withSQSHandler(async event => {
     // messages are sent in the batch and one fails, the entire batch is re-tried. Webhooks
     // should not expect to messages to be delivered only once.
     if (!res.ok) {
-      throw new Error(
-        `Failed to process webhook '${webhookId}', invalid response '${res.status}' from '${webhook.url}'`,
-      );
+      const errorMessage = `Failed to process webhook '${webhookId}', invalid response '${res.status}' from '${webhook.url}'`;
+      await webhook.save({
+        lastRanAt: new Date().toISOString(),
+        error: errorMessage,
+      });
+
+      throw new Error(errorMessage);
     }
+
+    await webhook.save({
+      lastRanAt: new Date().toISOString(),
+      error: '',
+    });
 
     console.info(
       `Successfully ran webhook '${webhookId}', received status '${res.status}' from '${webhook.url}'`,
