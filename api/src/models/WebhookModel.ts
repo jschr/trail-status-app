@@ -25,7 +25,7 @@ export default class WebhookModel {
       return new WebhookModel(this.fromAttributeMap(res.Item));
     } catch (err) {
       throw new Error(
-        `WebhookModel.get for trailId '${webhookId}' failed with '${err.message}'`,
+        `WebhookModel.get for webhookId '${webhookId}' failed with '${err.message}'`,
       );
     }
   }
@@ -108,7 +108,7 @@ export default class WebhookModel {
     const attrMap: AWS.DynamoDB.AttributeMap = {};
 
     if (webhook.webhookId !== undefined) {
-      attrMap.webhookId = { S: webhook.trailId };
+      attrMap.webhookId = { S: webhook.webhookId };
     }
     if (webhook.trailId !== undefined) {
       attrMap.trailId = { S: webhook.trailId };
