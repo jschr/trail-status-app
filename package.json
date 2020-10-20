@@ -11,12 +11,15 @@
     "infrastructure"
   ],
   "scripts": {
-    "start": "dotenv -e .env -e .env.dev -- wsrun --exclude-missing dev",
+    "start": "dotenv -e .env -e .env.local -- wsrun --exclude-missing dev",
     "watch": "wsrun --exclude-missing watch",
     "lint": "wsrun --exclude-missing lint",
     "package": "tasks/package.sh",
-    "build": "dotenv -e .env -e .env.production -- wsrun --exclude-missing --stages build",
-    "deploy": "dotenv -e .env -e .env.production yarn infrastructure deploy",
+    "build": "tasks/build-ci.sh",
+    "build:dev": "dotenv -e .env -e .env.dev -- wsrun --exclude-missing --stages build",
+    "deploy:dev": "dotenv -e .env -e .env.dev yarn infrastructure deploy",
+    "build:production": "dotenv -e .env -e .env.production -- wsrun --exclude-missing --stages build",
+    "deploy:production": "dotenv -e .env -e .env.production yarn infrastructure deploy",
     "--- workspaces ---": "",
     "api": "yarn workspace @trail-status-app/api",
     "embed": "yarn workspace @trail-status-app/embed",
