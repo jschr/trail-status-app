@@ -180,6 +180,7 @@ export default class TrailStatusModel {
 
   public toJSON() {
     return {
+      trailId: this.trailId,
       status: this.status,
       message: this.message,
       imageUrl: this.imageUrl,
