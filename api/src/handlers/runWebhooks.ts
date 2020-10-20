@@ -9,6 +9,10 @@ export default withSQSHandler(async event => {
     return;
   }
 
+  // Messages should be grouped by trail id so cache the trail status to
+  // avoid unecessary db lookups while processing the webhooks for a trail.
+  const getTrailStatus = createTrailStatusCache();
+
   for (const message of event.Records) {
     let webhookId: string | null = null;
     try {
@@ -28,9 +32,7 @@ export default withSQSHandler(async event => {
       continue;
     }
 
-    // Messages should be grouped by trail id so cache the trail status to
-    // avoid unecessary db lookups while processing the webhooks for a trail.
-    const trailStatus = await getTrailStatusCache(webhook.trailId);
+    const trailStatus = await getTrailStatus(webhook.trailId);
     if (!trailStatus) {
       console.error(`Failed to find trail for '${webhook.trailId}'`);
       continue;
@@ -67,7 +69,7 @@ export default withSQSHandler(async event => {
   }
 });
 
-const getTrailStatusCache = (() => {
+const createTrailStatusCache = () => {
   const cache: Record<string, TrailStatusModel | null> = {};
   return async (trailId: string) => {
     if (trailId in cache) {
@@ -77,4 +79,4 @@ const getTrailStatusCache = (() => {
     cache[trailId] = result;
     return result;
   };
-})();
+};
