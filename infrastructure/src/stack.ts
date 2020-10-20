@@ -279,6 +279,30 @@ export default class extends cdk.Stack {
     userTable.grantReadWriteData(authorizeInstagramCallbackHandler);
     trailSettingsTable.grantReadWriteData(authorizeInstagramCallbackHandler);
 
+    // Test webhook
+    const webhookTestApi = api.root.addResource('webhook-test');
+
+    // POST /webhook-test
+    const testWebhookHandler = new lambda.Function(
+      this,
+      projectPrefix('testWebhook'),
+      {
+        functionName: projectPrefix('testWebhook'),
+        runtime: lambda.Runtime.NODEJS_12_X,
+        code: lambda.Code.fromAsset(packagePath),
+        handler: 'api/build/src/handlers/testWebhook.default',
+        environment: apiEnvVars,
+        timeout: cdk.Duration.seconds(10),
+        memorySize: 512,
+      },
+    );
+
+    const testWebhookIntegration = new apigateway.LambdaIntegration(
+      testWebhookHandler,
+    );
+
+    webhookTestApi.addMethod('POST', testWebhookIntegration);
+
     // Schedules
 
     // Sync trail status
