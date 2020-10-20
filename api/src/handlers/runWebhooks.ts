@@ -43,6 +43,9 @@ export default withSQSHandler(async event => {
     });
 
     // If the webhook fails throw an error. This triggers the message batch to be retried.
+    // There should only be one message per batch but this handles multiple. If multiple
+    // messages are sent in the batch and one fails, the entire batch is re-tried. Webhooks
+    // should not expect to messages to be delivered only once.
     if (!res.ok) {
       throw new Error(
         `Failed to process webhook '${webhookId}', invalid response '${res.status}' from '${webhook.url}'`,

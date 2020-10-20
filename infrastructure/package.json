@@ -18,6 +18,7 @@
     "@aws-cdk/aws-dynamodb": "1.27.0",
     "@aws-cdk/aws-events-targets": "1.27.0",
     "@aws-cdk/aws-lambda": "1.27.0",
+    "@aws-cdk/aws-lambda-event-sources": "1.27.0",
     "@aws-cdk/aws-route53": "1.27.0",
     "@aws-cdk/aws-route53-targets": "1.27.0",
     "@aws-cdk/aws-sqs": "1.27.0",

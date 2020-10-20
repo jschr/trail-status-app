@@ -144,11 +144,11 @@ const updateTrailStatus = async (
     return {
       trailId: trailSettings.trailId,
       success: true,
+      webhookJobsCreated,
       status,
       message,
       imageUrl,
       skipped,
-      webhookJobsCreated,
     };
   } catch (err) {
     return {

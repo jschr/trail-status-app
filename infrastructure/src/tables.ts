@@ -38,7 +38,7 @@ export default {
           type: dynamodb.AttributeType.STRING,
         },
         sortKey: {
-          name: 'lastRanAt',
+          name: 'webhookId',
           type: dynamodb.AttributeType.STRING,
         },
       },

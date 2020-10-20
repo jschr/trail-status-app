@@ -8,6 +8,7 @@ import * as dynamodb from '@aws-cdk/aws-dynamodb';
 import * as lambda from '@aws-cdk/aws-lambda';
 import * as events from '@aws-cdk/aws-events';
 import * as eventTargets from '@aws-cdk/aws-events-targets';
+import { SqsEventSource } from '@aws-cdk/aws-lambda-event-sources';
 import * as sqs from '@aws-cdk/aws-sqs';
 import path from 'path';
 import tables from './tables';
@@ -97,6 +98,9 @@ export default class extends cdk.Stack {
       fifo: true,
       queueName: projectPrefix('webhook-jobs.fifo'),
       contentBasedDeduplication: true,
+      // Set to vibility timeout to 6 times the runWebhooks lambda timeout
+      // https://docs.aws.amazon.com/lambda/latest/dg/with-sqs.html#events-sqs-queueconfig
+      visibilityTimeout: cdk.Duration.seconds(6 * 15),
       deadLetterQueue: {
         queue: webhookQueueDeadletter,
         maxReceiveCount: 10,
@@ -338,5 +342,33 @@ export default class extends cdk.Stack {
     syncTrailStatusRule.addTarget(
       new eventTargets.LambdaFunction(syncTrailStatusHandler),
     );
+
+    // Jobs
+
+    // Run webhooks
+
+    const webhookQueueEventSource = new SqsEventSource(webhookQueue, {
+      // Set batch size to one. The runWebhooks handler will be called for each webhook
+      // to allow re-trying each individual one if one fails rather than the entire batch.
+      batchSize: 1,
+    });
+
+    const runWebhooksHandler = new lambda.Function(
+      this,
+      projectPrefix('runWebhooks'),
+      {
+        functionName: projectPrefix('runWebhooks'),
+        runtime: lambda.Runtime.NODEJS_12_X,
+        code: lambda.Code.fromAsset(packagePath),
+        handler: 'api/build/src/handlers/runWebhooks.default',
+        environment: apiEnvVars,
+        timeout: cdk.Duration.seconds(15),
+        memorySize: 512,
+      },
+    );
+
+    runWebhooksHandler.addEventSource(webhookQueueEventSource);
+    webhookTable.grantReadWriteData(runWebhooksHandler);
+    trailStatusTable.grantReadData(runWebhooksHandler);
   }
 }

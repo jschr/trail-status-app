@@ -295,12 +295,40 @@
     "@aws-cdk/core" "1.27.0"
     "@aws-cdk/region-info" "1.27.0"
 
+"@aws-cdk/aws-kinesis@1.27.0":
+  version "1.27.0"
+  resolved "https://registry.yarnpkg.com/@aws-cdk/aws-kinesis/-/aws-kinesis-1.27.0.tgz#90ba2daae00d3cfd8ba2bca5675724aa52e50282"
+  integrity sha512-Quddbs/8GsmcNlpIeoqtqNy8X89DZfBQa8r7pNqMhInSKYMcljmmV9kWfDMaR0CVn1y00DHHiXyN3T0sdJeyBw==
+  dependencies:
+    "@aws-cdk/aws-iam" "1.27.0"
+    "@aws-cdk/aws-kms" "1.27.0"
+    "@aws-cdk/aws-logs" "1.27.0"
+    "@aws-cdk/core" "1.27.0"
+
 "@aws-cdk/aws-kms@1.27.0":
   version "1.27.0"
   resolved "https://registry.yarnpkg.com/@aws-cdk/aws-kms/-/aws-kms-1.27.0.tgz#6df493072de4e21e1b91898a8e1a3b244c36b894"
   integrity sha512-wfSWL0SKCLGPQeiCGKKCh840kz4fVpBarhtOz9i2tkQP1OGfyZv5dTGGCs2VE6WzLBC6oRrx1hKjXG4URpYIGA==
   dependencies:
     "@aws-cdk/aws-iam" "1.27.0"
+    "@aws-cdk/core" "1.27.0"
+
+"@aws-cdk/aws-lambda-event-sources@1.27.0":
+  version "1.27.0"
+  resolved "https://registry.yarnpkg.com/@aws-cdk/aws-lambda-event-sources/-/aws-lambda-event-sources-1.27.0.tgz#87e9c8ed1e41ea277d50107545e4740b7476d551"
+  integrity sha512-qVat3DkRsnWA9wmfyB4+xusLNeJ4m/PYoyYdPiGA99CgzRYuEWut20hwgcbPpnllUZFjWBiaesKMxhiZ5jtoZg==
+  dependencies:
+    "@aws-cdk/aws-apigateway" "1.27.0"
+    "@aws-cdk/aws-dynamodb" "1.27.0"
+    "@aws-cdk/aws-events" "1.27.0"
+    "@aws-cdk/aws-iam" "1.27.0"
+    "@aws-cdk/aws-kinesis" "1.27.0"
+    "@aws-cdk/aws-lambda" "1.27.0"
+    "@aws-cdk/aws-s3" "1.27.0"
+    "@aws-cdk/aws-s3-notifications" "1.27.0"
+    "@aws-cdk/aws-sns" "1.27.0"
+    "@aws-cdk/aws-sns-subscriptions" "1.27.0"
+    "@aws-cdk/aws-sqs" "1.27.0"
     "@aws-cdk/core" "1.27.0"
 
 "@aws-cdk/aws-lambda@1.27.0":
@@ -364,6 +392,18 @@
     "@aws-cdk/aws-s3" "1.27.0"
     "@aws-cdk/core" "1.27.0"
     "@aws-cdk/cx-api" "1.27.0"
+
+"@aws-cdk/aws-s3-notifications@1.27.0":
+  version "1.27.0"
+  resolved "https://registry.yarnpkg.com/@aws-cdk/aws-s3-notifications/-/aws-s3-notifications-1.27.0.tgz#dc3393b6f8c2a01e8086a0d0370da04e3afb25f4"
+  integrity sha512-jlBbM+HvoXS9YLoEd1/M89n8c8wFm4CWy9VQqKfAKAL1Uj7QEHmM0njsWsVWr2Mx6KaWIVDEV6nBzCfM9z0rzw==
+  dependencies:
+    "@aws-cdk/aws-iam" "1.27.0"
+    "@aws-cdk/aws-lambda" "1.27.0"
+    "@aws-cdk/aws-s3" "1.27.0"
+    "@aws-cdk/aws-sns" "1.27.0"
+    "@aws-cdk/aws-sqs" "1.27.0"
+    "@aws-cdk/core" "1.27.0"
 
 "@aws-cdk/aws-s3@1.27.0":
   version "1.27.0"
