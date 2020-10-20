@@ -11,8 +11,10 @@ import authorizeInstagramCallback from '../handlers/authorizeInstagramCallback';
 import syncTrailStatus from '../handlers/syncTrailStatus';
 import getTrailSettings from '../handlers/getTrailSettings';
 import putTrailSettings from '../handlers/putTrailSettings';
+import receiveWebhookJob from '../handlers/receiveWebhookJob';
 import toExpressApiHandler from './toExpressApiHandler';
 import toExpressScheduledHandler from './toExpressScheduledHandler';
+import toExpressSQSHandler from './toExpressSQSHandler';
 
 const app = express();
 const server = https.createServer(
@@ -37,7 +39,9 @@ app.get('/status', toExpressApiHandler(getTrailStatus));
 app.get('/settings', toExpressApiHandler(getTrailSettings));
 app.put('/settings', toExpressApiHandler(putTrailSettings));
 
-app.post('/scheduled/sync-status', toExpressScheduledHandler(syncTrailStatus));
+app.post('/sync-status', toExpressScheduledHandler(syncTrailStatus));
+
+app.post('/receive-webhook-job', toExpressSQSHandler(receiveWebhookJob));
 
 const port = env('API_PORT');
 server.listen(port, () => {

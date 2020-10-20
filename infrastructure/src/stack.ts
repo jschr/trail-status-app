@@ -8,10 +8,10 @@ import * as dynamodb from '@aws-cdk/aws-dynamodb';
 import * as lambda from '@aws-cdk/aws-lambda';
 import * as events from '@aws-cdk/aws-events';
 import * as eventTargets from '@aws-cdk/aws-events-targets';
+import * as sqs from '@aws-cdk/aws-sqs';
 import path from 'path';
 import tables from './tables';
 import projectPrefix from './projectPrefix';
-import { Duration } from '@aws-cdk/core';
 
 const packagePath = path.join(__dirname, '../../tmp/package.zip');
 
@@ -63,6 +63,46 @@ export default class extends cdk.Stack {
           : cdk.RemovalPolicy.RETAIN,
     });
 
+    // Webhooks table
+    const webhookTable = new dynamodb.Table(this, tables.webhooks.name, {
+      tableName: tables.webhooks.name,
+      partitionKey: tables.webhooks.partitionKey,
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      removalPolicy:
+        env('USER_RESOURCE_REMOVAL_POLICY') === 'destroy'
+          ? cdk.RemovalPolicy.DESTROY
+          : cdk.RemovalPolicy.RETAIN,
+    });
+
+    // TODO: Comment this out and deploy to production to re-create the index.
+    const trailWebhooksIndex = tables.webhooks.indexes.trailWebhooks;
+    webhookTable.addGlobalSecondaryIndex({
+      indexName: trailWebhooksIndex.name,
+      partitionKey: trailWebhooksIndex.partitionKey,
+      sortKey: trailWebhooksIndex.sortKey,
+    });
+
+    // Queues
+
+    const webhookQueueDeadletter = new sqs.Queue(
+      this,
+      projectPrefix('webhook-jobs-deadletter'),
+      {
+        fifo: true,
+        queueName: projectPrefix('webhook-jobs-deadletter.fifo'),
+      },
+    );
+
+    const webhookQueue = new sqs.Queue(this, projectPrefix('webhook-jobs'), {
+      fifo: true,
+      queueName: projectPrefix('webhook-jobs.fifo'),
+      contentBasedDeduplication: true,
+      deadLetterQueue: {
+        queue: webhookQueueDeadletter,
+        maxReceiveCount: 10,
+      },
+    });
+
     // API
     const hostedZone = route53.HostedZone.fromHostedZoneAttributes(
       this,
@@ -106,6 +146,7 @@ export default class extends cdk.Stack {
       JWT_SECRET: env('JWT_SECRET'),
       JWT_EXPIRES_IN: env('JWT_EXPIRES_IN'),
       FRONTEND_ENDPOINT: env('FRONTEND_ENDPOINT'),
+      WEBHOOK_QUEUE_URL: webhookQueue.queueUrl,
     };
 
     // /status
@@ -122,7 +163,7 @@ export default class extends cdk.Stack {
         code: lambda.Code.fromAsset(packagePath),
         handler: 'api/build/src/handlers/getTrailStatus.default',
         environment: apiEnvVars,
-        timeout: Duration.seconds(10),
+        timeout: cdk.Duration.seconds(10),
         memorySize: 512,
       },
     );
@@ -150,7 +191,7 @@ export default class extends cdk.Stack {
         code: lambda.Code.fromAsset(packagePath),
         handler: 'api/build/src/handlers/getTrailSettings.default',
         environment: apiEnvVars,
-        timeout: Duration.seconds(10),
+        timeout: cdk.Duration.seconds(10),
         memorySize: 512,
       },
     );
@@ -172,7 +213,7 @@ export default class extends cdk.Stack {
         code: lambda.Code.fromAsset(packagePath),
         handler: 'api/build/src/handlers/putTrailSettings.default',
         environment: apiEnvVars,
-        timeout: Duration.seconds(10),
+        timeout: cdk.Duration.seconds(10),
         memorySize: 512,
       },
     );
@@ -201,7 +242,7 @@ export default class extends cdk.Stack {
         code: lambda.Code.fromAsset(packagePath),
         handler: 'api/build/src/handlers/authorizeInstagram.default',
         environment: apiEnvVars,
-        timeout: Duration.seconds(10),
+        timeout: cdk.Duration.seconds(10),
         memorySize: 512,
       },
     );
@@ -222,7 +263,7 @@ export default class extends cdk.Stack {
         code: lambda.Code.fromAsset(packagePath),
         handler: 'api/build/src/handlers/authorizeInstagramCallback.default',
         environment: apiEnvVars,
-        timeout: Duration.seconds(10),
+        timeout: cdk.Duration.seconds(10),
         memorySize: 512,
       },
     );
@@ -259,7 +300,7 @@ export default class extends cdk.Stack {
         code: lambda.Code.fromAsset(packagePath),
         handler: 'api/build/src/handlers/syncTrailStatus.default',
         environment: apiEnvVars,
-        timeout: Duration.seconds(20),
+        timeout: cdk.Duration.seconds(20),
         memorySize: 1024,
       },
     );
@@ -267,6 +308,8 @@ export default class extends cdk.Stack {
     trailStatusTable.grantReadWriteData(syncTrailStatusHandler);
     trailSettingsTable.grantReadWriteData(syncTrailStatusHandler);
     userTable.grantReadWriteData(syncTrailStatusHandler);
+    webhookTable.grantReadWriteData(syncTrailStatusHandler);
+    webhookQueue.grantSendMessages(syncTrailStatusHandler);
 
     syncTrailStatusRule.addTarget(
       new eventTargets.LambdaFunction(syncTrailStatusHandler),

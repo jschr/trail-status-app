@@ -38,6 +38,7 @@ export default (
         res.send(result.body);
       }
     } catch (err) {
+      console.error(err);
       res.status(500);
       res.send(err.message);
     }

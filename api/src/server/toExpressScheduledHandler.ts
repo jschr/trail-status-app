@@ -8,6 +8,7 @@ export default (fn: AWSLambda.ScheduledHandler): express.RequestHandler => {
       await fn(mockScheduledEvent(), mockLambdaContext(), () => {});
       res.send('OK');
     } catch (err) {
+      console.error(err);
       res.status(500);
       res.send(err.message);
     }

@@ -1,6 +1,8 @@
+import * as AWS from 'aws-sdk';
 import TrailSettingsModel from '../models/TrailSettingsModel';
 import TrailStatusModel from '../models/TrailStatusModel';
 import UserModel from '../models/UserModel';
+import WebhookModel from '../models/WebhookModel';
 import * as instagram from '../clients/instagram';
 import withScheduledHandler from '../withScheduledHandler';
 
@@ -13,6 +15,14 @@ interface TrailUpdateResult {
   failed?: boolean;
   reason?: string;
   skipped?: boolean;
+  webhookJobsCreated?: number;
+}
+
+const sqs = new AWS.SQS();
+const webhookQueueUrl = process.env.WEBHOOK_QUEUE_URL;
+if (!webhookQueueUrl) {
+  // Log error but don't throw.
+  console.error(`Missing environment variable 'WEBHOOK_QUEUE_URL'`);
 }
 
 export default withScheduledHandler(async () => {
@@ -63,6 +73,7 @@ const updateTrailStatus = async (
     let message: string | undefined;
     let imageUrl: string | undefined;
     let instagramPostId: string | undefined;
+    let webhookJobsCreated: number | undefined;
     let skipped = true;
 
     for (const { id, caption, mediaUrl } of userMedia) {
@@ -120,6 +131,13 @@ const updateTrailStatus = async (
         lastSyncdAt: new Date().toISOString(),
       });
 
+      const webhooks = await WebhookModel.getTrailWebhooks(
+        trailSettings.trailId,
+      );
+
+      await Promise.all(webhooks.map(createWebhookJob));
+      webhookJobsCreated = webhooks.length;
+
       skipped = false;
     }
 
@@ -130,6 +148,7 @@ const updateTrailStatus = async (
       message,
       imageUrl,
       skipped,
+      webhookJobsCreated,
     };
   } catch (err) {
     return {
@@ -137,6 +156,25 @@ const updateTrailStatus = async (
       failed: true,
       reason: err.message,
     };
+  }
+};
+
+const createWebhookJob = async (webhook: WebhookModel) => {
+  if (!webhookQueueUrl) return;
+
+  const params: AWS.SQS.SendMessageRequest = {
+    MessageGroupId: webhook.trailId,
+    MessageDeduplicationId: webhook.webhookId,
+    MessageBody: JSON.stringify({ webhookId: webhook.webhookId }),
+    QueueUrl: webhookQueueUrl,
+  };
+
+  try {
+    await sqs.sendMessage(params).promise();
+  } catch (err) {
+    throw new Error(
+      `Failed to create webhook job for '${webhook.webhookId}' with '${err.message}'`,
+    );
   }
 };
 
