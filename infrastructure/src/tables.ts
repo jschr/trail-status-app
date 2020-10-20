@@ -38,8 +38,8 @@ export default {
           type: dynamodb.AttributeType.STRING,
         },
         sortKey: {
-          name: 'webhookId',
-          type: dynamodb.AttributeType.STRING,
+          name: 'runPriority',
+          type: dynamodb.AttributeType.NUMBER,
         },
       },
     },

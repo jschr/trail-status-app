@@ -5,6 +5,7 @@ import dynamodb from './dynamodb';
 export interface Webhook {
   webhookId: string;
   trailId: string;
+  runPriority: number;
   name: string;
   url: string;
   lastRanAt: string;
@@ -24,7 +25,7 @@ export default class WebhookModel {
       return new WebhookModel(this.fromAttributeMap(res.Item));
     } catch (err) {
       throw new Error(
-        `WebhookModel.get for webhookId '${webhookId}' failed with '${err.message}'`,
+        `WebhookModel.get for trailId '${webhookId}' failed with '${err.message}'`,
       );
     }
   }
@@ -107,10 +108,13 @@ export default class WebhookModel {
     const attrMap: AWS.DynamoDB.AttributeMap = {};
 
     if (webhook.webhookId !== undefined) {
-      attrMap.webhookId = { S: webhook.webhookId };
+      attrMap.webhookId = { S: webhook.trailId };
     }
     if (webhook.trailId !== undefined) {
       attrMap.trailId = { S: webhook.trailId };
+    }
+    if (webhook.runPriority !== undefined) {
+      attrMap.runPriority = { N: String(webhook.runPriority) };
     }
     if (webhook.name !== undefined) {
       attrMap.name = { S: webhook.name };
@@ -137,6 +141,7 @@ export default class WebhookModel {
     return {
       webhookId: attrMap.webhookId?.S,
       trailId: attrMap.trailId?.S,
+      runPriority: Number(attrMap.runPriority?.N),
       url: attrMap.url?.S,
       name: attrMap.name?.S,
       lastRanAt: attrMap.lastRanAt?.S,
@@ -179,6 +184,10 @@ export default class WebhookModel {
     return this.attrs.trailId ?? '';
   }
 
+  get runPriority() {
+    return this.attrs.runPriority ?? 0;
+  }
+
   get name() {
     return this.attrs.name ?? '';
   }
@@ -199,6 +208,7 @@ export default class WebhookModel {
     return {
       webhookId: this.webhookId,
       trailId: this.trailId,
+      runPriority: this.runPriority,
       name: this.name,
       url: this.url,
       lastRanAt: this.lastRanAt,

@@ -75,7 +75,6 @@ export default class extends cdk.Stack {
           : cdk.RemovalPolicy.RETAIN,
     });
 
-    // TODO: Comment this out and deploy to production to re-create the index.
     const trailWebhooksIndex = tables.webhooks.indexes.trailWebhooks;
     webhookTable.addGlobalSecondaryIndex({
       indexName: trailWebhooksIndex.name,
