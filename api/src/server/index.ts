@@ -11,8 +11,10 @@ import authorizeInstagramCallback from '../handlers/authorizeInstagramCallback';
 import syncTrailStatus from '../handlers/syncTrailStatus';
 import getTrailSettings from '../handlers/getTrailSettings';
 import putTrailSettings from '../handlers/putTrailSettings';
+import runWebhooks from '../handlers/runWebhooks';
 import toExpressApiHandler from './toExpressApiHandler';
 import toExpressScheduledHandler from './toExpressScheduledHandler';
+import toExpressSQSHandler from './toExpressSQSHandler';
 
 const app = express();
 const server = https.createServer(
@@ -37,7 +39,19 @@ app.get('/status', toExpressApiHandler(getTrailStatus));
 app.get('/settings', toExpressApiHandler(getTrailSettings));
 app.put('/settings', toExpressApiHandler(putTrailSettings));
 
-app.post('/scheduled/sync-status', toExpressScheduledHandler(syncTrailStatus));
+app.post('/sync-status', toExpressScheduledHandler(syncTrailStatus));
+
+// Example body:
+// {
+//   "Records": [
+//       {
+//           "groupId": "instagram|17841430372261684|default",
+//           "messageId": "b4c941b9-8aa8-40e1-91f4-90bf93bb93a9",
+//           "body": "{\"webhookId\": \"b4c941b9-8aa8-40e1-91f4-90bf93bb93a9\"}"
+//       }
+//   ]
+// }
+app.post('/run-webhooks', toExpressSQSHandler(runWebhooks));
 
 const port = env('API_PORT');
 server.listen(port, () => {

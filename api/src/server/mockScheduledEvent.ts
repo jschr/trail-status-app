@@ -3,7 +3,7 @@ import merge from 'deepmerge';
 export default (
   overrides: Partial<AWSLambda.ScheduledEvent> = {},
 ): AWSLambda.ScheduledEvent => {
-  const defaultEvent = {
+  const defaultEvent: AWSLambda.ScheduledEvent = {
     account: '',
     region: '',
     detail: null,
