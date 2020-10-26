@@ -32,25 +32,21 @@ export default class extends cdk.Stack {
     });
 
     // Trail settings table
-    const trailSettingsTable = new dynamodb.Table(
-      this,
-      tables.trailSettings.name,
-      {
-        tableName: tables.trailSettings.name,
-        partitionKey: tables.trailSettings.partitionKey,
-        billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
-        removalPolicy:
-          env('USER_RESOURCE_REMOVAL_POLICY') === 'destroy'
-            ? cdk.RemovalPolicy.DESTROY
-            : cdk.RemovalPolicy.RETAIN,
-      },
-    );
+    const trailSettingsTable = new dynamodb.Table(this, tables.trails.name, {
+      tableName: tables.trails.name,
+      partitionKey: tables.trails.partitionKey,
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      removalPolicy:
+        env('USER_RESOURCE_REMOVAL_POLICY') === 'destroy'
+          ? cdk.RemovalPolicy.DESTROY
+          : cdk.RemovalPolicy.RETAIN,
+    });
 
-    const trailSyncIndex = tables.trailSettings.indexes.trailSync;
+    const trailsByRegionIndex = tables.trails.indexes.trailsByRegion;
     trailSettingsTable.addGlobalSecondaryIndex({
-      indexName: trailSyncIndex.name,
-      partitionKey: trailSyncIndex.partitionKey,
-      sortKey: trailSyncIndex.sortKey,
+      indexName: trailsByRegionIndex.name,
+      partitionKey: trailsByRegionIndex.partitionKey,
+      sortKey: trailsByRegionIndex.sortKey,
     });
 
     // Trail status table
@@ -75,11 +71,11 @@ export default class extends cdk.Stack {
           : cdk.RemovalPolicy.RETAIN,
     });
 
-    const trailWebhooksIndex = tables.webhooks.indexes.trailWebhooks;
+    const webhooksByRegionIndex = tables.webhooks.indexes.webhooksByRegion;
     webhookTable.addGlobalSecondaryIndex({
-      indexName: trailWebhooksIndex.name,
-      partitionKey: trailWebhooksIndex.partitionKey,
-      sortKey: trailWebhooksIndex.sortKey,
+      indexName: webhooksByRegionIndex.name,
+      partitionKey: webhooksByRegionIndex.partitionKey,
+      sortKey: webhooksByRegionIndex.sortKey,
     });
 
     // Queues

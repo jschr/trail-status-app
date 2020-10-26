@@ -1,30 +1,23 @@
 import * as AWS from 'aws-sdk';
 import tables from '@trail-status-app/infrastructure/build/src/tables';
 import dynamodb from './dynamodb';
+import ensureHashtagPrefix from './ensureHashtagPrefix';
 
 export interface TrailSettings {
-  trailId: string;
-  userId: string;
-  openHashtag: string;
+  id: string;
+  name: string;
+  regionId: string;
   closeHashtag: string;
   updatedAt: string;
   createdAt: string;
-  lastSyncdAt: string;
-  syncPriority: number;
-  enableSync: number;
 }
 
-const ensureHashtagPrefix = (value: string) => {
-  if (value.charAt(0) === '#') return value;
-  return `#${value}`;
-};
-
 export default class TrailSettingsModel {
-  public static async get(trailId: string): Promise<TrailSettingsModel | null> {
+  public static async get(id: string): Promise<TrailSettingsModel | null> {
     try {
       const params: AWS.DynamoDB.GetItemInput = {
         TableName: tables.trailSettings.name,
-        Key: this.toAttributeMap({ trailId }),
+        Key: this.toAttributeMap({ id }),
       };
       const res = await dynamodb.getItem(params).promise();
       if (!res.Item) return null;
@@ -32,17 +25,17 @@ export default class TrailSettingsModel {
       return new TrailSettingsModel(this.fromAttributeMap(res.Item));
     } catch (err) {
       throw new Error(
-        `TrailSettingsModel.get for trailId '${trailId}' failed with '${err.message}'`,
+        `TrailSettingsModel.get for id '${id}' failed with '${err.message}'`,
       );
     }
   }
 
   public static async batchGet(
     items: Array<{
-      trailId: string;
+      id: string;
     }>,
   ): Promise<Array<TrailSettingsModel | null>> {
-    const requestKeys = items.filter(i => i.trailId).map(this.toAttributeMap);
+    const requestKeys = items.filter(i => i.id).map(this.toAttributeMap);
     if (requestKeys.length === 0) return [];
 
     const params: AWS.DynamoDB.BatchGetItemInput = {
@@ -69,8 +62,7 @@ export default class TrailSettingsModel {
       );
 
       return items.map(
-        item =>
-          TrailSettingsModels.find(tm => tm.trailId === item.trailId) ?? null,
+        item => TrailSettingsModels.find(tm => tm.id === item.id) ?? null,
       );
     } catch (err) {
       throw new Error(
@@ -81,13 +73,13 @@ export default class TrailSettingsModel {
     }
   }
 
-  public static async getNextBatchToSync() {
+  public static async getTrailSettingsByRegion(regionId: string) {
     try {
-      const attrMap = this.toAttributeMap({ enableSync: 1 });
+      const attrMap = this.toAttributeMap({ regionId });
 
       const params: AWS.DynamoDB.QueryInput = {
         TableName: tables.trailSettings.name,
-        IndexName: tables.trailSettings.indexes.trailSync.name,
+        IndexName: tables.trailSettings.indexes.trailSettingsByRegion.name,
         KeyConditionExpression: '#enableSync = :enableSync',
         ExpressionAttributeNames: {
           '#enableSync': 'enableSync',
@@ -108,7 +100,7 @@ export default class TrailSettingsModel {
         : [];
     } catch (err) {
       throw new Error(
-        `TrailSettingsModel.getNextBatchToSync failed with '${err.message}'`,
+        `TrailSettingsModel.getTrailSettingsByRegion failed with '${err.message}'`,
       );
     }
   }
@@ -116,24 +108,17 @@ export default class TrailSettingsModel {
   private static toAttributeMap(trailSettings: Partial<TrailSettings>) {
     const attrMap: AWS.DynamoDB.AttributeMap = {};
 
-    if (trailSettings.trailId !== undefined)
-      attrMap.trailId = { S: trailSettings.trailId };
-    if (trailSettings.userId !== undefined)
-      attrMap.userId = { S: trailSettings.userId };
-    if (trailSettings.openHashtag !== undefined)
-      attrMap.openHashtag = { S: trailSettings.openHashtag };
+    if (trailSettings.id !== undefined) attrMap.id = { S: trailSettings.id };
+    if (trailSettings.regionId !== undefined)
+      attrMap.regionId = { S: trailSettings.regionId };
+    if (trailSettings.name !== undefined)
+      attrMap.name = { S: trailSettings.name };
     if (trailSettings.closeHashtag !== undefined)
       attrMap.closeHashtag = { S: trailSettings.closeHashtag };
     if (trailSettings.updatedAt !== undefined)
       attrMap.updatedAt = { S: trailSettings.updatedAt };
     if (trailSettings.createdAt !== undefined)
       attrMap.createdAt = { S: trailSettings.createdAt };
-    if (trailSettings.lastSyncdAt !== undefined)
-      attrMap.lastSyncdAt = { S: trailSettings.lastSyncdAt };
-    if (trailSettings.syncPriority !== undefined)
-      attrMap.syncPriority = { N: String(trailSettings.syncPriority) };
-    if (trailSettings.enableSync !== undefined)
-      attrMap.enableSync = { N: String(trailSettings.enableSync) };
 
     return attrMap;
   }
@@ -141,19 +126,16 @@ export default class TrailSettingsModel {
   private static fromAttributeMap(
     attrMap: AWS.DynamoDB.AttributeMap,
   ): Partial<TrailSettings> {
-    if (!attrMap.trailId || !attrMap.trailId.S)
-      throw new Error('Missing trailId parsing attribute map');
+    if (!attrMap.id || !attrMap.id.S)
+      throw new Error('Missing id parsing attribute map');
 
     return {
-      trailId: attrMap.trailId?.S,
-      userId: attrMap.userId?.S,
-      openHashtag: attrMap.openHashtag?.S,
+      id: attrMap.id?.S,
+      regionId: attrMap.regionId?.S,
+      name: attrMap.name?.S,
       closeHashtag: attrMap.closeHashtag?.S,
       updatedAt: attrMap.updatedAt?.S,
       createdAt: attrMap.createdAt?.S,
-      lastSyncdAt: attrMap.lastSyncdAt?.S,
-      syncPriority: Number(attrMap.syncPriority?.N),
-      enableSync: Number(attrMap.enableSync?.N),
     };
   }
 
@@ -184,16 +166,16 @@ export default class TrailSettingsModel {
     }
   }
 
-  get trailId() {
-    return this.attrs.trailId ?? '';
+  get id() {
+    return this.attrs.id ?? '';
   }
 
-  get userId() {
-    return this.attrs.userId ?? '';
+  get regionId() {
+    return this.attrs.regionId ?? '';
   }
 
-  get openHashtag() {
-    return ensureHashtagPrefix(this.attrs.openHashtag ?? '');
+  get name() {
+    return this.attrs.name ?? '';
   }
 
   get closeHashtag() {
@@ -208,29 +190,14 @@ export default class TrailSettingsModel {
     return this.attrs.createdAt ?? '';
   }
 
-  get lastSyncdAt() {
-    return this.attrs.lastSyncdAt ?? '';
-  }
-
-  get syncPriority() {
-    return this.attrs.syncPriority ?? 0;
-  }
-
-  get enableSync() {
-    return this.attrs.enableSync ?? 0;
-  }
-
   public toJSON() {
     return {
-      trailId: this.trailId,
-      userId: this.userId,
-      openHashtag: this.openHashtag,
+      id: this.id,
+      regionId: this.regionId,
+      name: this.name,
       closeHashtag: this.closeHashtag,
       updatedAt: this.updatedAt,
       createdAt: this.createdAt,
-      lastSyncdAt: this.lastSyncdAt,
-      syncPriority: this.syncPriority,
-      enableSync: this.enableSync,
     };
   }
 }

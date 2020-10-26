@@ -3,7 +3,7 @@ import tables from '@trail-status-app/infrastructure/build/src/tables';
 import dynamodb from './dynamodb';
 
 export interface User {
-  userId: string;
+  id: string;
   username: string;
   accessToken: string;
   expiresAt: string;
@@ -12,11 +12,11 @@ export interface User {
 }
 
 export default class UserModel {
-  public static async get(userId: string): Promise<UserModel | null> {
+  public static async get(id: string): Promise<UserModel | null> {
     try {
       const params: AWS.DynamoDB.GetItemInput = {
         TableName: tables.users.name,
-        Key: this.toAttributeMap({ userId }),
+        Key: this.toAttributeMap({ id }),
       };
       const res = await dynamodb.getItem(params).promise();
       if (!res.Item) return null;
@@ -24,17 +24,17 @@ export default class UserModel {
       return new UserModel(this.fromAttributeMap(res.Item));
     } catch (err) {
       throw new Error(
-        `UserModel.get for userId '${userId}' failed with '${err.message}'`,
+        `UserModel.get for id '${id}' failed with '${err.message}'`,
       );
     }
   }
 
   public static async batchGet(
     items: Array<{
-      userId: string;
+      id: string;
     }>,
   ): Promise<Array<UserModel | null>> {
-    const requestKeys = items.filter(i => i.userId).map(this.toAttributeMap);
+    const requestKeys = items.filter(i => i.id).map(this.toAttributeMap);
     if (requestKeys.length === 0) return [];
 
     const params: AWS.DynamoDB.BatchGetItemInput = {
@@ -61,7 +61,7 @@ export default class UserModel {
       );
 
       return items.map(
-        item => UserModels.find(um => um.userId === item.userId) ?? null,
+        item => UserModels.find(um => um.id === item.id) ?? null,
       );
     } catch (err) {
       throw new Error(
@@ -75,7 +75,7 @@ export default class UserModel {
   private static toAttributeMap(user: Partial<User>) {
     const attrMap: AWS.DynamoDB.AttributeMap = {};
 
-    if (user.userId !== undefined) attrMap.userId = { S: user.userId };
+    if (user.id !== undefined) attrMap.id = { S: user.id };
     if (user.username !== undefined) attrMap.username = { S: user.username };
     if (user.accessToken !== undefined)
       attrMap.accessToken = { S: user.accessToken };
@@ -90,11 +90,11 @@ export default class UserModel {
   private static fromAttributeMap(
     attrMap: AWS.DynamoDB.AttributeMap,
   ): Partial<User> {
-    if (!attrMap.userId ?? !attrMap.userId.S)
-      throw new Error('Missing userId parsing attribute map');
+    if (!attrMap.id ?? !attrMap.id.S)
+      throw new Error('Missing id parsing attribute map');
 
     return {
-      userId: attrMap.userId?.S,
+      id: attrMap.id?.S,
       username: attrMap.username?.S,
       accessToken: attrMap.accessToken?.S,
       expiresAt: attrMap.expiresAt?.S,
@@ -129,8 +129,8 @@ export default class UserModel {
     }
   }
 
-  get userId() {
-    return this.attrs.userId ?? '';
+  get id() {
+    return this.attrs.id ?? '';
   }
 
   get username() {
@@ -155,7 +155,7 @@ export default class UserModel {
 
   public toJSON() {
     return {
-      userId: this.userId,
+      id: this.id,
       username: this.username,
     };
   }

@@ -3,8 +3,8 @@ import tables from '@trail-status-app/infrastructure/build/src/tables';
 import dynamodb from './dynamodb';
 
 export interface Webhook {
-  webhookId: string;
-  trailId: string;
+  id: string;
+  regionId: string;
   runPriority: number;
   name: string;
   url: string;
@@ -13,11 +13,11 @@ export interface Webhook {
 }
 
 export default class WebhookModel {
-  public static async get(webhookId: string): Promise<WebhookModel | null> {
+  public static async get(id: string): Promise<WebhookModel | null> {
     try {
       const params: AWS.DynamoDB.GetItemInput = {
         TableName: tables.webhooks.name,
-        Key: this.toAttributeMap({ webhookId }),
+        Key: this.toAttributeMap({ id }),
       };
       const res = await dynamodb.getItem(params).promise();
       if (!res.Item) return null;
@@ -25,17 +25,17 @@ export default class WebhookModel {
       return new WebhookModel(this.fromAttributeMap(res.Item));
     } catch (err) {
       throw new Error(
-        `WebhookModel.get for webhookId '${webhookId}' failed with '${err.message}'`,
+        `WebhookModel.get for id '${id}' failed with '${err.message}'`,
       );
     }
   }
 
   public static async batchGet(
     items: Array<{
-      webhookId: string;
+      id: string;
     }>,
   ): Promise<Array<WebhookModel | null>> {
-    const requestKeys = items.filter(i => i.webhookId).map(this.toAttributeMap);
+    const requestKeys = items.filter(i => i.id).map(this.toAttributeMap);
     if (requestKeys.length === 0) return [];
 
     const params: AWS.DynamoDB.BatchGetItemInput = {
@@ -62,8 +62,7 @@ export default class WebhookModel {
       );
 
       return items.map(
-        item =>
-          WebhookModels.find(wm => wm.webhookId === item.webhookId) ?? null,
+        item => WebhookModels.find(wm => wm.id === item.id) ?? null,
       );
     } catch (err) {
       throw new Error(
@@ -74,19 +73,19 @@ export default class WebhookModel {
     }
   }
 
-  public static async getTrailWebhooks(trailId: string) {
+  public static async getWebhooksByRegion(regionId: string) {
     try {
-      const attrMap = this.toAttributeMap({ trailId });
+      const attrMap = this.toAttributeMap({ regionId });
 
       const params: AWS.DynamoDB.QueryInput = {
         TableName: tables.webhooks.name,
-        IndexName: tables.webhooks.indexes.trailWebhooks.name,
-        KeyConditionExpression: '#trailId = :trailId',
+        IndexName: tables.webhooks.indexes.webhooksByRegion.name,
+        KeyConditionExpression: '#regionId = :regionId',
         ExpressionAttributeNames: {
-          '#trailId': 'trailId',
+          '#regionId': 'regionId',
         },
         ExpressionAttributeValues: {
-          ':trailId': attrMap.trailId,
+          ':regionId': attrMap.regionId,
         },
         ScanIndexForward: true,
         Limit: 100,
@@ -99,7 +98,7 @@ export default class WebhookModel {
         : [];
     } catch (err) {
       throw new Error(
-        `WebhookModel.getTrailWebhooks failed with '${err.message}'`,
+        `WebhookModel.getWebhooksByRegion failed with '${err.message}'`,
       );
     }
   }
@@ -107,11 +106,11 @@ export default class WebhookModel {
   private static toAttributeMap(webhook: Partial<Webhook>) {
     const attrMap: AWS.DynamoDB.AttributeMap = {};
 
-    if (webhook.webhookId !== undefined) {
-      attrMap.webhookId = { S: webhook.webhookId };
+    if (webhook.id !== undefined) {
+      attrMap.id = { S: webhook.id };
     }
-    if (webhook.trailId !== undefined) {
-      attrMap.trailId = { S: webhook.trailId };
+    if (webhook.regionId !== undefined) {
+      attrMap.regionId = { S: webhook.regionId };
     }
     if (webhook.runPriority !== undefined) {
       attrMap.runPriority = { N: String(webhook.runPriority) };
@@ -135,12 +134,12 @@ export default class WebhookModel {
   private static fromAttributeMap(
     attrMap: AWS.DynamoDB.AttributeMap,
   ): Partial<Webhook> {
-    if (!attrMap.webhookId || !attrMap.trailId.S)
-      throw new Error('Missing webhookId parsing attribute map');
+    if (!attrMap.id || !attrMap.regionId.S)
+      throw new Error('Missing id parsing attribute map');
 
     return {
-      webhookId: attrMap.webhookId?.S,
-      trailId: attrMap.trailId?.S,
+      id: attrMap.id?.S,
+      regionId: attrMap.regionId?.S,
       runPriority: Number(attrMap.runPriority?.N),
       url: attrMap.url?.S,
       name: attrMap.name?.S,
@@ -176,12 +175,12 @@ export default class WebhookModel {
     }
   }
 
-  get webhookId() {
-    return this.attrs.webhookId ?? '';
+  get id() {
+    return this.attrs.id ?? '';
   }
 
-  get trailId() {
-    return this.attrs.trailId ?? '';
+  get regionId() {
+    return this.attrs.regionId ?? '';
   }
 
   get runPriority() {
@@ -206,8 +205,8 @@ export default class WebhookModel {
 
   public toJSON() {
     return {
-      webhookId: this.webhookId,
-      trailId: this.trailId,
+      id: this.id,
+      regionId: this.regionId,
       runPriority: this.runPriority,
       name: this.name,
       url: this.url,
