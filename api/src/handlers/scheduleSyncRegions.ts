@@ -1,0 +1,31 @@
+import * as AWS from 'aws-sdk';
+import RegionModel from '../models/RegionModel';
+import withScheduledHandler from '../withScheduledHandler';
+
+const sqs = new AWS.SQS();
+const syncRegionQueueUrl = process.env.SYNC_REGION_QUEUE_URL;
+
+if (!syncRegionQueueUrl) {
+  throw new Error(`Missing environment variable 'SYNC_REGION_QUEUE_URL'`);
+}
+
+export default withScheduledHandler(async () => {
+  const regions = await RegionModel.all();
+  await regions.map(createSyncRegionJob);
+});
+
+const createSyncRegionJob = async (region: RegionModel) => {
+  const params: AWS.SQS.SendMessageRequest = {
+    MessageGroupId: region.userId,
+    MessageDeduplicationId: region.id,
+    MessageBody: JSON.stringify({ regionId: region.id }),
+    QueueUrl: syncRegionQueueUrl,
+  };
+  try {
+    await sqs.sendMessage(params).promise();
+  } catch (err) {
+    throw new Error(
+      `Failed to create sync region job for '${region.id}' with '${err.message}'`,
+    );
+  }
+};

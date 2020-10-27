@@ -32,14 +32,14 @@ export default {
     name: projectPrefix('trailStatus'),
     partitionKey: { name: 'id', type: dynamodb.AttributeType.STRING },
   },
-  webhooks: {
-    name: projectPrefix('webhooks'),
+  trailWebhooks: {
+    name: projectPrefix('trailWebhooks'),
     partitionKey: { name: 'id', type: dynamodb.AttributeType.STRING },
     indexes: {
       webhooksByRegion: {
-        name: 'webhooksByRegion',
+        name: 'webhooksByTrail',
         partitionKey: {
-          name: 'regionId',
+          name: 'trailId',
           type: dynamodb.AttributeType.STRING,
         },
         sortKey: {

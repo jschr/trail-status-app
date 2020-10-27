@@ -1,6 +1,6 @@
 import fetch from 'node-fetch';
 import withSQSHandler from '../withSQSHandler';
-import WebhookModel from '../models/WebhookModel';
+import TrailWebhookModel from '../models/TrailWebhookModel';
 import TrailStatusModel from '../models/TrailStatusModel';
 
 export default withSQSHandler(async event => {
@@ -26,7 +26,7 @@ export default withSQSHandler(async event => {
       continue;
     }
 
-    const webhook = await WebhookModel.get(webhookId);
+    const webhook = await TrailWebhookModel.get(webhookId);
     if (!webhook) {
       console.error(`Failed to find webhook for '${webhookId}'`);
       continue;

@@ -61,21 +61,26 @@ export default class extends cdk.Stack {
     });
 
     // Webhooks table
-    const webhookTable = new dynamodb.Table(this, tables.webhooks.name, {
-      tableName: tables.webhooks.name,
-      partitionKey: tables.webhooks.partitionKey,
-      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
-      removalPolicy:
-        env('USER_RESOURCE_REMOVAL_POLICY') === 'destroy'
-          ? cdk.RemovalPolicy.DESTROY
-          : cdk.RemovalPolicy.RETAIN,
-    });
+    const trailWebhooksTable = new dynamodb.Table(
+      this,
+      tables.trailWebhooks.name,
+      {
+        tableName: tables.trailWebhooks.name,
+        partitionKey: tables.trailWebhooks.partitionKey,
+        billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+        removalPolicy:
+          env('USER_RESOURCE_REMOVAL_POLICY') === 'destroy'
+            ? cdk.RemovalPolicy.DESTROY
+            : cdk.RemovalPolicy.RETAIN,
+      },
+    );
 
-    const webhooksByRegionIndex = tables.webhooks.indexes.webhooksByRegion;
-    webhookTable.addGlobalSecondaryIndex({
-      indexName: webhooksByRegionIndex.name,
-      partitionKey: webhooksByRegionIndex.partitionKey,
-      sortKey: webhooksByRegionIndex.sortKey,
+    const trailWebhooksByRegionIndex =
+      tables.trailWebhooks.indexes.webhooksByRegion;
+    trailWebhooksTable.addGlobalSecondaryIndex({
+      indexName: trailWebhooksByRegionIndex.name,
+      partitionKey: trailWebhooksByRegionIndex.partitionKey,
+      sortKey: trailWebhooksByRegionIndex.sortKey,
     });
 
     // Queues
@@ -331,7 +336,7 @@ export default class extends cdk.Stack {
     trailStatusTable.grantReadWriteData(syncTrailStatusHandler);
     trailSettingsTable.grantReadWriteData(syncTrailStatusHandler);
     userTable.grantReadWriteData(syncTrailStatusHandler);
-    webhookTable.grantReadWriteData(syncTrailStatusHandler);
+    trailWebhooksTable.grantReadWriteData(syncTrailStatusHandler);
     webhookQueue.grantSendMessages(syncTrailStatusHandler);
 
     syncTrailStatusRule.addTarget(
@@ -363,7 +368,7 @@ export default class extends cdk.Stack {
     );
 
     runWebhooksHandler.addEventSource(webhookQueueEventSource);
-    webhookTable.grantReadWriteData(runWebhooksHandler);
+    trailWebhooksTable.grantReadWriteData(runWebhooksHandler);
     trailStatusTable.grantReadData(runWebhooksHandler);
   }
 }
