@@ -7,7 +7,6 @@ export interface Trail {
   id: string;
   name: string;
   regionId: string;
-  openHashtag: string;
   closeHashtag: string;
   updatedAt: string;
   createdAt: string;
@@ -84,15 +83,14 @@ export default class TrailModel {
       const params: AWS.DynamoDB.QueryInput = {
         TableName: tables.trails.name,
         IndexName: tables.trails.indexes.trailsByRegion.name,
-        KeyConditionExpression: '#enableSync = :enableSync',
+        KeyConditionExpression: '#regionId = :regionId',
         ExpressionAttributeNames: {
-          '#enableSync': 'enableSync',
+          '#regionId': 'regionId',
         },
         ExpressionAttributeValues: {
-          ':enableSync': attrMap.enableSync,
+          ':regionId': attrMap.regionId,
         },
         ScanIndexForward: false,
-        Limit: 100,
         ExclusiveStartKey: exclusiveStartKey,
       };
 
@@ -104,9 +102,7 @@ export default class TrailModel {
 
       return [trails, res.LastEvaluatedKey];
     } catch (err) {
-      throw new Error(
-        `TrailModel.getTrailByRegion failed with '${err.message}'`,
-      );
+      throw new Error(`TrailModel.queryByRegion failed with '${err.message}'`);
     }
   }
 
@@ -133,8 +129,6 @@ export default class TrailModel {
     if (Trail.id !== undefined) attrMap.id = { S: Trail.id };
     if (Trail.regionId !== undefined) attrMap.regionId = { S: Trail.regionId };
     if (Trail.name !== undefined) attrMap.name = { S: Trail.name };
-    if (Trail.openHashtag !== undefined)
-      attrMap.openHashtag = { S: Trail.openHashtag };
     if (Trail.closeHashtag !== undefined)
       attrMap.closeHashtag = { S: Trail.closeHashtag };
     if (Trail.updatedAt !== undefined)
@@ -155,7 +149,6 @@ export default class TrailModel {
       id: attrMap.id?.S,
       regionId: attrMap.regionId?.S,
       name: attrMap.name?.S,
-      openHashtag: attrMap.openHashtag?.S,
       closeHashtag: attrMap.closeHashtag?.S,
       updatedAt: attrMap.updatedAt?.S,
       createdAt: attrMap.createdAt?.S,
@@ -201,10 +194,6 @@ export default class TrailModel {
     return this.attrs.name ?? '';
   }
 
-  get openHashtag() {
-    return ensureHashtagPrefix(this.attrs.openHashtag ?? '');
-  }
-
   get closeHashtag() {
     return ensureHashtagPrefix(this.attrs.closeHashtag ?? '');
   }
@@ -222,7 +211,6 @@ export default class TrailModel {
       id: this.id,
       regionId: this.regionId,
       name: this.name,
-      openHashtag: this.openHashtag,
       closeHashtag: this.closeHashtag,
       updatedAt: this.updatedAt,
       createdAt: this.createdAt,

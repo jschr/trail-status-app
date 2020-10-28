@@ -1,13 +1,14 @@
 import { assert, env } from '@trail-status-app/utilities';
+import uuid from 'uuid/v4';
 import * as instagram from '../clients/instagram';
 import { parseQuery } from '../requests';
 import { redirect } from '../responses';
 import withApiHandler from '../withApiHandler';
 import { BadRequestError } from '../HttpError';
 import UserModel from '../models/UserModel';
-import TrailSettingsModel from '../models/TrailSettingsModel';
+import RegionModel from '../models/RegionModel';
+import TrailModel from '../models/TrailModel';
 import * as jwt from '../jwt';
-import getDefaultTrailId from '../getDefaultTrailId';
 
 interface AuthorizeInstagramCallback {
   code: string;
@@ -25,47 +26,60 @@ export default withApiHandler([], async event => {
     throw new BadRequestError('Failed getting access token.', err);
   });
 
-  const { username } = await instagram.getUser(accessToken);
+  const { username, name, profilePictureUrl } = await instagram.getUser(
+    accessToken,
+  );
 
   const userId = `instagram|${igUserId}`;
   let user = await UserModel.get(userId);
   if (!user) {
     user = new UserModel({
-      userId,
+      id: userId,
       createdAt: new Date().toISOString(),
     });
   }
 
-  await user.save({ username });
-
+  // Update user with latest Instagram user data
   const now = new Date();
   const expiresAt = new Date(+now + expiresIn * 1000);
-
   await user.save({
+    username,
+    profilePictureUrl,
     accessToken,
-    lastLoginAt: now.toISOString(),
     expiresAt: expiresAt.toISOString(),
+    lastLoginAt: now.toISOString(),
   });
 
-  // Create default trail settings.
-  const defaultTrailId = getDefaultTrailId(userId);
-  let defaultSettings = await TrailSettingsModel.get(defaultTrailId);
-  if (!defaultSettings) {
-    defaultSettings = new TrailSettingsModel({
+  // Ensure user has at least one region.
+  const regions = await RegionModel.allByUser(userId);
+  if (regions.length === 0) {
+    const region = new RegionModel({
+      id: uuid(),
       userId,
-      trailId: defaultTrailId,
-      openHashtag: '#open-trails',
-      closeHashtag: '#close-trails',
+      name,
+      openHashtag: 'trailsopen',
+      closeHashtag: 'trailsclosed',
       createdAt: new Date().toISOString(),
     });
+    await region.save();
+    regions.push(region);
   }
 
-  // Enable sync whenever user logs in.
-  // TODO: Disable sync after X days of not finding any trail updates.
-  await defaultSettings.save({
-    syncPriority: +new Date(),
-    enableSync: 1,
-  });
+  // Ensure each region has a trail.
+  await Promise.all(
+    regions.map(async region => {
+      const trails = await TrailModel.allByRegion(region.id);
+      if (trails.length === 0) {
+        const trail = new TrailModel({
+          id: uuid(),
+          regionId: region.id,
+          createdAt: new Date().toISOString(),
+        });
+        await trail.save();
+        trails.push(trail);
+      }
+    }),
+  );
 
   const sessionToken = jwt.createUserSession(userId, username);
 

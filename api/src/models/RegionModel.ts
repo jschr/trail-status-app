@@ -74,6 +74,56 @@ export default class RegionModel {
     }
   }
 
+  public static async queryByUser(
+    userId: string,
+    exclusiveStartKey?: AWS.DynamoDB.Key | undefined,
+  ): Promise<[RegionModel[], AWS.DynamoDB.Key | undefined]> {
+    try {
+      const attrMap = this.toAttributeMap({ userId });
+
+      const params: AWS.DynamoDB.QueryInput = {
+        TableName: tables.trails.name,
+        IndexName: tables.trails.indexes.trailsByRegion.name,
+        KeyConditionExpression: '#userId = :userId',
+        ExpressionAttributeNames: {
+          '#userId': 'userId',
+        },
+        ExpressionAttributeValues: {
+          ':userId': attrMap.userId,
+        },
+        ScanIndexForward: false,
+        ExclusiveStartKey: exclusiveStartKey,
+      };
+
+      const res = await dynamodb.query(params).promise();
+
+      const trails = res.Items
+        ? res.Items.map(item => new RegionModel(this.fromAttributeMap(item)))
+        : [];
+
+      return [trails, res.LastEvaluatedKey];
+    } catch (err) {
+      throw new Error(`RegionModel.queryByUser failed with '${err.message}'`);
+    }
+  }
+
+  public static async allByUser(userId: string): Promise<RegionModel[]> {
+    const allRegionsByUser: RegionModel[] = [];
+
+    let [regions, lastEvaluatedKey] = await RegionModel.queryByUser(userId);
+    allRegionsByUser.push(...regions);
+
+    while (lastEvaluatedKey) {
+      [regions, lastEvaluatedKey] = await RegionModel.queryByUser(
+        userId,
+        lastEvaluatedKey,
+      );
+      allRegionsByUser.push(...regions);
+    }
+
+    return allRegionsByUser;
+  }
+
   public static async scan(
     exclusiveStartKey?: AWS.DynamoDB.Key | undefined,
   ): Promise<[RegionModel[], AWS.DynamoDB.Key | undefined]> {

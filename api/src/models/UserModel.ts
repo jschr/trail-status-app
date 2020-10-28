@@ -5,6 +5,7 @@ import dynamodb from './dynamodb';
 export interface User {
   id: string;
   username: string;
+  profilePictureUrl: string;
   accessToken: string;
   expiresAt: string;
   lastLoginAt: string;
@@ -77,6 +78,8 @@ export default class UserModel {
 
     if (user.id !== undefined) attrMap.id = { S: user.id };
     if (user.username !== undefined) attrMap.username = { S: user.username };
+    if (user.profilePictureUrl !== undefined)
+      attrMap.profilePictureUrl = { S: user.profilePictureUrl };
     if (user.accessToken !== undefined)
       attrMap.accessToken = { S: user.accessToken };
     if (user.expiresAt !== undefined) attrMap.expiresAt = { S: user.expiresAt };
@@ -96,6 +99,7 @@ export default class UserModel {
     return {
       id: attrMap.id?.S,
       username: attrMap.username?.S,
+      profilePictureUrl: attrMap.profilePictureUrl?.S,
       accessToken: attrMap.accessToken?.S,
       expiresAt: attrMap.expiresAt?.S,
       lastLoginAt: attrMap.lastLoginAt?.S,
@@ -137,6 +141,10 @@ export default class UserModel {
     return this.attrs.username ?? '';
   }
 
+  get profilePictureUrl() {
+    return this.attrs.profilePictureUrl ?? '';
+  }
+
   get accessToken() {
     return this.attrs.accessToken ?? '';
   }
@@ -157,6 +165,8 @@ export default class UserModel {
     return {
       id: this.id,
       username: this.username,
+      profilePictureUrl: this.profilePictureUrl,
+      createdAt: this.createdAt,
     };
   }
 }

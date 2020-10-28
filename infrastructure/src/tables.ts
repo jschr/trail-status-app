@@ -9,6 +9,19 @@ export default {
   regions: {
     name: projectPrefix('region'),
     partitionKey: { name: 'id', type: dynamodb.AttributeType.STRING },
+    indexes: {
+      trailsByRegion: {
+        name: 'regionsByUser',
+        partitionKey: {
+          name: 'userId',
+          type: dynamodb.AttributeType.NUMBER,
+        },
+        sortKey: {
+          name: 'createdAt',
+          type: dynamodb.AttributeType.STRING,
+        },
+      },
+    },
   },
   trails: {
     name: projectPrefix('trail'),

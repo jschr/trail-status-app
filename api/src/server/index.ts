@@ -8,10 +8,10 @@ import https from 'https';
 import getTrailStatus from '../handlers/getTrailStatus';
 import authorizeInstagram from '../handlers/authorizeInstagram';
 import authorizeInstagramCallback from '../handlers/authorizeInstagramCallback';
-import syncTrailStatus from '../handlers/syncTrailStatus';
+import syncRegion from '../handlers/syncRegion';
 import getTrailSettings from '../handlers/getTrailSettings';
 import putTrailSettings from '../handlers/putTrailSettings';
-import runWebhooks from '../handlers/runWebhooks';
+import runTrailWebhooks from '../handlers/runTrailWebhooks';
 import toExpressApiHandler from './toExpressApiHandler';
 import toExpressScheduledHandler from './toExpressScheduledHandler';
 import toExpressSQSHandler from './toExpressSQSHandler';
@@ -39,19 +39,31 @@ app.get('/status', toExpressApiHandler(getTrailStatus));
 app.get('/settings', toExpressApiHandler(getTrailSettings));
 app.put('/settings', toExpressApiHandler(putTrailSettings));
 
-app.post('/sync-status', toExpressScheduledHandler(syncTrailStatus));
+app.post('/schedule-sync-regions', toExpressScheduledHandler(syncRegion));
 
 // Example body:
 // {
 //   "Records": [
 //       {
-//           "groupId": "instagram|17841430372261684|default",
-//           "messageId": "b4c941b9-8aa8-40e1-91f4-90bf93bb93a9",
-//           "body": "{\"webhookId\": \"b4c941b9-8aa8-40e1-91f4-90bf93bb93a9\"}"
+//           "groupId": "[userId]>",
+//           "messageId": "[regionId]",
+//           "body": "{\"regionId\": \"[regionId]\"}"
 //       }
 //   ]
 // }
-app.post('/run-webhooks', toExpressSQSHandler(runWebhooks));
+app.post('/run-sync-region', toExpressSQSHandler(runTrailWebhooks));
+
+// Example body:
+// {
+//   "Records": [
+//       {
+//           "groupId": "[trailId]",
+//           "messageId": "[webhookId]",
+//           "body": "{\"webhookId\": \"[webhookId]\"}"
+//       }
+//   ]
+// }
+app.post('/run-trail-webhooks', toExpressSQSHandler(runTrailWebhooks));
 
 const port = env('API_PORT');
 server.listen(port, () => {
