@@ -39,7 +39,7 @@ export default withApiHandler([], async event => {
     });
   }
 
-  // Update user with latest Instagram user data
+  // Update user with latest Instagram user data.
   const now = new Date();
   const expiresAt = new Date(+now + expiresIn * 1000);
   await user.save({

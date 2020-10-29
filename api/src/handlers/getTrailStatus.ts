@@ -1,6 +1,7 @@
 import { assert } from '@trail-status-app/utilities';
 import TrailStatusModel from '../models/TrailStatusModel';
-import TrailSettingsModel from '../models/TrailSettingsModel';
+import TrailModel from '../models/TrailModel';
+import RegionModel from '../models/RegionModel';
 import UserModel from '../models/UserModel';
 import { json } from '../responses';
 import withApiHandler from '../withApiHandler';
@@ -13,24 +14,27 @@ interface GetTrailStatus {
 
 export default withApiHandler([], async event => {
   const { trailId } = assertGetTrailStatus(parseQuery(event));
-  const [trailStatus, trailSettings] = await Promise.all([
+  const [trailStatus, trail] = await Promise.all([
     TrailStatusModel.get(trailId),
-    TrailSettingsModel.get(trailId),
+    TrailModel.get(trailId),
   ]);
 
   if (!trailStatus) {
     throw new NotFoundError(`Could not find trail status for '${trailId}'`);
   }
 
-  if (!trailSettings) {
+  if (!trail) {
     throw new NotFoundError(`Could not find trail settings for '${trailId}'`);
   }
 
-  const user = await UserModel.get(trailSettings.userId);
+  const region = await RegionModel.get(trail.regionId);
+  if (!region) {
+    throw new NotFoundError(`Could not find region for '${trail.regionId}'`);
+  }
+
+  const user = await UserModel.get(region.userId);
   if (!user) {
-    throw new NotFoundError(
-      `Could not find user for '${trailSettings.userId}'`,
-    );
+    throw new NotFoundError(`Could not find user for '${region.userId}'`);
   }
 
   return json({

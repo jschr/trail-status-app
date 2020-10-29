@@ -50,7 +50,7 @@ const syncRegion = async (regionId: string) => {
   const accessToken = await getAccessToken(user);
   const userMedia = await instagram.getUserMedia(accessToken);
 
-  console.log(userMedia);
+  console.log('userMedia', userMedia);
 };
 
 const getAccessToken = async (user: UserModel): Promise<string> => {
