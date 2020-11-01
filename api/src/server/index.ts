@@ -8,10 +8,13 @@ import https from 'https';
 import getTrailStatus from '../handlers/getTrailStatus';
 import authorizeInstagram from '../handlers/authorizeInstagram';
 import authorizeInstagramCallback from '../handlers/authorizeInstagramCallback';
-import syncRegion from '../handlers/syncRegion';
-import getTrailSettings from '../handlers/getTrailSettings';
-import putTrailSettings from '../handlers/putTrailSettings';
+import putTrails from '../handlers/putTrails';
+import postTrails from '../handlers/postTrails';
+import getRegion from '../handlers/getRegion';
+import putRegion from '../handlers/putRegion';
+import runSyncRegion from '../handlers/runSyncRegion';
 import runTrailWebhooks from '../handlers/runTrailWebhooks';
+import scheduleSyncRegions from '../handlers/scheduleSyncRegions';
 import toExpressApiHandler from './toExpressApiHandler';
 import toExpressScheduledHandler from './toExpressScheduledHandler';
 import toExpressSQSHandler from './toExpressSQSHandler';
@@ -34,12 +37,19 @@ app.get(
   toExpressApiHandler(authorizeInstagramCallback),
 );
 
+app.put('/trails', toExpressApiHandler(putTrails));
+app.post('/trails', toExpressApiHandler(postTrails));
+
+app.get('/region', toExpressApiHandler(getRegion));
+app.put('/region', toExpressApiHandler(putRegion));
+
+// TODO: Deprecate
 app.get('/status', toExpressApiHandler(getTrailStatus));
 
-app.get('/settings', toExpressApiHandler(getTrailSettings));
-app.put('/settings', toExpressApiHandler(putTrailSettings));
-
-app.post('/schedule-sync-regions', toExpressScheduledHandler(syncRegion));
+app.post(
+  '/schedule-sync-regions',
+  toExpressScheduledHandler(scheduleSyncRegions),
+);
 
 // Example body:
 // {
@@ -51,7 +61,7 @@ app.post('/schedule-sync-regions', toExpressScheduledHandler(syncRegion));
 //       }
 //   ]
 // }
-app.post('/run-sync-region', toExpressSQSHandler(runTrailWebhooks));
+app.post('/run-sync-region', toExpressSQSHandler(runSyncRegion));
 
 // Example body:
 // {

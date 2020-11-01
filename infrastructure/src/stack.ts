@@ -31,8 +31,26 @@ export default class extends cdk.Stack {
           : cdk.RemovalPolicy.RETAIN,
     });
 
-    // Trail settings table
-    const trailSettingsTable = new dynamodb.Table(this, tables.trails.name, {
+    // Region table
+    const regionsTable = new dynamodb.Table(this, tables.regions.name, {
+      tableName: tables.regions.name,
+      partitionKey: tables.regions.partitionKey,
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      removalPolicy:
+        env('USER_RESOURCE_REMOVAL_POLICY') === 'destroy'
+          ? cdk.RemovalPolicy.DESTROY
+          : cdk.RemovalPolicy.RETAIN,
+    });
+
+    const regionsByUserIndex = tables.regions.indexes.regionsByUser;
+    regionsTable.addGlobalSecondaryIndex({
+      indexName: regionsByUserIndex.name,
+      partitionKey: regionsByUserIndex.partitionKey,
+      sortKey: regionsByUserIndex.sortKey,
+    });
+
+    // Trails table
+    const trailsTable = new dynamodb.Table(this, tables.trails.name, {
       tableName: tables.trails.name,
       partitionKey: tables.trails.partitionKey,
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
@@ -43,7 +61,7 @@ export default class extends cdk.Stack {
     });
 
     const trailsByRegionIndex = tables.trails.indexes.trailsByRegion;
-    trailSettingsTable.addGlobalSecondaryIndex({
+    trailsTable.addGlobalSecondaryIndex({
       indexName: trailsByRegionIndex.name,
       partitionKey: trailsByRegionIndex.partitionKey,
       sortKey: trailsByRegionIndex.sortKey,
@@ -178,56 +196,56 @@ export default class extends cdk.Stack {
 
     trailStatusApi.addMethod('GET', getTrailStatusIntegration);
     trailStatusTable.grantReadData(getTrailStatusHandler);
-    trailSettingsTable.grantReadData(getTrailStatusHandler);
+    trailsTable.grantReadData(getTrailStatusHandler);
     userTable.grantReadData(getTrailStatusHandler);
 
-    // /settings
-    const trailSettingsApi = api.root.addResource('settings');
-    trailSettingsApi.addCorsPreflight({ allowOrigins: ['*'] });
+    // /trails
+    const trailsApi = api.root.addResource('trails');
+    trailsApi.addCorsPreflight({ allowOrigins: ['*'] });
 
-    // GET /settings
-    const getTrailSettingsHandler = new lambda.Function(
+    // GET /trails
+    const getTrailsHandler = new lambda.Function(
       this,
-      projectPrefix('getTrailSettings'),
+      projectPrefix('getTrails'),
       {
-        functionName: projectPrefix('getTrailSettings'),
+        functionName: projectPrefix('getTrails'),
         runtime: lambda.Runtime.NODEJS_12_X,
         code: lambda.Code.fromAsset(packagePath),
-        handler: 'api/build/src/handlers/getTrailSettings.default',
+        handler: 'api/build/src/handlers/getTrails.default',
         environment: apiEnvVars,
         timeout: cdk.Duration.seconds(10),
         memorySize: 512,
       },
     );
 
-    const getTrailSettingsIntegration = new apigateway.LambdaIntegration(
-      getTrailSettingsHandler,
+    const getTrailsIntegration = new apigateway.LambdaIntegration(
+      getTrailsHandler,
     );
 
-    trailSettingsApi.addMethod('GET', getTrailSettingsIntegration);
-    trailSettingsTable.grantReadData(getTrailSettingsHandler);
+    trailsApi.addMethod('GET', getTrailsIntegration);
+    trailsTable.grantReadData(getTrailsHandler);
 
-    // PUT /settings
-    const putTrailSettingsHandler = new lambda.Function(
+    // PUT /trails
+    const putTrailsHandler = new lambda.Function(
       this,
-      projectPrefix('putTrailSettings'),
+      projectPrefix('putTrails'),
       {
-        functionName: projectPrefix('putTrailSettings'),
+        functionName: projectPrefix('putTrails'),
         runtime: lambda.Runtime.NODEJS_12_X,
         code: lambda.Code.fromAsset(packagePath),
-        handler: 'api/build/src/handlers/putTrailSettings.default',
+        handler: 'api/build/src/handlers/putTrails.default',
         environment: apiEnvVars,
         timeout: cdk.Duration.seconds(10),
         memorySize: 512,
       },
     );
 
-    const putTrailSettingsIntegration = new apigateway.LambdaIntegration(
-      putTrailSettingsHandler,
+    const putTrailsIntegration = new apigateway.LambdaIntegration(
+      putTrailsHandler,
     );
 
-    trailSettingsApi.addMethod('PUT', putTrailSettingsIntegration);
-    trailSettingsTable.grantReadWriteData(putTrailSettingsHandler);
+    trailsApi.addMethod('PUT', putTrailsIntegration);
+    trailsTable.grantReadWriteData(putTrailsHandler);
 
     // instagram
     const instagramApi = api.root.addResource('instagram');
@@ -281,7 +299,7 @@ export default class extends cdk.Stack {
       authorizeInstagramCallbackIntegration,
     );
     userTable.grantReadWriteData(authorizeInstagramCallbackHandler);
-    trailSettingsTable.grantReadWriteData(authorizeInstagramCallbackHandler);
+    trailsTable.grantReadWriteData(authorizeInstagramCallbackHandler);
 
     // Test webhook
     const webhookTestApi = api.root.addResource('webhook-test');
@@ -334,7 +352,7 @@ export default class extends cdk.Stack {
     );
 
     trailStatusTable.grantReadWriteData(syncTrailStatusHandler);
-    trailSettingsTable.grantReadWriteData(syncTrailStatusHandler);
+    trailsTable.grantReadWriteData(syncTrailStatusHandler);
     userTable.grantReadWriteData(syncTrailStatusHandler);
     trailWebhooksTable.grantReadWriteData(syncTrailStatusHandler);
     webhookQueue.grantSendMessages(syncTrailStatusHandler);

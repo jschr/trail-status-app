@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "ts-node-dev --no-notify src/server/index.ts",
     "build": "tsc -b",
-    "lint": "eslint -c ./.eslintrc src/**/*.ts"
+    "lint": "eslint -c ./.eslintrc src/**/*.ts",
+    "seed": "ts-node src/seed.ts"
   },
   "dependencies": {
     "@trail-status-app/infrastructure": "",

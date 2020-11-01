@@ -7,14 +7,14 @@ export default {
     partitionKey: { name: 'id', type: dynamodb.AttributeType.STRING },
   },
   regions: {
-    name: projectPrefix('region'),
+    name: projectPrefix('regions'),
     partitionKey: { name: 'id', type: dynamodb.AttributeType.STRING },
     indexes: {
-      trailsByRegion: {
+      regionsByUser: {
         name: 'regionsByUser',
         partitionKey: {
           name: 'userId',
-          type: dynamodb.AttributeType.NUMBER,
+          type: dynamodb.AttributeType.STRING,
         },
         sortKey: {
           name: 'createdAt',
@@ -24,14 +24,14 @@ export default {
     },
   },
   trails: {
-    name: projectPrefix('trail'),
+    name: projectPrefix('trails'),
     partitionKey: { name: 'id', type: dynamodb.AttributeType.STRING },
     indexes: {
       trailsByRegion: {
         name: 'trailsByRegion',
         partitionKey: {
           name: 'regionId',
-          type: dynamodb.AttributeType.NUMBER,
+          type: dynamodb.AttributeType.STRING,
         },
         sortKey: {
           name: 'createdAt',
