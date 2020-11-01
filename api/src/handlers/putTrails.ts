@@ -7,7 +7,7 @@ import { BadRequestError, NotFoundError } from '../HttpError';
 import { parseQuery, parseBody } from '../requests';
 
 interface PutTrailsQuery {
-  trailId: string;
+  id: string;
 }
 
 interface PutTrailsBody {
@@ -15,15 +15,17 @@ interface PutTrailsBody {
   closeHashtag: string;
 }
 
-export default withApiHandler([P.SettingsRead], async event => {
-  const { trailId } = assertPutTrailsQuery(parseQuery(event));
+export default withApiHandler([P.TrailsUpdate], async event => {
+  const { id } = assertPutTrailsQuery(parseQuery(event));
   const { name, closeHashtag } = assertPutTrailsBody(parseBody(event));
 
-  const trail = await TrailModel.get(trailId);
+  const trail = await TrailModel.get(id);
 
   if (!trail) {
-    throw new NotFoundError(`Could not find trail for '${trailId}'`);
+    throw new NotFoundError(`Could not find trail for '${id}'`);
   }
+
+  // TODO: Ensure user has access to trail.
 
   await trail.save({
     name,
@@ -40,7 +42,7 @@ const assertPutTrailsQuery = (query: any): PutTrailsQuery => {
   );
 
   assert(
-    typeof query.trailId !== 'string',
+    typeof query.id !== 'string',
     new BadRequestError('Missing regionId query parameter.'),
   );
 

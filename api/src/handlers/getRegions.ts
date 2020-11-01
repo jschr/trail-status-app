@@ -5,19 +5,22 @@ import { json } from '../responses';
 import withApiHandler from '../withApiHandler';
 import { BadRequestError, NotFoundError } from '../HttpError';
 import { parseQuery } from '../requests';
+import { Permissions as P } from '../jwt';
 
 interface GetRegion {
-  regionId: string;
+  id: string;
 }
 
-export default withApiHandler([], async event => {
-  const { regionId } = assertGetRegion(parseQuery(event));
+export default withApiHandler([P.RegionsRead], async event => {
+  const { id } = assertGetRegion(parseQuery(event));
 
-  const region = await RegionModel.get(regionId);
+  const region = await RegionModel.get(id);
 
   if (!region) {
     throw new NotFoundError(`Could not find region for '${region}'`);
   }
+
+  // TODO: Ensure user has access to region.
 
   const trails = await TrailModel.allByRegion(region.id);
 
@@ -34,8 +37,8 @@ const assertGetRegion = (query: any): GetRegion => {
   );
 
   assert(
-    typeof query.trailId !== 'string',
-    new BadRequestError('Missing regionId query parameter.'),
+    typeof query.id !== 'string',
+    new BadRequestError('Missing id query parameter.'),
   );
 
   return query;

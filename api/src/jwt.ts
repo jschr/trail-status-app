@@ -2,8 +2,11 @@ import { env } from '@trail-status-app/utilities';
 import jwt from 'jsonwebtoken';
 
 export enum Permissions {
-  SettingsRead = 'settings:read',
-  SettingsUpdate = 'settings:update',
+  RegionsRead = 'regions:read',
+  RegionsUpdate = 'regions:update',
+  TrailsRead = 'trails:read',
+  TrailsUpdate = 'trails:update',
+  TrailsCreate = 'trails:create',
   StatusRead = 'status:read',
   StatusUpdate = 'status:update',
 }
@@ -35,8 +38,11 @@ export const createUserSession = (userId: string, username: string) => {
     {
       username,
       permissions: [
-        Permissions.SettingsRead,
-        Permissions.SettingsUpdate,
+        Permissions.RegionsRead,
+        Permissions.RegionsUpdate,
+        Permissions.TrailsRead,
+        Permissions.TrailsUpdate,
+        Permissions.TrailsCreate,
         Permissions.StatusRead,
       ],
     },

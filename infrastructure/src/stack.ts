@@ -171,33 +171,55 @@ export default class extends cdk.Stack {
       WEBHOOK_QUEUE_URL: webhookQueue.queueUrl,
     };
 
-    // /status
-    const trailStatusApi = api.root.addResource('status');
-    trailStatusApi.addCorsPreflight({ allowOrigins: ['*'] });
+    // /regions
+    const regionsApi = api.root.addResource('regions');
+    regionsApi.addCorsPreflight({ allowOrigins: ['*'] });
 
-    // GET /status
-    const getTrailStatusHandler = new lambda.Function(
+    // GET /regions
+    const getRegionsHandler = new lambda.Function(
       this,
-      projectPrefix('getTrailStatus'),
+      projectPrefix('getRegions'),
       {
-        functionName: projectPrefix('getTrailStatus'),
+        functionName: projectPrefix('getRegions'),
         runtime: lambda.Runtime.NODEJS_12_X,
         code: lambda.Code.fromAsset(packagePath),
-        handler: 'api/build/src/handlers/getTrailStatus.default',
+        handler: 'api/build/src/handlers/getRegions.default',
         environment: apiEnvVars,
         timeout: cdk.Duration.seconds(10),
         memorySize: 512,
       },
     );
 
-    const getTrailStatusIntegration = new apigateway.LambdaIntegration(
-      getTrailStatusHandler,
+    const getRegionsIntegration = new apigateway.LambdaIntegration(
+      getRegionsHandler,
     );
 
-    trailStatusApi.addMethod('GET', getTrailStatusIntegration);
-    trailStatusTable.grantReadData(getTrailStatusHandler);
-    trailsTable.grantReadData(getTrailStatusHandler);
-    userTable.grantReadData(getTrailStatusHandler);
+    regionsApi.addMethod('GET', getRegionsIntegration);
+    regionsTable.grantReadData(getRegionsHandler);
+    trailsTable.grantReadData(getRegionsHandler);
+    userTable.grantReadData(getRegionsHandler);
+
+    // PUT /regions
+    const putRegionsHandler = new lambda.Function(
+      this,
+      projectPrefix('putRegions'),
+      {
+        functionName: projectPrefix('putRegions'),
+        runtime: lambda.Runtime.NODEJS_12_X,
+        code: lambda.Code.fromAsset(packagePath),
+        handler: 'api/build/src/handlers/putRegions.default',
+        environment: apiEnvVars,
+        timeout: cdk.Duration.seconds(10),
+        memorySize: 512,
+      },
+    );
+
+    const putRegionsIntegration = new apigateway.LambdaIntegration(
+      putRegionsHandler,
+    );
+
+    regionsApi.addMethod('PUT', putRegionsIntegration);
+    regionsTable.grantReadWriteData(putRegionsHandler);
 
     // /trails
     const trailsApi = api.root.addResource('trails');
@@ -225,6 +247,28 @@ export default class extends cdk.Stack {
     trailsApi.addMethod('GET', getTrailsIntegration);
     trailsTable.grantReadData(getTrailsHandler);
 
+    // POST /trails
+    const postTrailsHandler = new lambda.Function(
+      this,
+      projectPrefix('postTrails'),
+      {
+        functionName: projectPrefix('postTrails'),
+        runtime: lambda.Runtime.NODEJS_12_X,
+        code: lambda.Code.fromAsset(packagePath),
+        handler: 'api/build/src/handlers/postTrails.default',
+        environment: apiEnvVars,
+        timeout: cdk.Duration.seconds(10),
+        memorySize: 512,
+      },
+    );
+
+    const postTrailsIntegration = new apigateway.LambdaIntegration(
+      postTrailsHandler,
+    );
+
+    trailsApi.addMethod('POST', postTrailsIntegration);
+    trailsTable.grantReadWriteData(postTrailsHandler);
+
     // PUT /trails
     const putTrailsHandler = new lambda.Function(
       this,
@@ -246,6 +290,35 @@ export default class extends cdk.Stack {
 
     trailsApi.addMethod('PUT', putTrailsIntegration);
     trailsTable.grantReadWriteData(putTrailsHandler);
+
+    // TODO: Remove when devices use new api
+    // /status
+    const trailStatusApi = api.root.addResource('status');
+    trailStatusApi.addCorsPreflight({ allowOrigins: ['*'] });
+
+    // GET /status
+    const getTrailStatusHandler = new lambda.Function(
+      this,
+      projectPrefix('getTrailStatus'),
+      {
+        functionName: projectPrefix('getTrailStatus'),
+        runtime: lambda.Runtime.NODEJS_12_X,
+        code: lambda.Code.fromAsset(packagePath),
+        handler: 'api/build/src/handlers/getTrailStatus.default',
+        environment: apiEnvVars,
+        timeout: cdk.Duration.seconds(10),
+        memorySize: 512,
+      },
+    );
+
+    const getTrailStatusIntegration = new apigateway.LambdaIntegration(
+      getTrailStatusHandler,
+    );
+
+    trailStatusApi.addMethod('GET', getTrailStatusIntegration);
+    trailStatusTable.grantReadData(getTrailStatusHandler);
+    trailsTable.grantReadData(getTrailStatusHandler);
+    userTable.grantReadData(getTrailStatusHandler);
 
     // instagram
     const instagramApi = api.root.addResource('instagram');

@@ -13,10 +13,12 @@ interface PostTrailsBody {
   closeHashtag: string;
 }
 
-export default withApiHandler([P.SettingsRead], async event => {
+export default withApiHandler([P.TrailsCreate], async event => {
   const { name, regionId, closeHashtag } = assertPostTrailsBody(
     parseBody(event),
   );
+
+  // TODO: Ensure user has access to region.
 
   const trail = new TrailModel({
     id: uuid(),

@@ -7,7 +7,7 @@ import { BadRequestError, NotFoundError } from '../HttpError';
 import { parseQuery, parseBody } from '../requests';
 
 interface PutRegionQuery {
-  regionId: string;
+  id: string;
 }
 
 interface PutRegionBody {
@@ -16,17 +16,19 @@ interface PutRegionBody {
   openHashtag: string;
 }
 
-export default withApiHandler([P.SettingsRead], async event => {
-  const { regionId } = assertPutRegionQuery(parseQuery(event));
+export default withApiHandler([P.RegionsUpdate], async event => {
+  const { id } = assertPutRegionQuery(parseQuery(event));
   const { name, openHashtag, closeHashtag } = assertPutRegionBody(
     parseBody(event),
   );
 
-  const region = await RegionModel.get(regionId);
+  const region = await RegionModel.get(id);
 
   if (!region) {
-    throw new NotFoundError(`Could not find region for '${regionId}'`);
+    throw new NotFoundError(`Could not find region for '${id}'`);
   }
+
+  // TODO: Ensure user has access to region.
 
   await region.save({
     name,
@@ -44,8 +46,8 @@ const assertPutRegionQuery = (query: any): PutRegionQuery => {
   );
 
   assert(
-    typeof query.regionId !== 'string',
-    new BadRequestError('Missing regionId query parameter.'),
+    typeof query.id !== 'string',
+    new BadRequestError('Missing id query parameter.'),
   );
 
   return query;

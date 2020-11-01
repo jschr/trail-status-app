@@ -9,6 +9,7 @@ import { BadRequestError, NotFoundError } from '../HttpError';
 import { parseQuery } from '../requests';
 
 interface GetTrailStatus {
+  // TODO: Deprecate and use id instead once devices use new api.
   trailId: string;
 }
 

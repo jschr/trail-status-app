@@ -239,11 +239,15 @@ export default class RegionModel {
   }
 
   get openHashtag() {
-    return ensureHashtagPrefix(this.attrs.openHashtag ?? '');
+    return this.attrs.openHashtag
+      ? ensureHashtagPrefix(this.attrs.openHashtag)
+      : '';
   }
 
   get closeHashtag() {
-    return ensureHashtagPrefix(this.attrs.closeHashtag ?? '');
+    return this.attrs.closeHashtag
+      ? ensureHashtagPrefix(this.attrs.closeHashtag)
+      : '';
   }
 
   get updatedAt() {

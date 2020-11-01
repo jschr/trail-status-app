@@ -195,7 +195,9 @@ export default class TrailModel {
   }
 
   get closeHashtag() {
-    return ensureHashtagPrefix(this.attrs.closeHashtag ?? '');
+    return this.attrs.closeHashtag
+      ? ensureHashtagPrefix(this.attrs.closeHashtag)
+      : '';
   }
 
   get updatedAt() {
