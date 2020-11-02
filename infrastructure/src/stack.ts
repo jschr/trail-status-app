@@ -212,7 +212,7 @@ export default class extends cdk.Stack {
       JWT_EXPIRES_IN: env('JWT_EXPIRES_IN'),
       FRONTEND_ENDPOINT: env('FRONTEND_ENDPOINT'),
       RUN_SYNC_REGIONS_QUEUE_URL: runSyncRegionsQueue.queueUrl,
-      RUN_TRAIL_WEBHOOK_QUEUE_URL: runTrailWebhooksQueue.queueUrl,
+      RUN_TRAIL_WEBHOOKS_QUEUE_URL: runTrailWebhooksQueue.queueUrl,
     };
 
     // /regions

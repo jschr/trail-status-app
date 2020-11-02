@@ -40,8 +40,8 @@ app.get(
 app.put('/trails', toExpressApiHandler(putTrails));
 app.post('/trails', toExpressApiHandler(postTrails));
 
-app.get('/region', toExpressApiHandler(getRegions));
-app.put('/region', toExpressApiHandler(putRegions));
+app.get('/regions', toExpressApiHandler(getRegions));
+app.put('/regions', toExpressApiHandler(putRegions));
 
 // TODO: Deprecate
 app.get('/status', toExpressApiHandler(getTrailStatus));

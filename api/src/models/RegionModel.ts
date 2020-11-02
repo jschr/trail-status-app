@@ -171,6 +171,7 @@ export default class RegionModel {
 
     if (region.id !== undefined) attrMap.id = { S: region.id };
     if (region.userId !== undefined) attrMap.userId = { S: region.userId };
+    if (region.name !== undefined) attrMap.name = { S: region.name };
     if (region.openHashtag !== undefined)
       attrMap.openHashtag = { S: region.openHashtag };
     if (region.closeHashtag !== undefined)
@@ -192,6 +193,7 @@ export default class RegionModel {
     return {
       id: attrMap.id?.S,
       userId: attrMap.userId?.S,
+      name: attrMap.name?.S,
       openHashtag: attrMap.openHashtag?.S,
       closeHashtag: attrMap.closeHashtag?.S,
       updatedAt: attrMap.updatedAt?.S,
