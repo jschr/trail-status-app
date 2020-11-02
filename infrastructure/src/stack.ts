@@ -103,27 +103,70 @@ export default class extends cdk.Stack {
 
     // Queues
 
-    const webhookQueueDeadletter = new sqs.Queue(
+    // Sync regions
+
+    const runSyncRegionsDeadletter = new sqs.Queue(
       this,
-      projectPrefix('webhook-jobs-deadletter'),
+      projectPrefix('runSyncRegionsJobDeadletter'),
       {
         fifo: true,
-        queueName: projectPrefix('webhook-jobs-deadletter.fifo'),
+        queueName: projectPrefix('runSyncRegionsJobDeadletter.fifo'),
       },
     );
 
-    const webhookQueue = new sqs.Queue(this, projectPrefix('webhook-jobs'), {
-      fifo: true,
-      queueName: projectPrefix('webhook-jobs.fifo'),
-      contentBasedDeduplication: true,
-      // Set to vibility timeout to 6 times the runWebhooks lambda timeout
-      // https://docs.aws.amazon.com/lambda/latest/dg/with-sqs.html#events-sqs-queueconfig
-      visibilityTimeout: cdk.Duration.seconds(6 * 15),
-      deadLetterQueue: {
-        queue: webhookQueueDeadletter,
-        maxReceiveCount: 10,
+    // Set to vibility timeout to 6 times the runTrailWebhooks lambda timeout
+    // https://docs.aws.amazon.com/lambda/latest/dg/with-sqs.html#events-sqs-queueconfig
+    const runSyncRegionsHandlerTimeout = 15;
+    const runSyncRegionsQueue = new sqs.Queue(
+      this,
+      projectPrefix('runSyncRegionsJob'),
+      {
+        fifo: true,
+        queueName: projectPrefix('runSyncRegionsJob.fifo'),
+        contentBasedDeduplication: true,
+        // Set to vibility timeout to 6 times the runTrailWebhooks lambda timeout
+        // https://docs.aws.amazon.com/lambda/latest/dg/with-sqs.html#events-sqs-queueconfig
+        visibilityTimeout: cdk.Duration.seconds(
+          6 * runSyncRegionsHandlerTimeout,
+        ),
+        deadLetterQueue: {
+          queue: runSyncRegionsDeadletter,
+          maxReceiveCount: 10,
+        },
       },
-    });
+    );
+
+    // Trail webhooks
+
+    const runTrailWebhooksDeadletter = new sqs.Queue(
+      this,
+      projectPrefix('runTrailWebhooksJobDeadletter'),
+      {
+        fifo: true,
+        queueName: projectPrefix('runTrailWebhooksJobDeadletter.fifo'),
+      },
+    );
+
+    // Set to vibility timeout to 6 times the runTrailWebhooks lambda timeout
+    // https://docs.aws.amazon.com/lambda/latest/dg/with-sqs.html#events-sqs-queueconfig
+    const runTrailWebhooksHandlerTimeout = 15;
+    const runTrailWebhooksQueue = new sqs.Queue(
+      this,
+      projectPrefix('runTrailWebhooksJob'),
+      {
+        fifo: true,
+        queueName: projectPrefix('runTrailWebhooksJob.fifo'),
+        contentBasedDeduplication: true,
+
+        visibilityTimeout: cdk.Duration.seconds(
+          6 * runTrailWebhooksHandlerTimeout,
+        ),
+        deadLetterQueue: {
+          queue: runTrailWebhooksDeadletter,
+          maxReceiveCount: 10,
+        },
+      },
+    );
 
     // API
     const hostedZone = route53.HostedZone.fromHostedZoneAttributes(
@@ -157,7 +200,7 @@ export default class extends cdk.Stack {
       recordName: env('API_SUBDOMAIN'),
     });
 
-    const apiEnvVars = {
+    const envVars = {
       PROJECT: env('PROJECT'),
       DYNAMO_ENDPOINT: env('DYNAMO_ENDPOINT'),
       API_ENDPOINT: env('API_ENDPOINT'),
@@ -168,7 +211,8 @@ export default class extends cdk.Stack {
       JWT_SECRET: env('JWT_SECRET'),
       JWT_EXPIRES_IN: env('JWT_EXPIRES_IN'),
       FRONTEND_ENDPOINT: env('FRONTEND_ENDPOINT'),
-      WEBHOOK_QUEUE_URL: webhookQueue.queueUrl,
+      RUN_SYNC_REGIONS_QUEUE_URL: runSyncRegionsQueue.queueUrl,
+      RUN_TRAIL_WEBHOOK_QUEUE_URL: runTrailWebhooksQueue.queueUrl,
     };
 
     // /regions
@@ -184,7 +228,7 @@ export default class extends cdk.Stack {
         runtime: lambda.Runtime.NODEJS_12_X,
         code: lambda.Code.fromAsset(packagePath),
         handler: 'api/build/src/handlers/getRegions.default',
-        environment: apiEnvVars,
+        environment: envVars,
         timeout: cdk.Duration.seconds(10),
         memorySize: 512,
       },
@@ -208,7 +252,7 @@ export default class extends cdk.Stack {
         runtime: lambda.Runtime.NODEJS_12_X,
         code: lambda.Code.fromAsset(packagePath),
         handler: 'api/build/src/handlers/putRegions.default',
-        environment: apiEnvVars,
+        environment: envVars,
         timeout: cdk.Duration.seconds(10),
         memorySize: 512,
       },
@@ -234,7 +278,7 @@ export default class extends cdk.Stack {
         runtime: lambda.Runtime.NODEJS_12_X,
         code: lambda.Code.fromAsset(packagePath),
         handler: 'api/build/src/handlers/getTrails.default',
-        environment: apiEnvVars,
+        environment: envVars,
         timeout: cdk.Duration.seconds(10),
         memorySize: 512,
       },
@@ -256,7 +300,7 @@ export default class extends cdk.Stack {
         runtime: lambda.Runtime.NODEJS_12_X,
         code: lambda.Code.fromAsset(packagePath),
         handler: 'api/build/src/handlers/postTrails.default',
-        environment: apiEnvVars,
+        environment: envVars,
         timeout: cdk.Duration.seconds(10),
         memorySize: 512,
       },
@@ -278,7 +322,7 @@ export default class extends cdk.Stack {
         runtime: lambda.Runtime.NODEJS_12_X,
         code: lambda.Code.fromAsset(packagePath),
         handler: 'api/build/src/handlers/putTrails.default',
-        environment: apiEnvVars,
+        environment: envVars,
         timeout: cdk.Duration.seconds(10),
         memorySize: 512,
       },
@@ -305,7 +349,7 @@ export default class extends cdk.Stack {
         runtime: lambda.Runtime.NODEJS_12_X,
         code: lambda.Code.fromAsset(packagePath),
         handler: 'api/build/src/handlers/getTrailStatus.default',
-        environment: apiEnvVars,
+        environment: envVars,
         timeout: cdk.Duration.seconds(10),
         memorySize: 512,
       },
@@ -336,7 +380,7 @@ export default class extends cdk.Stack {
         runtime: lambda.Runtime.NODEJS_12_X,
         code: lambda.Code.fromAsset(packagePath),
         handler: 'api/build/src/handlers/authorizeInstagram.default',
-        environment: apiEnvVars,
+        environment: envVars,
         timeout: cdk.Duration.seconds(10),
         memorySize: 512,
       },
@@ -357,7 +401,7 @@ export default class extends cdk.Stack {
         runtime: lambda.Runtime.NODEJS_12_X,
         code: lambda.Code.fromAsset(packagePath),
         handler: 'api/build/src/handlers/authorizeInstagramCallback.default',
-        environment: apiEnvVars,
+        environment: envVars,
         timeout: cdk.Duration.seconds(10),
         memorySize: 512,
       },
@@ -386,7 +430,7 @@ export default class extends cdk.Stack {
         runtime: lambda.Runtime.NODEJS_12_X,
         code: lambda.Code.fromAsset(packagePath),
         handler: 'api/build/src/handlers/testWebhook.default',
-        environment: apiEnvVars,
+        environment: envVars,
         timeout: cdk.Duration.seconds(10),
         memorySize: 512,
       },
@@ -400,66 +444,101 @@ export default class extends cdk.Stack {
 
     // Schedules
 
-    // Sync trail status
+    // Sync regions
 
-    const syncTrailStatusRule = new events.Rule(
+    const syncRegionsRule = new events.Rule(
       this,
-      projectPrefix('syncTrailStatusRule'),
+      projectPrefix('syncRegionsRule'),
       {
         schedule: events.Schedule.rate(cdk.Duration.minutes(2)),
       },
     );
 
-    const syncTrailStatusHandler = new lambda.Function(
+    const syncRegionsHandler = new lambda.Function(
       this,
-      projectPrefix('syncTrailStatus'),
+      projectPrefix('syncRegions'),
       {
-        functionName: projectPrefix('syncTrailStatus'),
+        functionName: projectPrefix('syncRegions'),
         runtime: lambda.Runtime.NODEJS_12_X,
         code: lambda.Code.fromAsset(packagePath),
-        handler: 'api/build/src/handlers/syncTrailStatus.default',
-        environment: apiEnvVars,
-        timeout: cdk.Duration.seconds(20),
-        memorySize: 1024,
-      },
-    );
-
-    trailStatusTable.grantReadWriteData(syncTrailStatusHandler);
-    trailsTable.grantReadWriteData(syncTrailStatusHandler);
-    userTable.grantReadWriteData(syncTrailStatusHandler);
-    trailWebhooksTable.grantReadWriteData(syncTrailStatusHandler);
-    webhookQueue.grantSendMessages(syncTrailStatusHandler);
-
-    syncTrailStatusRule.addTarget(
-      new eventTargets.LambdaFunction(syncTrailStatusHandler),
-    );
-
-    // Jobs
-
-    // Run webhooks
-
-    const webhookQueueEventSource = new SqsEventSource(webhookQueue, {
-      // Set batch size to one. The runWebhooks handler will be called for each webhook
-      // to allow re-trying each individual one if one fails rather than the entire batch.
-      batchSize: 1,
-    });
-
-    const runWebhooksHandler = new lambda.Function(
-      this,
-      projectPrefix('runWebhooks'),
-      {
-        functionName: projectPrefix('runWebhooks'),
-        runtime: lambda.Runtime.NODEJS_12_X,
-        code: lambda.Code.fromAsset(packagePath),
-        handler: 'api/build/src/handlers/runWebhooks.default',
-        environment: apiEnvVars,
-        timeout: cdk.Duration.seconds(15),
+        handler: 'api/build/src/handlers/syncRegions.default',
+        environment: envVars,
+        timeout: cdk.Duration.seconds(10),
         memorySize: 512,
       },
     );
 
-    runWebhooksHandler.addEventSource(webhookQueueEventSource);
-    trailWebhooksTable.grantReadWriteData(runWebhooksHandler);
-    trailStatusTable.grantReadData(runWebhooksHandler);
+    trailStatusTable.grantReadWriteData(syncRegionsHandler);
+    trailsTable.grantReadWriteData(syncRegionsHandler);
+    userTable.grantReadWriteData(syncRegionsHandler);
+    trailWebhooksTable.grantReadWriteData(syncRegionsHandler);
+    runTrailWebhooksQueue.grantSendMessages(syncRegionsHandler);
+
+    syncRegionsRule.addTarget(
+      new eventTargets.LambdaFunction(syncRegionsHandler),
+    );
+
+    // Jobs
+
+    // Sync regions
+
+    const runSyncRegionsQueueEventSource = new SqsEventSource(
+      runSyncRegionsQueue,
+      {
+        // Set batch size to one. The runSyncRegions handler will be called for each region
+        // to allow re-trying each individual one if one fails rather than the entire batch.
+        batchSize: 1,
+      },
+    );
+
+    const runSyncRegionsHandler = new lambda.Function(
+      this,
+      projectPrefix('runSyncRegions'),
+      {
+        functionName: projectPrefix('runSyncRegions'),
+        runtime: lambda.Runtime.NODEJS_12_X,
+        code: lambda.Code.fromAsset(packagePath),
+        handler: 'api/build/src/handlers/runSyncRegions.default',
+        environment: envVars,
+        timeout: cdk.Duration.seconds(runSyncRegionsHandlerTimeout),
+        memorySize: 1024,
+      },
+    );
+
+    runSyncRegionsHandler.addEventSource(runSyncRegionsQueueEventSource);
+    regionsTable.grantReadData(runSyncRegionsHandler);
+    trailsTable.grantReadData(runSyncRegionsHandler);
+    trailWebhooksTable.grantReadData(runSyncRegionsHandler);
+    trailStatusTable.grantReadWriteData(runSyncRegionsHandler);
+    userTable.grantReadWriteData(runSyncRegionsHandler);
+
+    // Run webhooks
+
+    const runTrailWebhookQueueEventSource = new SqsEventSource(
+      runTrailWebhooksQueue,
+      {
+        // Set batch size to one. The runTrailWebhooks handler will be called for each webhook
+        // to allow re-trying each individual one if one fails rather than the entire batch.
+        batchSize: 1,
+      },
+    );
+
+    const runTrailWebhooksHandler = new lambda.Function(
+      this,
+      projectPrefix('runTrailWebhooks'),
+      {
+        functionName: projectPrefix('runTrailWebhooks'),
+        runtime: lambda.Runtime.NODEJS_12_X,
+        code: lambda.Code.fromAsset(packagePath),
+        handler: 'api/build/src/handlers/runTrailWebhooks.default',
+        environment: envVars,
+        timeout: cdk.Duration.seconds(runSyncRegionsHandlerTimeout),
+        memorySize: 1024,
+      },
+    );
+
+    runTrailWebhooksHandler.addEventSource(runTrailWebhookQueueEventSource);
+    trailWebhooksTable.grantReadWriteData(runTrailWebhooksHandler);
+    trailStatusTable.grantReadData(runTrailWebhooksHandler);
   }
 }

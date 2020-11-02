@@ -3,10 +3,10 @@ import RegionModel from '../models/RegionModel';
 import withScheduledHandler from '../withScheduledHandler';
 
 const sqs = new AWS.SQS();
-const syncRegionQueueUrl = process.env.SYNC_REGION_QUEUE_URL;
+const runSyncRegionsQueueUrl = process.env.RUN_SYNC_REGIONS_QUEUE_URL;
 
-if (!syncRegionQueueUrl) {
-  throw new Error(`Missing environment variable 'SYNC_REGION_QUEUE_URL'`);
+if (!runSyncRegionsQueueUrl) {
+  throw new Error(`Missing environment variable 'RUN_SYNC_REGIONS_QUEUE_URL'`);
 }
 
 export default withScheduledHandler(async () => {
@@ -19,7 +19,7 @@ const createSyncRegionJob = async (region: RegionModel) => {
     MessageGroupId: region.userId,
     MessageDeduplicationId: region.id,
     MessageBody: JSON.stringify({ regionId: region.id }),
-    QueueUrl: syncRegionQueueUrl,
+    QueueUrl: runSyncRegionsQueueUrl,
   };
   try {
     await sqs.sendMessage(params).promise();

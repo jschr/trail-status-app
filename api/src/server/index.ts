@@ -12,7 +12,7 @@ import putTrails from '../handlers/putTrails';
 import postTrails from '../handlers/postTrails';
 import getRegions from '../handlers/getRegions';
 import putRegions from '../handlers/putRegions';
-import runSyncRegion from '../handlers/runSyncRegion';
+import runSyncRegions from '../handlers/runSyncRegions';
 import runTrailWebhooks from '../handlers/runTrailWebhooks';
 import scheduleSyncRegions from '../handlers/scheduleSyncRegions';
 import toExpressApiHandler from './toExpressApiHandler';
@@ -61,7 +61,7 @@ app.post(
 //       }
 //   ]
 // }
-app.post('/run-sync-region', toExpressSQSHandler(runSyncRegion));
+app.post('/run-sync-regions', toExpressSQSHandler(runSyncRegions));
 
 // Example body:
 // {
