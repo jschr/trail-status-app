@@ -446,36 +446,33 @@ export default class extends cdk.Stack {
 
     // Sync regions
 
-    const syncRegionsRule = new events.Rule(
+    const scheduleSyncRegionsRule = new events.Rule(
       this,
-      projectPrefix('syncRegionsRule'),
+      projectPrefix('scheduleSyncRegionsRule'),
       {
         schedule: events.Schedule.rate(cdk.Duration.minutes(2)),
       },
     );
 
-    const syncRegionsHandler = new lambda.Function(
+    const scheduleSyncRegionsHandler = new lambda.Function(
       this,
-      projectPrefix('syncRegions'),
+      projectPrefix('scheduleSyncRegions'),
       {
-        functionName: projectPrefix('syncRegions'),
+        functionName: projectPrefix('scheduleSyncRegions'),
         runtime: lambda.Runtime.NODEJS_12_X,
         code: lambda.Code.fromAsset(packagePath),
-        handler: 'api/build/src/handlers/syncRegions.default',
+        handler: 'api/build/src/handlers/scheduleSyncRegions.default',
         environment: envVars,
         timeout: cdk.Duration.seconds(10),
         memorySize: 512,
       },
     );
 
-    trailStatusTable.grantReadWriteData(syncRegionsHandler);
-    trailsTable.grantReadWriteData(syncRegionsHandler);
-    userTable.grantReadWriteData(syncRegionsHandler);
-    trailWebhooksTable.grantReadWriteData(syncRegionsHandler);
-    runTrailWebhooksQueue.grantSendMessages(syncRegionsHandler);
+    regionsTable.grantReadData(scheduleSyncRegionsHandler);
+    runSyncRegionsQueue.grantSendMessages(scheduleSyncRegionsHandler);
 
-    syncRegionsRule.addTarget(
-      new eventTargets.LambdaFunction(syncRegionsHandler),
+    scheduleSyncRegionsRule.addTarget(
+      new eventTargets.LambdaFunction(scheduleSyncRegionsHandler),
     );
 
     // Jobs

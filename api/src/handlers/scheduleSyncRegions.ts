@@ -23,6 +23,7 @@ const createSyncRegionJob = async (region: RegionModel) => {
   };
   try {
     await sqs.sendMessage(params).promise();
+    console.info(`Created sync region job for '${region.id}'`);
   } catch (err) {
     throw new Error(
       `Failed to create sync region job for '${region.id}' with '${err.message}'`,

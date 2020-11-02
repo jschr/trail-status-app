@@ -51,6 +51,8 @@ const syncRegion = async (regionId: string) => {
   const userMedia = await instagram.getUserMedia(accessToken);
 
   console.log('userMedia', userMedia);
+  console.log('trails', trails);
+  console.log('region', region);
 };
 
 const getAccessToken = async (user: UserModel): Promise<string> => {
