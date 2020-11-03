@@ -3,7 +3,7 @@ import tables from '@trail-status-app/infrastructure/build/src/tables';
 import dynamodb from './dynamodb';
 
 export interface TrailStatus {
-  trailId: string;
+  id: string;
   status: string;
   message: string;
   imageUrl: string;
@@ -14,11 +14,11 @@ export interface TrailStatus {
 }
 
 export default class TrailStatusModel {
-  public static async get(trailId: string): Promise<TrailStatusModel | null> {
+  public static async get(id: string): Promise<TrailStatusModel | null> {
     try {
       const params: AWS.DynamoDB.GetItemInput = {
         TableName: tables.trailStatus.name,
-        Key: this.toAttributeMap({ trailId }),
+        Key: this.toAttributeMap({ id }),
       };
       const res = await dynamodb.getItem(params).promise();
       if (!res.Item) return null;
@@ -26,17 +26,17 @@ export default class TrailStatusModel {
       return new TrailStatusModel(this.fromAttributeMap(res.Item));
     } catch (err) {
       throw new Error(
-        `TrailStatusModel.get for trailId '${trailId}' failed with '${err.message}'`,
+        `TrailStatusModel.get for id '${id}' failed with '${err.message}'`,
       );
     }
   }
 
   public static async batchGet(
     items: Array<{
-      trailId: string;
+      id: string;
     }>,
   ): Promise<Array<TrailStatusModel | null>> {
-    const requestKeys = items.filter(i => i.trailId).map(this.toAttributeMap);
+    const requestKeys = items.filter(i => i.id).map(this.toAttributeMap);
     if (requestKeys.length === 0) return [];
 
     const params: AWS.DynamoDB.BatchGetItemInput = {
@@ -63,8 +63,7 @@ export default class TrailStatusModel {
       );
 
       return items.map(
-        item =>
-          TrailStatusModels.find(tm => tm.trailId === item.trailId) ?? null,
+        item => TrailStatusModels.find(tm => tm.id === item.id) ?? null,
       );
     } catch (err) {
       throw new Error(
@@ -78,8 +77,7 @@ export default class TrailStatusModel {
   private static toAttributeMap(trailStatus: Partial<TrailStatus>) {
     const attrMap: AWS.DynamoDB.AttributeMap = {};
 
-    if (trailStatus.trailId !== undefined)
-      attrMap.trailId = { S: trailStatus.trailId };
+    if (trailStatus.id !== undefined) attrMap.id = { S: trailStatus.id };
     if (trailStatus.status !== undefined)
       attrMap.status = { S: trailStatus.status };
     if (trailStatus.message !== undefined)
@@ -101,11 +99,11 @@ export default class TrailStatusModel {
   private static fromAttributeMap(
     attrMap: AWS.DynamoDB.AttributeMap,
   ): Partial<TrailStatus> {
-    if (!attrMap.trailId ?? !attrMap.trailId.S)
-      throw new Error('Missing trailId parsing attribute map');
+    if (!attrMap.id ?? !attrMap.id.S)
+      throw new Error('Missing id parsing attribute map');
 
     return {
-      trailId: attrMap.trailId?.S,
+      id: attrMap.id?.S,
       status: attrMap.status?.S,
       message: attrMap.message?.S,
       imageUrl: attrMap.imageUrl?.S,
@@ -142,8 +140,8 @@ export default class TrailStatusModel {
     }
   }
 
-  get trailId() {
-    return this.attrs.trailId ?? '';
+  get id() {
+    return this.attrs.id ?? '';
   }
 
   get status() {
@@ -180,7 +178,7 @@ export default class TrailStatusModel {
 
   public toJSON() {
     return {
-      trailId: this.trailId,
+      id: this.id,
       status: this.status,
       message: this.message,
       imageUrl: this.imageUrl,

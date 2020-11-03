@@ -61,7 +61,7 @@ export const handleRedirectCallback = async (
   };
 };
 
-interface User {
+export interface User {
   id: string;
   username: string;
   name: string;
@@ -91,16 +91,17 @@ export const getUser = async (accessToken: string): Promise<User> => {
   };
 };
 
-interface UserMedia {
+export interface UserMedia {
   id: string;
   caption: string;
   mediaUrl: string;
+  timestamp: string;
 }
 
 export const getUserMedia = async (
   accessToken: string,
 ): Promise<UserMedia[]> => {
-  const userUrl = `${igGraphUrl}/me?fields=media,media.caption,media.media_url&access_token=${accessToken}`;
+  const userUrl = `${igGraphUrl}/me?fields=media,media.caption,media.media_url,media.timestamp&access_token=${accessToken}`;
   const userResp = await fetch(userUrl);
 
   if (!userResp.ok) {
@@ -115,6 +116,7 @@ export const getUserMedia = async (
     id: m.id,
     caption: m.caption,
     mediaUrl: m.media_url,
+    timestamp: m.timestamp,
   }));
 };
 

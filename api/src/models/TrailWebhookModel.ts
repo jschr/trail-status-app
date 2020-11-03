@@ -73,7 +73,10 @@ export default class TrailWebhookModel {
     }
   }
 
-  public static async getWebhooksByTrail(trailId: string) {
+  public static async queryByTrail(
+    trailId: string,
+    exclusiveStartKey?: AWS.DynamoDB.Key | undefined,
+  ): Promise<[TrailWebhookModel[], AWS.DynamoDB.Key | undefined]> {
     try {
       const attrMap = this.toAttributeMap({ trailId });
 
@@ -87,22 +90,45 @@ export default class TrailWebhookModel {
         ExpressionAttributeValues: {
           ':trailId': attrMap.trailId,
         },
-        ScanIndexForward: true,
-        Limit: 100,
+        ScanIndexForward: false,
+        ExclusiveStartKey: exclusiveStartKey,
       };
 
       const res = await dynamodb.query(params).promise();
 
-      return res.Items
+      const trails = res.Items
         ? res.Items.map(
             item => new TrailWebhookModel(this.fromAttributeMap(item)),
           )
         : [];
+
+      return [trails, res.LastEvaluatedKey];
     } catch (err) {
       throw new Error(
-        `TrailWebhookModel.getWebhooksByTrail failed with '${err.message}'`,
+        `TrailWebhookModel.queryByTrail failed with '${err.message}'`,
       );
     }
+  }
+
+  public static async allByTrail(
+    regionId: string,
+  ): Promise<TrailWebhookModel[]> {
+    const allWebhooksByTrail: TrailWebhookModel[] = [];
+
+    let [regions, lastEvaluatedKey] = await TrailWebhookModel.queryByTrail(
+      regionId,
+    );
+    allWebhooksByTrail.push(...regions);
+
+    while (lastEvaluatedKey) {
+      [regions, lastEvaluatedKey] = await TrailWebhookModel.queryByTrail(
+        regionId,
+        lastEvaluatedKey,
+      );
+      allWebhooksByTrail.push(...regions);
+    }
+
+    return allWebhooksByTrail;
   }
 
   private static toAttributeMap(trailWebhook: Partial<TrailWebhook>) {
