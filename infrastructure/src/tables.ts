@@ -23,6 +23,10 @@ export default {
       },
     },
   },
+  regionStatus: {
+    name: projectPrefix('regionStatus'),
+    partitionKey: { name: 'id', type: dynamodb.AttributeType.STRING },
+  },
   trails: {
     name: projectPrefix('trails'),
     partitionKey: { name: 'id', type: dynamodb.AttributeType.STRING },
@@ -40,7 +44,6 @@ export default {
       },
     },
   },
-  // TODO: Move this into trails table?
   trailStatus: {
     name: projectPrefix('trailStatus'),
     partitionKey: { name: 'id', type: dynamodb.AttributeType.STRING },

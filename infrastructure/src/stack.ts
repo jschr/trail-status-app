@@ -49,6 +49,21 @@ export default class extends cdk.Stack {
       sortKey: regionsByUserIndex.sortKey,
     });
 
+    // Region status table
+    const regionStatusTable = new dynamodb.Table(
+      this,
+      tables.regionStatus.name,
+      {
+        tableName: tables.regionStatus.name,
+        partitionKey: tables.regionStatus.partitionKey,
+        billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+        removalPolicy:
+          env('USER_RESOURCE_REMOVAL_POLICY') === 'destroy'
+            ? cdk.RemovalPolicy.DESTROY
+            : cdk.RemovalPolicy.RETAIN,
+      },
+    );
+
     // Trails table
     const trailsTable = new dynamodb.Table(this, tables.trails.name, {
       tableName: tables.trails.name,
@@ -265,6 +280,36 @@ export default class extends cdk.Stack {
     regionsApi.addMethod('PUT', putRegionsIntegration);
     regionsTable.grantReadWriteData(putRegionsHandler);
 
+    // /regions/status
+    const regionStatusApi = regionsApi.addResource('status');
+    regionStatusApi.addCorsPreflight({ allowOrigins: ['*'] });
+
+    // GET /regions/status
+    const getRegionStatusHandler = new lambda.Function(
+      this,
+      projectPrefix('getRegionStatus'),
+      {
+        functionName: projectPrefix('getRegionStatus'),
+        runtime: lambda.Runtime.NODEJS_12_X,
+        code: lambda.Code.fromAsset(packagePath),
+        handler: 'api/build/src/handlers/getRegionStatus.default',
+        environment: envVars,
+        timeout: cdk.Duration.seconds(10),
+        memorySize: 512,
+      },
+    );
+
+    const getRegionStatusIntegration = new apigateway.LambdaIntegration(
+      getRegionStatusHandler,
+    );
+
+    regionStatusApi.addMethod('GET', getRegionStatusIntegration);
+    regionsTable.grantReadData(getRegionStatusHandler);
+    regionStatusTable.grantReadData(getRegionStatusHandler);
+    trailsTable.grantReadData(getRegionStatusHandler);
+    trailStatusTable.grantReadData(getRegionStatusHandler);
+    userTable.grantReadData(getRegionStatusHandler);
+
     // /trails
     const trailsApi = api.root.addResource('trails');
     trailsApi.addCorsPreflight({ allowOrigins: ['*'] });
@@ -335,12 +380,11 @@ export default class extends cdk.Stack {
     trailsApi.addMethod('PUT', putTrailsIntegration);
     trailsTable.grantReadWriteData(putTrailsHandler);
 
-    // TODO: Remove when devices use new api
-    // /status
-    const trailStatusApi = api.root.addResource('status');
+    // /trails/status
+    const trailStatusApi = trailsApi.addResource('status');
     trailStatusApi.addCorsPreflight({ allowOrigins: ['*'] });
 
-    // GET /status
+    // GET /trails/status
     const getTrailStatusHandler = new lambda.Function(
       this,
       projectPrefix('getTrailStatus'),
@@ -360,9 +404,38 @@ export default class extends cdk.Stack {
     );
 
     trailStatusApi.addMethod('GET', getTrailStatusIntegration);
-    trailStatusTable.grantReadData(getTrailStatusHandler);
+    regionsTable.grantReadData(getTrailStatusHandler);
     trailsTable.grantReadData(getTrailStatusHandler);
     userTable.grantReadData(getTrailStatusHandler);
+
+    // TODO: Legacy, remove when devices use new api
+    // /status
+    const legacyTrailStatusApi = api.root.addResource('status');
+    legacyTrailStatusApi.addCorsPreflight({ allowOrigins: ['*'] });
+
+    // GET /status
+    const getLegacyTrailStatusHandler = new lambda.Function(
+      this,
+      projectPrefix('getLegacyTrailStatus'),
+      {
+        functionName: projectPrefix('getLegacyTrailStatus'),
+        runtime: lambda.Runtime.NODEJS_12_X,
+        code: lambda.Code.fromAsset(packagePath),
+        handler: 'api/build/src/handlers/getLegacyTrailStatus.default',
+        environment: envVars,
+        timeout: cdk.Duration.seconds(10),
+        memorySize: 512,
+      },
+    );
+
+    const getLegacyTrailStatusIntegration = new apigateway.LambdaIntegration(
+      getLegacyTrailStatusHandler,
+    );
+
+    legacyTrailStatusApi.addMethod('GET', getLegacyTrailStatusIntegration);
+    trailStatusTable.grantReadData(getLegacyTrailStatusHandler);
+    trailsTable.grantReadData(getLegacyTrailStatusHandler);
+    userTable.grantReadData(getLegacyTrailStatusHandler);
 
     // instagram
     const instagramApi = api.root.addResource('instagram');
@@ -505,8 +578,9 @@ export default class extends cdk.Stack {
     runSyncRegionsHandler.addEventSource(runSyncRegionsQueueEventSource);
     regionsTable.grantReadData(runSyncRegionsHandler);
     trailsTable.grantReadData(runSyncRegionsHandler);
-    trailWebhooksTable.grantReadData(runSyncRegionsHandler);
+    regionStatusTable.grantReadWriteData(runSyncRegionsHandler);
     trailStatusTable.grantReadWriteData(runSyncRegionsHandler);
+    trailWebhooksTable.grantReadData(runSyncRegionsHandler);
     userTable.grantReadWriteData(runSyncRegionsHandler);
 
     // Run webhooks

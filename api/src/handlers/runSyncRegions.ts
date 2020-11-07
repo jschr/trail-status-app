@@ -1,6 +1,7 @@
 import * as AWS from 'aws-sdk';
 import withSQSHandler from '../withSQSHandler';
 import RegionModel from '../models/RegionModel';
+import RegionStatusModel from '../models/RegionStatusModel';
 import UserModel from '../models/UserModel';
 import TrailModel from '../models/TrailModel';
 import TrailStatusModel from '../models/TrailStatusModel';
@@ -87,12 +88,16 @@ const syncRegion = async (regionId: string) => {
 
   if (mediaWithClosedStatus) {
     console.info(`Region '${region.id}' is closed.`);
+    // Mark region as closed.
+    await setRegionStatus(region, 'closed', mediaWithClosedStatus);
     // Mark all trails as closed.
     for (const trail of trails) {
-      setTrailStatus(trail, 'closed', mediaWithClosedStatus);
+      await setTrailStatus(trail, 'closed');
     }
   } else if (mediaWithOpenStatus) {
     console.info(`Region '${region.id}' is open.`);
+    // Mark region as closed.
+    await setRegionStatus(region, 'open', mediaWithOpenStatus);
     // Mark all trails open except any that are closed.
     for (const trail of trails) {
       if (
@@ -100,10 +105,10 @@ const syncRegion = async (regionId: string) => {
         mediaWithOpenStatus.caption.includes(trail.closeHashtag)
       ) {
         console.info(
-          `Found close hashtag '${trail.closeHashtag}' for trail '${trail.id}'.`,
+          `Found close hashtag '${trail.closeHashtag}' for trail '${trail.id}' and region '${region.id}'.`,
         );
       } else {
-        setTrailStatus(trail, 'open', mediaWithOpenStatus);
+        setTrailStatus(trail, 'open');
       }
     }
   } else {
@@ -129,11 +134,41 @@ const getAccessToken = async (user: UserModel): Promise<string> => {
   return user.accessToken;
 };
 
-const setTrailStatus = async (
-  trail: TrailModel,
+const setRegionStatus = async (
+  region: RegionModel,
   status: 'open' | 'closed',
   media: instagram.UserMedia,
 ) => {
+  let regionStatus = await RegionStatusModel.get(region.id);
+
+  if (!regionStatus) {
+    regionStatus = new RegionStatusModel({
+      id: region.id,
+      createdAt: new Date().toISOString(),
+    });
+  }
+
+  const message = stripHashtags(media.caption);
+
+  if (status !== regionStatus.status || message !== regionStatus.message) {
+    await regionStatus.save({
+      status,
+      message,
+      instagramPostId: media.id,
+      imageUrl: media.mediaUrl,
+    });
+
+    console.info(
+      `Setting region '${region.id}' status to '${status}' with message '${message}`,
+    );
+  } else {
+    console.info(
+      `Region '${region.id}' has the same status and message, skipping setting status.`,
+    );
+  }
+};
+
+const setTrailStatus = async (trail: TrailModel, status: 'open' | 'closed') => {
   let trailStatus = await TrailStatusModel.get(trail.id);
 
   if (!trailStatus) {
@@ -143,31 +178,18 @@ const setTrailStatus = async (
     });
   }
 
-  const message = stripHashtags(media.caption);
-
-  if (status !== trailStatus.status || message !== trailStatus.message) {
-    await trailStatus.save({
-      status,
-      // TODO: These are the same for each trail in the region, move to RegionStatus?
-      message,
-      instagramPostId: media.id,
-      imageUrl: media.mediaUrl,
-    });
-
-    console.info(
-      `Setting trail '${trail.id}' status to '${status}' with message '${message}`,
-    );
-
+  if (status !== trailStatus.status) {
+    console.info(`Setting trail '${trail.id}' status to '${status}'`);
+    await trailStatus.save({ status });
     const trailWebhooks = await TrailWebhookModel.allByTrail(trail.id);
-
     console.info(
-      `Found '${trailWebhooks.length}' webhooks for trail '${trail.id}'`,
+      `Found '${trailWebhooks.length}' webhooks for trail '${trail.id}' region '${trail.regionId}'`,
     );
 
     await Promise.all(trailWebhooks.map(createTrailWebhookJob));
   } else {
     console.info(
-      `Trail '${trail.id}' has the same status and message, skipping setting status.`,
+      `Trail '${trail.id}' region '${trail.regionId} has the same status and message, skipping setting status.`,
     );
   }
 };

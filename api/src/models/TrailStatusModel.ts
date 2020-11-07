@@ -5,10 +5,6 @@ import dynamodb from './dynamodb';
 export interface TrailStatus {
   id: string;
   status: string;
-  message: string;
-  imageUrl: string;
-  instagramPostId: string;
-  instagramPermalink: string;
   updatedAt: string;
   createdAt: string;
 }
@@ -80,14 +76,6 @@ export default class TrailStatusModel {
     if (trailStatus.id !== undefined) attrMap.id = { S: trailStatus.id };
     if (trailStatus.status !== undefined)
       attrMap.status = { S: trailStatus.status };
-    if (trailStatus.message !== undefined)
-      attrMap.message = { S: trailStatus.message };
-    if (trailStatus.imageUrl !== undefined)
-      attrMap.imageUrl = { S: trailStatus.imageUrl };
-    if (trailStatus.instagramPostId !== undefined)
-      attrMap.instagramPostId = { S: trailStatus.instagramPostId };
-    if (trailStatus.instagramPermalink !== undefined)
-      attrMap.instagramPermalink = { S: trailStatus.instagramPermalink };
     if (trailStatus.updatedAt !== undefined)
       attrMap.updatedAt = { S: trailStatus.updatedAt };
     if (trailStatus.createdAt !== undefined)
@@ -105,10 +93,6 @@ export default class TrailStatusModel {
     return {
       id: attrMap.id?.S,
       status: attrMap.status?.S,
-      message: attrMap.message?.S,
-      imageUrl: attrMap.imageUrl?.S,
-      instagramPostId: attrMap.instagramPostId?.S,
-      instagramPermalink: attrMap.instagramPermalink?.S,
       updatedAt: attrMap.updatedAt?.S,
       createdAt: attrMap.createdAt?.S,
     };
@@ -148,22 +132,6 @@ export default class TrailStatusModel {
     return this.attrs.status ?? '';
   }
 
-  get message() {
-    return this.attrs.message ?? '';
-  }
-
-  get imageUrl() {
-    return this.attrs.imageUrl ?? '';
-  }
-
-  get instagramPostId() {
-    return this.attrs.instagramPostId ?? '';
-  }
-
-  get instagramPermalink() {
-    return this.attrs.instagramPermalink ?? '';
-  }
-
   set status(status: string) {
     this.attrs.status = status;
   }
@@ -180,10 +148,6 @@ export default class TrailStatusModel {
     return {
       id: this.id,
       status: this.status,
-      message: this.message,
-      imageUrl: this.imageUrl,
-      instagramPostId: this.instagramPostId,
-      instagramPermalink: this.instagramPermalink,
       updatedAt: this.updatedAt,
       createdAt: this.createdAt,
     };

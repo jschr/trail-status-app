@@ -5,7 +5,9 @@ import bodyParser from 'body-parser';
 import fs from 'fs';
 import path from 'path';
 import https from 'https';
+import getRegionStatus from '../handlers/getRegionStatus';
 import getTrailStatus from '../handlers/getTrailStatus';
+import getLegacyTrailStatus from '../handlers/getLegacyTrailStatus';
 import authorizeInstagram from '../handlers/authorizeInstagram';
 import authorizeInstagramCallback from '../handlers/authorizeInstagramCallback';
 import putTrails from '../handlers/putTrails';
@@ -39,12 +41,14 @@ app.get(
 
 app.put('/trails', toExpressApiHandler(putTrails));
 app.post('/trails', toExpressApiHandler(postTrails));
+app.post('/trails/status', toExpressApiHandler(getTrailStatus));
 
 app.get('/regions', toExpressApiHandler(getRegions));
 app.put('/regions', toExpressApiHandler(putRegions));
+app.get('/regions/status', toExpressApiHandler(getRegionStatus));
 
 // TODO: Deprecate
-app.get('/status', toExpressApiHandler(getTrailStatus));
+app.get('/status', toExpressApiHandler(getLegacyTrailStatus));
 
 app.post(
   '/schedule-sync-regions',

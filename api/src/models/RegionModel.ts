@@ -237,7 +237,7 @@ export default class RegionModel {
   }
 
   get name() {
-    return this.attrs.userId ?? '';
+    return this.attrs.name ?? '';
   }
 
   get openHashtag() {
