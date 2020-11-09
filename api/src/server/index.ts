@@ -15,7 +15,7 @@ import postTrails from '../handlers/postTrails';
 import getRegions from '../handlers/getRegions';
 import putRegions from '../handlers/putRegions';
 import runSyncRegions from '../handlers/runSyncRegions';
-import runTrailWebhooks from '../handlers/runTrailWebhooks';
+import runWebhooks from '../handlers/runWebhooks';
 import scheduleSyncRegions from '../handlers/scheduleSyncRegions';
 import toExpressApiHandler from './toExpressApiHandler';
 import toExpressScheduledHandler from './toExpressScheduledHandler';
@@ -77,7 +77,7 @@ app.post('/run-sync-regions', toExpressSQSHandler(runSyncRegions));
 //       }
 //   ]
 // }
-app.post('/run-trail-webhooks', toExpressSQSHandler(runTrailWebhooks));
+app.post('/run-trail-webhooks', toExpressSQSHandler(runWebhooks));
 
 const port = env('API_PORT');
 server.listen(port, () => {

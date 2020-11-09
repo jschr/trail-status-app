@@ -5,16 +5,14 @@ import RegionStatusModel from '../models/RegionStatusModel';
 import UserModel from '../models/UserModel';
 import TrailModel from '../models/TrailModel';
 import TrailStatusModel from '../models/TrailStatusModel';
-import TrailWebhookModel from '../models/TrailWebhookModel';
+import WebhookModel from '../models/WebhookModel';
 import * as instagram from '../clients/instagram';
 
 const sqs = new AWS.SQS();
-const runTrailWebhooksQueueUrl = process.env.RUN_TRAIL_WEBHOOKS_QUEUE_URL;
+const runWebhooksQueueUrl = process.env.RUN_WEBHOOKS_QUEUE_URL;
 
-if (!runTrailWebhooksQueueUrl) {
-  throw new Error(
-    `Missing environment variable 'RUN_TRAIL_WEBHOOKS_QUEUE_URL'`,
-  );
+if (!runWebhooksQueueUrl) {
+  throw new Error(`Missing environment variable 'RUN_WEBHOOKS_QUEUE_URL'`);
 }
 
 export default withSQSHandler(async event => {
@@ -60,6 +58,7 @@ const syncRegion = async (regionId: string) => {
     throw new Error(`Failed to find user for '${region.userId}'`);
   }
 
+  const webhooks = await WebhookModel.allByRegion(regionId);
   const accessToken = await getAccessToken(user);
   let userMedia = await instagram.getUserMedia(accessToken);
 
@@ -89,15 +88,15 @@ const syncRegion = async (regionId: string) => {
   if (mediaWithClosedStatus) {
     console.info(`Region '${region.id}' is closed.`);
     // Mark region as closed.
-    await setRegionStatus(region, 'closed', mediaWithClosedStatus);
+    await setRegionStatus(region, 'closed', mediaWithClosedStatus, webhooks);
     // Mark all trails as closed.
     for (const trail of trails) {
-      await setTrailStatus(trail, 'closed');
+      await setTrailStatus(trail, 'closed', webhooks);
     }
   } else if (mediaWithOpenStatus) {
     console.info(`Region '${region.id}' is open.`);
     // Mark region as closed.
-    await setRegionStatus(region, 'open', mediaWithOpenStatus);
+    await setRegionStatus(region, 'open', mediaWithOpenStatus, webhooks);
     // Mark all trails open except any that are closed.
     for (const trail of trails) {
       if (
@@ -107,8 +106,9 @@ const syncRegion = async (regionId: string) => {
         console.info(
           `Found close hashtag '${trail.closeHashtag}' for trail '${trail.id}' and region '${region.id}'.`,
         );
+        setTrailStatus(trail, 'closed', webhooks);
       } else {
-        setTrailStatus(trail, 'open');
+        setTrailStatus(trail, 'open', webhooks);
       }
     }
   } else {
@@ -138,6 +138,7 @@ const setRegionStatus = async (
   region: RegionModel,
   status: 'open' | 'closed',
   media: instagram.UserMedia,
+  webhooks: WebhookModel[],
 ) => {
   let regionStatus = await RegionStatusModel.get(region.id);
 
@@ -151,6 +152,10 @@ const setRegionStatus = async (
   const message = stripHashtags(media.caption);
 
   if (status !== regionStatus.status || message !== regionStatus.message) {
+    console.info(
+      `Setting region '${region.id}' status to '${status}' with message '${message}`,
+    );
+
     await regionStatus.save({
       status,
       message,
@@ -158,9 +163,13 @@ const setRegionStatus = async (
       imageUrl: media.mediaUrl,
     });
 
+    const regionWebhooks = webhooks.filter(w => !w.trailId);
+
     console.info(
-      `Setting region '${region.id}' status to '${status}' with message '${message}`,
+      `Found '${regionWebhooks.length}' webhooks for region '${region.id}'`,
     );
+
+    await Promise.all(regionWebhooks.map(createWebhookJob));
   } else {
     console.info(
       `Region '${region.id}' has the same status and message, skipping setting status.`,
@@ -168,7 +177,11 @@ const setRegionStatus = async (
   }
 };
 
-const setTrailStatus = async (trail: TrailModel, status: 'open' | 'closed') => {
+const setTrailStatus = async (
+  trail: TrailModel,
+  status: 'open' | 'closed',
+  webhooks: WebhookModel[],
+) => {
   let trailStatus = await TrailStatusModel.get(trail.id);
 
   if (!trailStatus) {
@@ -181,12 +194,13 @@ const setTrailStatus = async (trail: TrailModel, status: 'open' | 'closed') => {
   if (status !== trailStatus.status) {
     console.info(`Setting trail '${trail.id}' status to '${status}'`);
     await trailStatus.save({ status });
-    const trailWebhooks = await TrailWebhookModel.allByTrail(trail.id);
+    const trailWebhooks = webhooks.filter(w => !!w.trailId);
+
     console.info(
       `Found '${trailWebhooks.length}' webhooks for trail '${trail.id}' region '${trail.regionId}'`,
     );
 
-    await Promise.all(trailWebhooks.map(createTrailWebhookJob));
+    await Promise.all(trailWebhooks.map(createWebhookJob));
   } else {
     console.info(
       `Trail '${trail.id}' region '${trail.regionId} has the same status and message, skipping setting status.`,
@@ -194,20 +208,22 @@ const setTrailStatus = async (trail: TrailModel, status: 'open' | 'closed') => {
   }
 };
 
-const createTrailWebhookJob = async (trailWebhook: TrailWebhookModel) => {
+const createWebhookJob = async (webhook: WebhookModel) => {
   const params: AWS.SQS.SendMessageRequest = {
-    MessageGroupId: trailWebhook.trailId,
-    MessageDeduplicationId: trailWebhook.id,
-    MessageBody: JSON.stringify({ trailWebbookId: trailWebhook.id }),
-    QueueUrl: runTrailWebhooksQueueUrl,
+    MessageGroupId: webhook.regionId,
+    MessageDeduplicationId: webhook.id,
+    MessageBody: JSON.stringify({ trailWebbookId: webhook.id }),
+    QueueUrl: runWebhooksQueueUrl,
   };
 
   try {
     await sqs.sendMessage(params).promise();
-    console.info(`Created trail webhook job for webhook '${trailWebhook.id}'`);
+    console.info(
+      `Created webhook job for webhook '${webhook.id}' region '${webhook.regionId}'`,
+    );
   } catch (err) {
     throw new Error(
-      `Failed to create trail webhook job for '${trailWebhook.id}' with '${err.message}'`,
+      `Failed to create webhook job for '${webhook.id}' region '${webhook.regionId}' with '${err.message}'`,
     );
   }
 };

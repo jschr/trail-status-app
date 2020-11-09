@@ -94,26 +94,21 @@ export default class extends cdk.Stack {
     });
 
     // Webhooks table
-    const trailWebhooksTable = new dynamodb.Table(
-      this,
-      tables.trailWebhooks.name,
-      {
-        tableName: tables.trailWebhooks.name,
-        partitionKey: tables.trailWebhooks.partitionKey,
-        billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
-        removalPolicy:
-          env('USER_RESOURCE_REMOVAL_POLICY') === 'destroy'
-            ? cdk.RemovalPolicy.DESTROY
-            : cdk.RemovalPolicy.RETAIN,
-      },
-    );
+    const webhooksTable = new dynamodb.Table(this, tables.webhooks.name, {
+      tableName: tables.webhooks.name,
+      partitionKey: tables.webhooks.partitionKey,
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      removalPolicy:
+        env('USER_RESOURCE_REMOVAL_POLICY') === 'destroy'
+          ? cdk.RemovalPolicy.DESTROY
+          : cdk.RemovalPolicy.RETAIN,
+    });
 
-    const trailWebhooksByRegionIndex =
-      tables.trailWebhooks.indexes.webhooksByRegion;
-    trailWebhooksTable.addGlobalSecondaryIndex({
-      indexName: trailWebhooksByRegionIndex.name,
-      partitionKey: trailWebhooksByRegionIndex.partitionKey,
-      sortKey: trailWebhooksByRegionIndex.sortKey,
+    const webhooksByRegionIndex = tables.webhooks.indexes.webhooksByRegion;
+    webhooksTable.addGlobalSecondaryIndex({
+      indexName: webhooksByRegionIndex.name,
+      partitionKey: webhooksByRegionIndex.partitionKey,
+      sortKey: webhooksByRegionIndex.sortKey,
     });
 
     // Queues
@@ -129,7 +124,7 @@ export default class extends cdk.Stack {
       },
     );
 
-    // Set to vibility timeout to 6 times the runTrailWebhooks lambda timeout
+    // Set to vibility timeout to 6 times the runwebhooks lambda timeout
     // https://docs.aws.amazon.com/lambda/latest/dg/with-sqs.html#events-sqs-queueconfig
     const runSyncRegionsHandlerTimeout = 15;
     const runSyncRegionsQueue = new sqs.Queue(
@@ -139,7 +134,7 @@ export default class extends cdk.Stack {
         fifo: true,
         queueName: projectPrefix('runSyncRegionsJob.fifo'),
         contentBasedDeduplication: true,
-        // Set to vibility timeout to 6 times the runTrailWebhooks lambda timeout
+        // Set to vibility timeout to 6 times the runwebhooks lambda timeout
         // https://docs.aws.amazon.com/lambda/latest/dg/with-sqs.html#events-sqs-queueconfig
         visibilityTimeout: cdk.Duration.seconds(
           6 * runSyncRegionsHandlerTimeout,
@@ -153,31 +148,29 @@ export default class extends cdk.Stack {
 
     // Trail webhooks
 
-    const runTrailWebhooksDeadletter = new sqs.Queue(
+    const runwebhooksDeadletter = new sqs.Queue(
       this,
-      projectPrefix('runTrailWebhooksJobDeadletter'),
+      projectPrefix('runwebhooksJobDeadletter'),
       {
         fifo: true,
-        queueName: projectPrefix('runTrailWebhooksJobDeadletter.fifo'),
+        queueName: projectPrefix('runwebhooksJobDeadletter.fifo'),
       },
     );
 
-    // Set to vibility timeout to 6 times the runTrailWebhooks lambda timeout
+    // Set to vibility timeout to 6 times the runwebhooks lambda timeout
     // https://docs.aws.amazon.com/lambda/latest/dg/with-sqs.html#events-sqs-queueconfig
-    const runTrailWebhooksHandlerTimeout = 15;
-    const runTrailWebhooksQueue = new sqs.Queue(
+    const runWebhooksHandlerTimeout = 15;
+    const runWebhooksQueue = new sqs.Queue(
       this,
-      projectPrefix('runTrailWebhooksJob'),
+      projectPrefix('runwebhooksJob'),
       {
         fifo: true,
-        queueName: projectPrefix('runTrailWebhooksJob.fifo'),
+        queueName: projectPrefix('runwebhooksJob.fifo'),
         contentBasedDeduplication: true,
 
-        visibilityTimeout: cdk.Duration.seconds(
-          6 * runTrailWebhooksHandlerTimeout,
-        ),
+        visibilityTimeout: cdk.Duration.seconds(6 * runWebhooksHandlerTimeout),
         deadLetterQueue: {
-          queue: runTrailWebhooksDeadletter,
+          queue: runwebhooksDeadletter,
           maxReceiveCount: 10,
         },
       },
@@ -227,7 +220,7 @@ export default class extends cdk.Stack {
       JWT_EXPIRES_IN: env('JWT_EXPIRES_IN'),
       FRONTEND_ENDPOINT: env('FRONTEND_ENDPOINT'),
       RUN_SYNC_REGIONS_QUEUE_URL: runSyncRegionsQueue.queueUrl,
-      RUN_TRAIL_WEBHOOKS_QUEUE_URL: runTrailWebhooksQueue.queueUrl,
+      RUN_WEBHOOKS_QUEUE_URL: runWebhooksQueue.queueUrl,
     };
 
     // /regions
@@ -580,36 +573,33 @@ export default class extends cdk.Stack {
     trailsTable.grantReadData(runSyncRegionsHandler);
     regionStatusTable.grantReadWriteData(runSyncRegionsHandler);
     trailStatusTable.grantReadWriteData(runSyncRegionsHandler);
-    trailWebhooksTable.grantReadData(runSyncRegionsHandler);
+    webhooksTable.grantReadData(runSyncRegionsHandler);
     userTable.grantReadWriteData(runSyncRegionsHandler);
 
     // Run webhooks
 
-    const runTrailWebhookQueueEventSource = new SqsEventSource(
-      runTrailWebhooksQueue,
-      {
-        // Set batch size to one. The runTrailWebhooks handler will be called for each webhook
-        // to allow re-trying each individual one if one fails rather than the entire batch.
-        batchSize: 1,
-      },
-    );
+    const runWebhooksQueueEventSource = new SqsEventSource(runWebhooksQueue, {
+      // Set batch size to one. The runwebhooks handler will be called for each webhook
+      // to allow re-trying each individual one if one fails rather than the entire batch.
+      batchSize: 1,
+    });
 
-    const runTrailWebhooksHandler = new lambda.Function(
+    const runWebhooksHandler = new lambda.Function(
       this,
-      projectPrefix('runTrailWebhooks'),
+      projectPrefix('runWebhooks'),
       {
-        functionName: projectPrefix('runTrailWebhooks'),
+        functionName: projectPrefix('runWebhooks'),
         runtime: lambda.Runtime.NODEJS_12_X,
         code: lambda.Code.fromAsset(packagePath),
-        handler: 'api/build/src/handlers/runTrailWebhooks.default',
+        handler: 'api/build/src/handlers/runWebhooks.default',
         environment: envVars,
         timeout: cdk.Duration.seconds(runSyncRegionsHandlerTimeout),
         memorySize: 1024,
       },
     );
 
-    runTrailWebhooksHandler.addEventSource(runTrailWebhookQueueEventSource);
-    trailWebhooksTable.grantReadWriteData(runTrailWebhooksHandler);
-    trailStatusTable.grantReadData(runTrailWebhooksHandler);
+    runWebhooksHandler.addEventSource(runWebhooksQueueEventSource);
+    webhooksTable.grantReadWriteData(runWebhooksHandler);
+    trailStatusTable.grantReadData(runWebhooksHandler);
   }
 }

@@ -1,7 +1,7 @@
 import fetch from 'node-fetch';
 import withSQSHandler from '../withSQSHandler';
-import TrailWebhookModel from '../models/TrailWebhookModel';
-import TrailStatusModel from '../models/TrailStatusModel';
+import WebhookModel from '../models/WebhookModel';
+import buildRegionStatus, { RegionStatus } from '../buildRegionStatus';
 
 export default withSQSHandler(async event => {
   if (!Array.isArray(event?.Records) || !event.Records.length) {
@@ -9,9 +9,9 @@ export default withSQSHandler(async event => {
     return;
   }
 
-  // Messages should be grouped by trail id so cache the trail status to
-  // avoid unecessary db lookups while processing the webhooks for a trail.
-  const getTrailStatus = createTrailStatusCache();
+  // Messages should be grouped by region id so cache the region status to
+  // avoid unecessary lookups while processing the webhooks for a region.
+  const getRegionStatus = createRegionStatusCache();
 
   for (const message of event.Records) {
     let webhookId: string | null = null;
@@ -26,22 +26,24 @@ export default withSQSHandler(async event => {
       continue;
     }
 
-    const webhook = await TrailWebhookModel.get(webhookId);
+    const webhook = await WebhookModel.get(webhookId);
     if (!webhook) {
       console.error(`Failed to find webhook for '${webhookId}'`);
       continue;
     }
 
-    const trailStatus = await getTrailStatus(webhook.trailId);
-    if (!trailStatus) {
-      console.error(`Failed to find trail for '${webhook.trailId}'`);
+    const regionStatus = await getRegionStatus(webhook.regionId);
+    if (!regionStatus) {
+      console.warn(`Failed to find region status for '${webhook.regionId}'`);
       continue;
     }
+
+    // TODO: If webhook.trailId send status for trail rather than region.
 
     const res = await fetch(`${webhook.url}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(trailStatus),
+      body: JSON.stringify(regionStatus),
     });
 
     // If the webhook fails throw an error. This triggers the message batch to be retried.
@@ -69,14 +71,15 @@ export default withSQSHandler(async event => {
   }
 });
 
-const createTrailStatusCache = () => {
-  const cache: Record<string, TrailStatusModel | null> = {};
-  return async (trailId: string) => {
-    if (trailId in cache) {
-      return cache[trailId];
+const createRegionStatusCache = () => {
+  const cache: Record<string, RegionStatus | null> = {};
+
+  return async (regionId: string) => {
+    if (regionId in cache) {
+      return cache[regionId];
     }
-    const result = await TrailStatusModel.get(trailId);
-    cache[trailId] = result;
+    const result = await buildRegionStatus(regionId);
+    cache[regionId] = result;
     return result;
   };
 };
