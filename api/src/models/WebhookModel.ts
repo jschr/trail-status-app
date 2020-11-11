@@ -8,6 +8,8 @@ export interface TrailWebhook {
   trailId?: string;
   runPriority: number;
   name: string;
+  description?: string;
+  method: string;
   url: string;
   lastRanAt: string;
   error: string;
@@ -146,8 +148,14 @@ export default class WebhookModel {
     if (trailWebhook.name !== undefined) {
       attrMap.name = { S: trailWebhook.name };
     }
+    if (trailWebhook.method !== undefined) {
+      attrMap.method = { S: trailWebhook.method };
+    }
     if (trailWebhook.url !== undefined) {
       attrMap.url = { S: trailWebhook.url };
+    }
+    if (trailWebhook.description !== undefined) {
+      attrMap.description = { S: trailWebhook.description };
     }
     if (trailWebhook.lastRanAt !== undefined) {
       attrMap.lastRanAt = { S: trailWebhook.lastRanAt };
@@ -169,8 +177,10 @@ export default class WebhookModel {
       id: attrMap.id?.S,
       trailId: attrMap.trailId?.S,
       runPriority: Number(attrMap.runPriority?.N),
+      method: attrMap.method?.S,
       url: attrMap.url?.S,
       name: attrMap.name?.S,
+      description: attrMap.description?.S,
       lastRanAt: attrMap.lastRanAt?.S,
       error: attrMap.error?.S,
     };
@@ -221,6 +231,14 @@ export default class WebhookModel {
 
   get name() {
     return this.attrs.name ?? '';
+  }
+
+  get description() {
+    return this.attrs.description ?? '';
+  }
+
+  get method() {
+    return this.attrs.method ?? '';
   }
 
   get url() {

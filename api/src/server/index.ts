@@ -71,13 +71,13 @@ app.post('/run-sync-regions', toExpressSQSHandler(runSyncRegions));
 // {
 //   "Records": [
 //       {
-//           "groupId": "[trailId]",
+//           "groupId": "[regionId]",
 //           "messageId": "[webhookId]",
 //           "body": "{\"webhookId\": \"[webhookId]\"}"
 //       }
 //   ]
 // }
-app.post('/run-trail-webhooks', toExpressSQSHandler(runWebhooks));
+app.post('/run-webhooks', toExpressSQSHandler(runWebhooks));
 
 const port = env('API_PORT');
 server.listen(port, () => {

@@ -487,7 +487,7 @@ export default class extends cdk.Stack {
     // Test webhook
     const webhookTestApi = api.root.addResource('webhook-test');
 
-    // POST /webhook-test
+    // POST and GET /webhook-test
     const testWebhookHandler = new lambda.Function(
       this,
       projectPrefix('testWebhook'),
@@ -507,6 +507,7 @@ export default class extends cdk.Stack {
     );
 
     webhookTestApi.addMethod('POST', testWebhookIntegration);
+    webhookTestApi.addMethod('GET', testWebhookIntegration);
 
     // Schedules
 

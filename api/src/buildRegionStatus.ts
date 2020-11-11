@@ -7,6 +7,7 @@ import { NotFoundError } from './HttpError';
 export interface RegionStatus {
   id: string;
   name: string;
+  status: string;
   message: string;
   imageUrl: string;
   instagramPostId: string;

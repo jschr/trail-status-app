@@ -1,4 +1,5 @@
-import fetch from 'node-fetch';
+import fetch, { Response } from 'node-fetch';
+import handlebars from 'handlebars';
 import withSQSHandler from '../withSQSHandler';
 import WebhookModel from '../models/WebhookModel';
 import buildRegionStatus, { RegionStatus } from '../buildRegionStatus';
@@ -38,38 +39,95 @@ export default withSQSHandler(async event => {
       continue;
     }
 
-    // TODO: If webhook.trailId send status for trail rather than region.
+    try {
+      const [status, url] = await runWebook(webhook, regionStatus);
 
-    const res = await fetch(`${webhook.url}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(regionStatus),
-    });
-
-    // If the webhook fails throw an error. This triggers the message batch to be retried.
-    // There should only be one message per batch but this handles multiple. If multiple
-    // messages are sent in the batch and one fails, the entire batch is re-tried. Webhooks
-    // should not expect to messages to be delivered only once.
-    if (!res.ok) {
-      const errorMessage = `Failed to process webhook '${webhookId}', invalid response '${res.status}' from '${webhook.url}'`;
       await webhook.save({
         lastRanAt: new Date().toISOString(),
-        error: errorMessage,
+        error: '',
       });
 
-      throw new Error(errorMessage);
+      console.info(
+        `Successfully ran webhook '${webhookId}', received status '${status}' from '${url}'`,
+      );
+    } catch (err) {
+      await webhook.save({
+        lastRanAt: new Date().toISOString(),
+        error: err.message,
+      });
+
+      // If the webhook fails throw an error. This triggers the message batch to be retried.
+      // There should only be one message per batch but this handles multiple. If multiple
+      // messages are sent in the batch and one fails, the entire batch is re-tried. Webhooks
+      // should not expect to messages to be delivered only once.
+      throw new Error(
+        `Failed to process webhook '${webhook.id}', ${err.message}`,
+      );
     }
-
-    await webhook.save({
-      lastRanAt: new Date().toISOString(),
-      error: '',
-    });
-
-    console.info(
-      `Successfully ran webhook '${webhookId}', received status '${res.status}' from '${webhook.url}'`,
-    );
   }
 });
+
+const runWebook = async (
+  webhook: WebhookModel,
+  regionStatus: RegionStatus,
+): Promise<[number, string]> => {
+  const method = webhook.method;
+  let url: string;
+  let body: string;
+
+  const urlTemplate = handlebars.compile(webhook.url);
+
+  if (webhook.trailId) {
+    const trailStatus = regionStatus.trails.find(t => t.id === webhook.trailId);
+    if (!trailStatus) {
+      // If the trail status hasn't been found this means it probably still hasn't been sync'd.
+      throw new Error(`Trail status for trail '${webhook.trailId}' not found`);
+    }
+    const trailStatusWithRegion = {
+      ...trailStatus,
+      region: {
+        id: regionStatus.id,
+        name: regionStatus.name,
+        status: regionStatus.status,
+        message: regionStatus.message,
+        imageUrl: regionStatus.imageUrl,
+        instagramPostId: regionStatus.instagramPostId,
+        instagramPermalink: regionStatus.instagramPostId,
+        updatedAt: regionStatus.updatedAt,
+      },
+    };
+    url = urlTemplate(trailStatusWithRegion);
+    body = JSON.stringify(trailStatusWithRegion);
+  } else {
+    url = urlTemplate(regionStatus);
+    body = JSON.stringify(regionStatus);
+  }
+
+  let res: Response;
+  if (method.toLowerCase() === 'post') {
+    res = await fetch(`${url}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+  } else if (method.toLowerCase() === 'get') {
+    res = await fetch(`${url}`, { method: 'GET' });
+  } else {
+    throw new Error(`Invalid webhook method '${webhook.method}'`);
+  }
+
+  if (!res.ok) {
+    const errorMessage = `Invalid response '${res.status}' from '${url}'`;
+    await webhook.save({
+      lastRanAt: new Date().toISOString(),
+      error: errorMessage,
+    });
+
+    throw new Error(errorMessage);
+  }
+
+  return [res.status, url];
+};
 
 const createRegionStatusCache = () => {
   const cache: Record<string, RegionStatus | null> = {};
