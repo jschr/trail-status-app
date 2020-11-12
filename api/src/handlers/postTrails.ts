@@ -13,7 +13,7 @@ interface PostTrailsBody {
   closeHashtag: string;
 }
 
-export default withApiHandler([P.TrailsCreate], async event => {
+export default withApiHandler([P.TrailCreate], async event => {
   const { name, regionId, closeHashtag } = assertPostTrailsBody(
     parseBody(event),
   );

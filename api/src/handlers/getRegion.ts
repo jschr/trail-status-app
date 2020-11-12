@@ -11,7 +11,7 @@ interface GetRegion {
   id: string;
 }
 
-export default withApiHandler([P.RegionsRead], async event => {
+export default withApiHandler([P.RegionRead], async event => {
   const { id } = assertGetRegion(parseQuery(event));
 
   const region = await RegionModel.get(id);

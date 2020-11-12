@@ -15,7 +15,7 @@ interface PutTrailsBody {
   closeHashtag: string;
 }
 
-export default withApiHandler([P.TrailsUpdate], async event => {
+export default withApiHandler([P.TrailUpdate], async event => {
   const { id } = assertPutTrailsQuery(parseQuery(event));
   const { name, closeHashtag } = assertPutTrailsBody(parseBody(event));
 

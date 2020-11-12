@@ -16,7 +16,7 @@ interface PutRegionBody {
   openHashtag: string;
 }
 
-export default withApiHandler([P.RegionsUpdate], async event => {
+export default withApiHandler([P.RegionUpdate], async event => {
   const { id } = assertPutRegionQuery(parseQuery(event));
   const { name, openHashtag, closeHashtag } = assertPutRegionBody(
     parseBody(event),
