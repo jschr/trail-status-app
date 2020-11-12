@@ -228,80 +228,80 @@ export default class extends cdk.Stack {
     regionsApi.addCorsPreflight({ allowOrigins: ['*'] });
 
     // GET /regions
-    const getRegionsHandler = new lambda.Function(
+    const getRegionHandler = new lambda.Function(
       this,
-      projectPrefix('getRegions'),
+      projectPrefix('getRegion'),
       {
-        functionName: projectPrefix('getRegions'),
+        functionName: projectPrefix('getRegion'),
         runtime: lambda.Runtime.NODEJS_12_X,
         code: lambda.Code.fromAsset(packagePath),
-        handler: 'api/build/src/handlers/getRegions.default',
+        handler: 'api/build/src/handlers/getRegion.default',
         environment: envVars,
         timeout: cdk.Duration.seconds(10),
         memorySize: 512,
       },
     );
 
-    const getRegionsIntegration = new apigateway.LambdaIntegration(
-      getRegionsHandler,
+    const getRegionIntegration = new apigateway.LambdaIntegration(
+      getRegionHandler,
     );
 
-    regionsApi.addMethod('GET', getRegionsIntegration);
-    regionsTable.grantReadData(getRegionsHandler);
-    trailsTable.grantReadData(getRegionsHandler);
-    userTable.grantReadData(getRegionsHandler);
+    regionsApi.addMethod('GET', getRegionIntegration);
+    regionsTable.grantReadData(getRegionHandler);
+    trailsTable.grantReadData(getRegionHandler);
+    userTable.grantReadData(getRegionHandler);
 
     // PUT /regions
-    const putRegionsHandler = new lambda.Function(
+    const putRegionHandler = new lambda.Function(
       this,
-      projectPrefix('putRegions'),
+      projectPrefix('putRegion'),
       {
-        functionName: projectPrefix('putRegions'),
+        functionName: projectPrefix('putRegion'),
         runtime: lambda.Runtime.NODEJS_12_X,
         code: lambda.Code.fromAsset(packagePath),
-        handler: 'api/build/src/handlers/putRegions.default',
+        handler: 'api/build/src/handlers/putRegion.default',
         environment: envVars,
         timeout: cdk.Duration.seconds(10),
         memorySize: 512,
       },
     );
 
-    const putRegionsIntegration = new apigateway.LambdaIntegration(
-      putRegionsHandler,
+    const putRegionIntegration = new apigateway.LambdaIntegration(
+      putRegionHandler,
     );
 
-    regionsApi.addMethod('PUT', putRegionsIntegration);
-    regionsTable.grantReadWriteData(putRegionsHandler);
+    regionsApi.addMethod('PUT', putRegionIntegration);
+    regionsTable.grantReadWriteData(putRegionHandler);
 
     // /regions/status
     const regionStatusApi = regionsApi.addResource('status');
     regionStatusApi.addCorsPreflight({ allowOrigins: ['*'] });
 
     // GET /regions/status
-    const getRegionStatusHandler = new lambda.Function(
+    const getRegiontatusHandler = new lambda.Function(
       this,
-      projectPrefix('getRegionStatus'),
+      projectPrefix('getRegiontatus'),
       {
-        functionName: projectPrefix('getRegionStatus'),
+        functionName: projectPrefix('getRegiontatus'),
         runtime: lambda.Runtime.NODEJS_12_X,
         code: lambda.Code.fromAsset(packagePath),
-        handler: 'api/build/src/handlers/getRegionStatus.default',
+        handler: 'api/build/src/handlers/getRegiontatus.default',
         environment: envVars,
         timeout: cdk.Duration.seconds(10),
         memorySize: 512,
       },
     );
 
-    const getRegionStatusIntegration = new apigateway.LambdaIntegration(
-      getRegionStatusHandler,
+    const getRegiontatusIntegration = new apigateway.LambdaIntegration(
+      getRegiontatusHandler,
     );
 
-    regionStatusApi.addMethod('GET', getRegionStatusIntegration);
-    regionsTable.grantReadData(getRegionStatusHandler);
-    regionStatusTable.grantReadData(getRegionStatusHandler);
-    trailsTable.grantReadData(getRegionStatusHandler);
-    trailStatusTable.grantReadData(getRegionStatusHandler);
-    userTable.grantReadData(getRegionStatusHandler);
+    regionStatusApi.addMethod('GET', getRegiontatusIntegration);
+    regionsTable.grantReadData(getRegiontatusHandler);
+    regionStatusTable.grantReadData(getRegiontatusHandler);
+    trailsTable.grantReadData(getRegiontatusHandler);
+    trailStatusTable.grantReadData(getRegiontatusHandler);
+    userTable.grantReadData(getRegiontatusHandler);
 
     // /trails
     const trailsApi = api.root.addResource('trails');

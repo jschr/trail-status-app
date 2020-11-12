@@ -12,8 +12,8 @@ import authorizeInstagram from '../handlers/authorizeInstagram';
 import authorizeInstagramCallback from '../handlers/authorizeInstagramCallback';
 import putTrails from '../handlers/putTrails';
 import postTrails from '../handlers/postTrails';
-import getRegions from '../handlers/getRegions';
-import putRegions from '../handlers/putRegions';
+import getRegion from '../handlers/getRegion';
+import putRegion from '../handlers/putRegion';
 import runSyncRegions from '../handlers/runSyncRegions';
 import runWebhooks from '../handlers/runWebhooks';
 import scheduleSyncRegions from '../handlers/scheduleSyncRegions';
@@ -43,8 +43,8 @@ app.put('/trails', toExpressApiHandler(putTrails));
 app.post('/trails', toExpressApiHandler(postTrails));
 app.post('/trails/status', toExpressApiHandler(getTrailStatus));
 
-app.get('/regions', toExpressApiHandler(getRegions));
-app.put('/regions', toExpressApiHandler(putRegions));
+app.get('/regions', toExpressApiHandler(getRegion));
+app.put('/regions', toExpressApiHandler(putRegion));
 app.get('/regions/status', toExpressApiHandler(getRegionStatus));
 
 // TODO: Deprecate
