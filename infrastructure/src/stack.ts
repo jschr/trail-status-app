@@ -330,48 +330,48 @@ export default class extends cdk.Stack {
     trailsTable.grantReadData(getTrailsHandler);
 
     // POST /trails
-    const postTrailsHandler = new lambda.Function(
+    const postTrailHandler = new lambda.Function(
       this,
-      projectPrefix('postTrails'),
+      projectPrefix('postTrail'),
       {
-        functionName: projectPrefix('postTrails'),
+        functionName: projectPrefix('postTrail'),
         runtime: lambda.Runtime.NODEJS_12_X,
         code: lambda.Code.fromAsset(packagePath),
-        handler: 'api/build/src/handlers/postTrails.default',
+        handler: 'api/build/src/handlers/postTrail.default',
         environment: envVars,
         timeout: cdk.Duration.seconds(10),
         memorySize: 512,
       },
     );
 
-    const postTrailsIntegration = new apigateway.LambdaIntegration(
-      postTrailsHandler,
+    const postTrailIntegration = new apigateway.LambdaIntegration(
+      postTrailHandler,
     );
 
-    trailsApi.addMethod('POST', postTrailsIntegration);
-    trailsTable.grantReadWriteData(postTrailsHandler);
+    trailsApi.addMethod('POST', postTrailIntegration);
+    trailsTable.grantReadWriteData(postTrailHandler);
 
     // PUT /trails
-    const putTrailsHandler = new lambda.Function(
+    const putTrailHandler = new lambda.Function(
       this,
-      projectPrefix('putTrails'),
+      projectPrefix('putTrail'),
       {
-        functionName: projectPrefix('putTrails'),
+        functionName: projectPrefix('putTrail'),
         runtime: lambda.Runtime.NODEJS_12_X,
         code: lambda.Code.fromAsset(packagePath),
-        handler: 'api/build/src/handlers/putTrails.default',
+        handler: 'api/build/src/handlers/putTrail.default',
         environment: envVars,
         timeout: cdk.Duration.seconds(10),
         memorySize: 512,
       },
     );
 
-    const putTrailsIntegration = new apigateway.LambdaIntegration(
-      putTrailsHandler,
+    const putTrailIntegration = new apigateway.LambdaIntegration(
+      putTrailHandler,
     );
 
-    trailsApi.addMethod('PUT', putTrailsIntegration);
-    trailsTable.grantReadWriteData(putTrailsHandler);
+    trailsApi.addMethod('PUT', putTrailIntegration);
+    trailsTable.grantReadWriteData(putTrailHandler);
 
     // /trails/status
     const trailStatusApi = trailsApi.addResource('status');

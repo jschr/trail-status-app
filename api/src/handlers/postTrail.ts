@@ -7,14 +7,14 @@ import { Permissions as P } from '../jwt';
 import { BadRequestError } from '../HttpError';
 import { parseBody } from '../requests';
 
-interface PostTrailsBody {
+interface PostTrailBody {
   name: string;
   regionId: string;
   closeHashtag: string;
 }
 
 export default withApiHandler([P.TrailCreate], async event => {
-  const { name, regionId, closeHashtag } = assertPostTrailsBody(
+  const { name, regionId, closeHashtag } = assertPostTrailBody(
     parseBody(event),
   );
 
@@ -33,7 +33,7 @@ export default withApiHandler([P.TrailCreate], async event => {
   return json(trail);
 });
 
-const assertPostTrailsBody = (body: any): PostTrailsBody => {
+const assertPostTrailBody = (body: any): PostTrailBody => {
   assert(
     !body || typeof body !== 'object',
     new BadRequestError('Invalid body.'),

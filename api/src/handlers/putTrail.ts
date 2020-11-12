@@ -6,7 +6,7 @@ import { Permissions as P } from '../jwt';
 import { BadRequestError, NotFoundError } from '../HttpError';
 import { parseQuery, parseBody } from '../requests';
 
-interface PutTrailsQuery {
+interface PutTrailQuery {
   id: string;
 }
 
@@ -16,7 +16,7 @@ interface PutTrailsBody {
 }
 
 export default withApiHandler([P.TrailUpdate], async event => {
-  const { id } = assertPutTrailsQuery(parseQuery(event));
+  const { id } = assertPutTrailQuery(parseQuery(event));
   const { name, closeHashtag } = assertPutTrailsBody(parseBody(event));
 
   const trail = await TrailModel.get(id);
@@ -35,7 +35,7 @@ export default withApiHandler([P.TrailUpdate], async event => {
   return json(trail);
 });
 
-const assertPutTrailsQuery = (query: any): PutTrailsQuery => {
+const assertPutTrailQuery = (query: any): PutTrailQuery => {
   assert(
     !query || typeof query !== 'object',
     new BadRequestError('Invalid query.'),

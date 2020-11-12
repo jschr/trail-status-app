@@ -10,8 +10,8 @@ import getTrailStatus from '../handlers/getTrailStatus';
 import getLegacyTrailStatus from '../handlers/getLegacyTrailStatus';
 import authorizeInstagram from '../handlers/authorizeInstagram';
 import authorizeInstagramCallback from '../handlers/authorizeInstagramCallback';
-import putTrails from '../handlers/putTrails';
-import postTrails from '../handlers/postTrails';
+import putTrail from '../handlers/putTrail';
+import postTrail from '../handlers/postTrail';
 import getRegion from '../handlers/getRegion';
 import putRegion from '../handlers/putRegion';
 import runSyncRegions from '../handlers/runSyncRegions';
@@ -39,8 +39,8 @@ app.get(
   toExpressApiHandler(authorizeInstagramCallback),
 );
 
-app.put('/trails', toExpressApiHandler(putTrails));
-app.post('/trails', toExpressApiHandler(postTrails));
+app.put('/trails', toExpressApiHandler(putTrail));
+app.post('/trails', toExpressApiHandler(postTrail));
 app.post('/trails/status', toExpressApiHandler(getTrailStatus));
 
 app.get('/regions', toExpressApiHandler(getRegion));
