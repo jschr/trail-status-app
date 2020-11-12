@@ -484,6 +484,49 @@ export default class extends cdk.Stack {
     userTable.grantReadWriteData(authorizeInstagramCallbackHandler);
     trailsTable.grantReadWriteData(authorizeInstagramCallbackHandler);
 
+    // webhook
+    const wehooksApi = api.root.addResource('webhooks');
+
+    // POST /webhooks
+    const postWebhook = new lambda.Function(
+      this,
+      projectPrefix('postWebhook'),
+      {
+        functionName: projectPrefix('postWebhook'),
+        runtime: lambda.Runtime.NODEJS_12_X,
+        code: lambda.Code.fromAsset(packagePath),
+        handler: 'api/build/src/handlers/postWebhook.default',
+        environment: envVars,
+        timeout: cdk.Duration.seconds(10),
+        memorySize: 512,
+      },
+    );
+
+    const postWebhookIntegration = new apigateway.LambdaIntegration(
+      postWebhook,
+    );
+
+    wehooksApi.addMethod('POST', postWebhookIntegration);
+    webhooksTable.grantReadWriteData(postWebhook);
+    regionsTable.grantReadData(postWebhook);
+
+    // PUT /webhooks
+    const putWebhook = new lambda.Function(this, projectPrefix('putWebhook'), {
+      functionName: projectPrefix('putWebhook'),
+      runtime: lambda.Runtime.NODEJS_12_X,
+      code: lambda.Code.fromAsset(packagePath),
+      handler: 'api/build/src/handlers/putWebhook.default',
+      environment: envVars,
+      timeout: cdk.Duration.seconds(10),
+      memorySize: 512,
+    });
+
+    const putWebhookIntegration = new apigateway.LambdaIntegration(putWebhook);
+
+    wehooksApi.addMethod('PUT', putWebhookIntegration);
+    webhooksTable.grantReadWriteData(putWebhook);
+    regionsTable.grantReadData(putWebhook);
+
     // Test webhook
     const webhookTestApi = api.root.addResource('webhook-test');
 
@@ -576,11 +619,12 @@ export default class extends cdk.Stack {
     trailStatusTable.grantReadWriteData(runSyncRegionsHandler);
     webhooksTable.grantReadData(runSyncRegionsHandler);
     userTable.grantReadWriteData(runSyncRegionsHandler);
+    runWebhooksQueue.grantSendMessages(runSyncRegionsHandler);
 
     // Run webhooks
 
     const runWebhooksQueueEventSource = new SqsEventSource(runWebhooksQueue, {
-      // Set batch size to one. The runwebhooks handler will be called for each webhook
+      // Set batch size to one. The runWebhooks handler will be called for each webhook
       // to allow re-trying each individual one if one fails rather than the entire batch.
       batchSize: 1,
     });
@@ -601,6 +645,9 @@ export default class extends cdk.Stack {
 
     runWebhooksHandler.addEventSource(runWebhooksQueueEventSource);
     webhooksTable.grantReadWriteData(runWebhooksHandler);
+    regionsTable.grantReadData(runWebhooksHandler);
+    regionStatusTable.grantReadData(runWebhooksHandler);
     trailStatusTable.grantReadData(runWebhooksHandler);
+    trailsTable.grantReadData(runWebhooksHandler);
   }
 }

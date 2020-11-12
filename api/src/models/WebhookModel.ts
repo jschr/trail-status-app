@@ -2,7 +2,7 @@ import * as AWS from 'aws-sdk';
 import tables from '@trail-status-app/infrastructure/build/src/tables';
 import dynamodb from './dynamodb';
 
-export interface TrailWebhook {
+export interface Webhook {
   id: string;
   regionId: string;
   trailId?: string;
@@ -13,6 +13,8 @@ export interface TrailWebhook {
   url: string;
   lastRanAt: string;
   error: string;
+  updatedAt: string;
+  createdAt: string;
 }
 
 export default class WebhookModel {
@@ -130,38 +132,44 @@ export default class WebhookModel {
     return allWebhooksByRegion;
   }
 
-  private static toAttributeMap(trailWebhook: Partial<TrailWebhook>) {
+  private static toAttributeMap(webhook: Partial<Webhook>) {
     const attrMap: AWS.DynamoDB.AttributeMap = {};
 
-    if (trailWebhook.id !== undefined) {
-      attrMap.id = { S: trailWebhook.id };
+    if (webhook.id !== undefined) {
+      attrMap.id = { S: webhook.id };
     }
-    if (trailWebhook.regionId !== undefined) {
-      attrMap.regionId = { S: trailWebhook.regionId };
+    if (webhook.regionId !== undefined) {
+      attrMap.regionId = { S: webhook.regionId };
     }
-    if (trailWebhook.trailId !== undefined) {
-      attrMap.trailId = { S: trailWebhook.trailId };
+    if (webhook.trailId !== undefined) {
+      attrMap.trailId = { S: webhook.trailId };
     }
-    if (trailWebhook.runPriority !== undefined) {
-      attrMap.runPriority = { N: String(trailWebhook.runPriority) };
+    if (webhook.runPriority !== undefined) {
+      attrMap.runPriority = { N: String(webhook.runPriority) };
     }
-    if (trailWebhook.name !== undefined) {
-      attrMap.name = { S: trailWebhook.name };
+    if (webhook.name !== undefined) {
+      attrMap.name = { S: webhook.name };
     }
-    if (trailWebhook.method !== undefined) {
-      attrMap.method = { S: trailWebhook.method };
+    if (webhook.method !== undefined) {
+      attrMap.method = { S: webhook.method };
     }
-    if (trailWebhook.url !== undefined) {
-      attrMap.url = { S: trailWebhook.url };
+    if (webhook.url !== undefined) {
+      attrMap.url = { S: webhook.url };
     }
-    if (trailWebhook.description !== undefined) {
-      attrMap.description = { S: trailWebhook.description };
+    if (webhook.description !== undefined) {
+      attrMap.description = { S: webhook.description };
     }
-    if (trailWebhook.lastRanAt !== undefined) {
-      attrMap.lastRanAt = { S: trailWebhook.lastRanAt };
+    if (webhook.lastRanAt !== undefined) {
+      attrMap.lastRanAt = { S: webhook.lastRanAt };
     }
-    if (trailWebhook.error !== undefined) {
-      attrMap.error = { S: trailWebhook.error };
+    if (webhook.error !== undefined) {
+      attrMap.error = { S: webhook.error };
+    }
+    if (webhook.updatedAt !== undefined) {
+      attrMap.updatedAt = { S: webhook.updatedAt };
+    }
+    if (webhook.createdAt !== undefined) {
+      attrMap.createdAt = { S: webhook.createdAt };
     }
 
     return attrMap;
@@ -169,12 +177,13 @@ export default class WebhookModel {
 
   private static fromAttributeMap(
     attrMap: AWS.DynamoDB.AttributeMap,
-  ): Partial<TrailWebhook> {
-    if (!attrMap.id || !attrMap.trailId.S)
+  ): Partial<Webhook> {
+    if (!attrMap.id || !attrMap.id.S)
       throw new Error('Missing id parsing attribute map');
 
     return {
       id: attrMap.id?.S,
+      regionId: attrMap.regionId?.S,
       trailId: attrMap.trailId?.S,
       runPriority: Number(attrMap.runPriority?.N),
       method: attrMap.method?.S,
@@ -183,12 +192,14 @@ export default class WebhookModel {
       description: attrMap.description?.S,
       lastRanAt: attrMap.lastRanAt?.S,
       error: attrMap.error?.S,
+      updatedAt: attrMap.createdAt?.S,
+      createdAt: attrMap.createdAt?.S,
     };
   }
 
-  constructor(private attrs: Partial<TrailWebhook>) {}
+  constructor(private attrs: Partial<Webhook>) {}
 
-  public async save(updatedAttrs: Partial<TrailWebhook> = {}): Promise<void> {
+  public async save(updatedAttrs: Partial<Webhook> = {}): Promise<void> {
     const newAttrs = {
       ...this.attrs,
       ...updatedAttrs,
@@ -253,6 +264,14 @@ export default class WebhookModel {
     return this.attrs.error ?? '';
   }
 
+  get updatedAt() {
+    return this.attrs.updatedAt ?? '';
+  }
+
+  get createdAt() {
+    return this.attrs.createdAt ?? '';
+  }
+
   public toJSON() {
     return {
       id: this.id,
@@ -263,6 +282,8 @@ export default class WebhookModel {
       url: this.url,
       lastRanAt: this.lastRanAt,
       error: this.error,
+      updatedAt: this.updatedAt,
+      createdAt: this.createdAt,
     };
   }
 }

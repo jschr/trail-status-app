@@ -14,6 +14,8 @@ import putTrail from '../handlers/putTrail';
 import postTrail from '../handlers/postTrail';
 import getRegion from '../handlers/getRegion';
 import putRegion from '../handlers/putRegion';
+import postWebhook from '../handlers/postWebhook';
+import putWebhook from '../handlers/putWebhook';
 import runSyncRegions from '../handlers/runSyncRegions';
 import runWebhooks from '../handlers/runWebhooks';
 import scheduleSyncRegions from '../handlers/scheduleSyncRegions';
@@ -39,13 +41,16 @@ app.get(
   toExpressApiHandler(authorizeInstagramCallback),
 );
 
+app.get('/regions', toExpressApiHandler(getRegion));
+app.put('/regions', toExpressApiHandler(putRegion));
+app.get('/regions/status', toExpressApiHandler(getRegionStatus));
+
 app.put('/trails', toExpressApiHandler(putTrail));
 app.post('/trails', toExpressApiHandler(postTrail));
 app.post('/trails/status', toExpressApiHandler(getTrailStatus));
 
-app.get('/regions', toExpressApiHandler(getRegion));
-app.put('/regions', toExpressApiHandler(putRegion));
-app.get('/regions/status', toExpressApiHandler(getRegionStatus));
+app.post('/webhooks', toExpressApiHandler(postWebhook));
+app.put('/webhooks', toExpressApiHandler(putWebhook));
 
 // TODO: Deprecate
 app.get('/status', toExpressApiHandler(getLegacyTrailStatus));

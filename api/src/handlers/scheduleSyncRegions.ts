@@ -11,7 +11,8 @@ if (!runSyncRegionsQueueUrl) {
 
 export default withScheduledHandler(async () => {
   const regions = await RegionModel.all();
-  await regions.map(createSyncRegionJob);
+  console.info(`Found '${regions.length}' regions to sync`);
+  await Promise.all(regions.map(createSyncRegionJob));
 });
 
 const createSyncRegionJob = async (region: RegionModel) => {

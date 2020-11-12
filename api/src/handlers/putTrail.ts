@@ -25,7 +25,7 @@ export default withApiHandler([P.TrailUpdate], async event => {
     throw new NotFoundError(`Could not find trail for '${id}'`);
   }
 
-  // TODO: Ensure user has access to trail.
+  // TODO: Ensure user has access to trail's region.
 
   await trail.save({
     name,
@@ -43,7 +43,7 @@ const assertPutTrailQuery = (query: any): PutTrailQuery => {
 
   assert(
     typeof query.id !== 'string',
-    new BadRequestError('Missing regionId query parameter.'),
+    new BadRequestError('Missing id query parameter.'),
   );
 
   return query;

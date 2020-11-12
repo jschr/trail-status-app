@@ -212,7 +212,7 @@ const createWebhookJob = async (webhook: WebhookModel) => {
   const params: AWS.SQS.SendMessageRequest = {
     MessageGroupId: webhook.regionId,
     MessageDeduplicationId: webhook.id,
-    MessageBody: JSON.stringify({ trailWebbookId: webhook.id }),
+    MessageBody: JSON.stringify({ webhookId: webhook.id }),
     QueueUrl: runWebhooksQueueUrl,
   };
 
