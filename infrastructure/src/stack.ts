@@ -350,6 +350,7 @@ export default class extends cdk.Stack {
 
     trailsApi.addMethod('POST', postTrailIntegration);
     trailsTable.grantReadWriteData(postTrailHandler);
+    regionsTable.grantReadWriteData(postTrailHandler);
 
     // PUT /trails
     const putTrailHandler = new lambda.Function(
@@ -372,6 +373,7 @@ export default class extends cdk.Stack {
 
     trailsApi.addMethod('PUT', putTrailIntegration);
     trailsTable.grantReadWriteData(putTrailHandler);
+    regionsTable.grantReadWriteData(putTrailHandler);
 
     // /trails/status
     const trailStatusApi = trailsApi.addResource('status');
@@ -509,6 +511,7 @@ export default class extends cdk.Stack {
     wehooksApi.addMethod('POST', postWebhookIntegration);
     webhooksTable.grantReadWriteData(postWebhook);
     regionsTable.grantReadData(postWebhook);
+    trailsTable.grantReadData(postWebhook);
 
     // PUT /webhooks
     const putWebhook = new lambda.Function(this, projectPrefix('putWebhook'), {
@@ -526,6 +529,7 @@ export default class extends cdk.Stack {
     wehooksApi.addMethod('PUT', putWebhookIntegration);
     webhooksTable.grantReadWriteData(putWebhook);
     regionsTable.grantReadData(putWebhook);
+    trailsTable.grantReadData(putWebhook);
 
     // Test webhook
     const webhookTestApi = api.root.addResource('webhook-test');

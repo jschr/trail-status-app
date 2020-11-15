@@ -1,10 +1,12 @@
 import { assert } from '@trail-status-app/utilities';
 import uuid from 'uuid/v4';
+import RegionModel from '../models/RegionModel';
+import TrailModel from '../models/TrailModel';
 import WebhookModel from '../models/WebhookModel';
 import { json } from '../responses';
 import withApiHandler from '../withApiHandler';
 import { Permissions as P } from '../jwt';
-import { BadRequestError } from '../HttpError';
+import { BadRequestError, NotFoundError } from '../HttpError';
 import { parseBody } from '../requests';
 
 interface PostWebhookBody {
@@ -28,7 +30,21 @@ export default withApiHandler([P.WebhookCreate], async event => {
     description = '',
   } = assertPostWebhookBody(parseBody(event));
 
+  // Ensure region exists.
+  const region = await RegionModel.get(regionId);
+  if (!region) {
+    throw new NotFoundError(`Region not found for id '${regionId}'`);
+  }
+
   // TODO: Ensure user has access to region.
+
+  // Ensure trail exists if provided.
+  if (trailId) {
+    const trail = await TrailModel.get(trailId);
+    if (!trail) {
+      throw new NotFoundError(`Trail not found for id '${trailId}'`);
+    }
+  }
 
   const webhook = new WebhookModel({
     id: uuid(),

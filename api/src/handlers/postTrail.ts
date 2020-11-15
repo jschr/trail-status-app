@@ -1,10 +1,11 @@
 import { assert } from '@trail-status-app/utilities';
 import uuid from 'uuid/v4';
+import RegionModel from '../models/RegionModel';
 import TrailModel from '../models/TrailModel';
 import { json } from '../responses';
 import withApiHandler from '../withApiHandler';
 import { Permissions as P } from '../jwt';
-import { BadRequestError } from '../HttpError';
+import { BadRequestError, NotFoundError } from '../HttpError';
 import { parseBody } from '../requests';
 
 interface PostTrailBody {
@@ -17,6 +18,12 @@ export default withApiHandler([P.TrailCreate], async event => {
   const { name, regionId, closeHashtag } = assertPostTrailBody(
     parseBody(event),
   );
+
+  // Ensure region exists.
+  const region = await RegionModel.get(regionId);
+  if (!region) {
+    throw new NotFoundError(`Region not found for id '${regionId}'`);
+  }
 
   // TODO: Ensure user has access to region.
 
