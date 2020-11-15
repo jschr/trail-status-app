@@ -24,10 +24,12 @@ const createSyncRegionJob = async (region: RegionModel) => {
   };
   try {
     await sqs.sendMessage(params).promise();
-    console.info(`Created sync region job for '${region.id}'`);
+    console.info(
+      `Created sync region job for region '${region.id}' user '${region.userId}'`,
+    );
   } catch (err) {
     throw new Error(
-      `Failed to create sync region job for '${region.id}' with '${err.message}'`,
+      `Failed to create sync region job for region '${region.id}' user '${region.userId}' with '${err.message}'`,
     );
   }
 };
