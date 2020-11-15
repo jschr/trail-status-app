@@ -83,8 +83,11 @@ const runWebook = async (
       // If the trail status hasn't been found this means it probably still hasn't been sync'd.
       throw new Error(`Trail status for trail '${webhook.trailId}' not found`);
     }
-    const trailStatusWithRegion = {
-      ...trailStatus,
+    const trailStatusPayload = {
+      id: trailStatus.id,
+      name: trailStatus.name,
+      status: trailStatus.status,
+      updatedAt: trailStatus.updatedAt,
       region: {
         id: regionStatus.id,
         name: regionStatus.name,
@@ -96,11 +99,46 @@ const runWebook = async (
         updatedAt: regionStatus.updatedAt,
       },
     };
-    url = urlTemplate(trailStatusWithRegion);
-    body = JSON.stringify(trailStatusWithRegion);
+    const trailStatusPayloadEncoded = {
+      ...trailStatusPayload,
+      region: {
+        ...trailStatusPayload.region,
+        imageUrl: encodeURIComponent(trailStatusPayload.region.imageUrl),
+        instagramPermalink: encodeURIComponent(
+          trailStatusPayload.region.instagramPermalink,
+        ),
+        message: encodeURIComponent(trailStatusPayload.region.message),
+      },
+    };
+    url = urlTemplate(trailStatusPayloadEncoded);
+    body = JSON.stringify(trailStatusPayload);
   } else {
-    url = urlTemplate(regionStatus);
-    body = JSON.stringify(regionStatus);
+    const regionStatusPayload = {
+      id: regionStatus.id,
+      name: regionStatus.name,
+      status: regionStatus.status,
+      message: regionStatus.message,
+      imageUrl: regionStatus.imageUrl,
+      instagramPostId: regionStatus.instagramPostId,
+      instagramPermalink: regionStatus.instagramPostId,
+      updatedAt: regionStatus.updatedAt,
+      trails: regionStatus.trails.map(t => ({
+        id: t.id,
+        name: t.name,
+        status: t.status,
+        updatedAt: t.updatedAt,
+      })),
+    };
+    const regionStatusPayloadEncoded = {
+      ...regionStatusPayload,
+      imageUrl: encodeURIComponent(regionStatusPayload.imageUrl),
+      instagramPermalink: encodeURIComponent(
+        regionStatusPayload.instagramPermalink,
+      ),
+      message: encodeURIComponent(regionStatusPayload.message),
+    };
+    url = urlTemplate(regionStatusPayloadEncoded);
+    body = JSON.stringify(regionStatusPayload);
   }
 
   let res: Response;
