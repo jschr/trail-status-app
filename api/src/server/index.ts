@@ -18,6 +18,7 @@ import postWebhook from '../handlers/postWebhook';
 import putWebhook from '../handlers/putWebhook';
 import runSyncRegions from '../handlers/runSyncRegions';
 import runWebhooks from '../handlers/runWebhooks';
+import testWebhook from '../handlers/testWebhook';
 import scheduleSyncRegions from '../handlers/scheduleSyncRegions';
 import toExpressApiHandler from './toExpressApiHandler';
 import toExpressScheduledHandler from './toExpressScheduledHandler';
@@ -83,6 +84,8 @@ app.post('/run-sync-regions', toExpressSQSHandler(runSyncRegions));
 //   ]
 // }
 app.post('/run-webhooks', toExpressSQSHandler(runWebhooks));
+
+app.post('/webhook-test', toExpressApiHandler(testWebhook));
 
 const port = env('API_PORT');
 server.listen(port, () => {

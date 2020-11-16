@@ -1,5 +1,5 @@
 import fetch, { Response } from 'node-fetch';
-import handlebars from 'handlebars';
+import pupa from 'pupa';
 import withSQSHandler from '../withSQSHandler';
 import WebhookModel from '../models/WebhookModel';
 import buildRegionStatus, { RegionStatus } from '../buildRegionStatus';
@@ -75,70 +75,26 @@ const runWebook = async (
   let url: string;
   let body: string;
 
-  const urlTemplate = handlebars.compile(webhook.url);
-
   if (webhook.trailId) {
-    const trailStatus = regionStatus.trails.find(t => t.id === webhook.trailId);
+    const { trails, ...regionStatusWithoutTrails } = regionStatus;
+    const trailStatus = trails.find(t => t.id === webhook.trailId);
     if (!trailStatus) {
       // If the trail status hasn't been found this means it probably still hasn't been sync'd.
       throw new Error(`Trail status for trail '${webhook.trailId}' not found`);
     }
-    const trailStatusPayload = {
-      id: trailStatus.id,
-      name: trailStatus.name,
-      status: trailStatus.status,
-      updatedAt: trailStatus.updatedAt,
-      region: {
-        id: regionStatus.id,
-        name: regionStatus.name,
-        status: regionStatus.status,
-        message: regionStatus.message,
-        imageUrl: regionStatus.imageUrl,
-        instagramPostId: regionStatus.instagramPostId,
-        instagramPermalink: regionStatus.instagramPostId,
-        updatedAt: regionStatus.updatedAt,
-      },
+    const trailStatusWithRegion = {
+      ...trailStatus,
+      region: regionStatusWithoutTrails,
     };
-    const trailStatusPayloadEncoded = {
-      ...trailStatusPayload,
-      region: {
-        ...trailStatusPayload.region,
-        imageUrl: encodeURIComponent(trailStatusPayload.region.imageUrl),
-        instagramPermalink: encodeURIComponent(
-          trailStatusPayload.region.instagramPermalink,
-        ),
-        message: encodeURIComponent(trailStatusPayload.region.message),
-      },
-    };
-    url = urlTemplate(trailStatusPayloadEncoded);
-    body = JSON.stringify(trailStatusPayload);
+
+    url = pupa(webhook.url, trailStatusWithRegion);
+    body = JSON.stringify(trailStatusWithRegion);
   } else {
-    const regionStatusPayload = {
-      id: regionStatus.id,
-      name: regionStatus.name,
-      status: regionStatus.status,
+    url = pupa(webhook.url, {
+      ...regionStatus,
       message: regionStatus.message,
-      imageUrl: regionStatus.imageUrl,
-      instagramPostId: regionStatus.instagramPostId,
-      instagramPermalink: regionStatus.instagramPostId,
-      updatedAt: regionStatus.updatedAt,
-      trails: regionStatus.trails.map(t => ({
-        id: t.id,
-        name: t.name,
-        status: t.status,
-        updatedAt: t.updatedAt,
-      })),
-    };
-    const regionStatusPayloadEncoded = {
-      ...regionStatusPayload,
-      imageUrl: encodeURIComponent(regionStatusPayload.imageUrl),
-      instagramPermalink: encodeURIComponent(
-        regionStatusPayload.instagramPermalink,
-      ),
-      message: encodeURIComponent(regionStatusPayload.message),
-    };
-    url = urlTemplate(regionStatusPayloadEncoded);
-    body = JSON.stringify(regionStatusPayload);
+    });
+    body = JSON.stringify(regionStatus);
   }
 
   let res: Response;

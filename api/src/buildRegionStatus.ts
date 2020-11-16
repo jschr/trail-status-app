@@ -21,7 +21,6 @@ export interface TrailStatus {
   name: string;
   status: string;
   updatedAt: string;
-  createdAt: string;
 }
 
 const isNotNull = <T>(value: T | null): value is T => {
@@ -49,17 +48,25 @@ export default async (regionId: string): Promise<RegionStatus | null> => {
   );
 
   return {
-    ...regionStatus.toJSON(),
+    id: region.id,
     name: region.name,
+    status: regionStatus.status,
+    message: regionStatus.message,
+    imageUrl: regionStatus.imageUrl,
+    instagramPostId: regionStatus.instagramPostId,
+    instagramPermalink: regionStatus.instagramPermalink,
+    updatedAt: regionStatus.updatedAt,
     trails: trailStatuses
-      .map(ts => {
-        if (!ts) return null;
-        const trail = (trails || []).find(t => t.id === ts.id);
+      .map(trailStatus => {
+        if (!trailStatus) return null;
+        const trail = (trails || []).find(t => t.id === trailStatus.id);
         if (!trail) return null;
 
         return {
-          ...ts.toJSON(),
+          id: trail.id,
           name: trail.name,
+          status: trailStatus.status,
+          updatedAt: trailStatus.updatedAt,
         };
       })
       .filter(isNotNull),

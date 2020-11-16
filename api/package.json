@@ -13,10 +13,10 @@
     "@trail-status-app/utilities": "",
     "@types/uuid": "^3.4.7",
     "cors": "^2.8.5",
-    "handlebars": "^4.7.6",
     "jsonwebtoken": "^8.5.1",
     "node-fetch": "^2.6.0",
     "oauth": "^0.9.15",
+    "pupa": "^2.1.1",
     "query-string": "^6.11.0",
     "uuid": "^3.4.0"
   },
