@@ -10,6 +10,7 @@ export enum Permissions {
   WebhookRead = 'webook:read',
   WebhookCreate = 'webook:create',
   WebhookUpdate = 'webook:update',
+  WebhookRun = 'webook:run',
   StatusRead = 'status:read',
   StatusUpdate = 'status:update',
 }
@@ -49,7 +50,7 @@ export const createUserSession = (userId: string, username: string) => {
         Permissions.WebhookRead,
         Permissions.WebhookUpdate,
         Permissions.WebhookCreate,
-        Permissions.StatusRead,
+        Permissions.WebhookRun,
       ],
     },
     jwtSecret,

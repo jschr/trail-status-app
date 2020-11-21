@@ -487,7 +487,7 @@ export default class extends cdk.Stack {
     trailsTable.grantReadWriteData(authorizeInstagramCallbackHandler);
 
     // webhook
-    const wehooksApi = api.root.addResource('webhooks');
+    const webhooksApi = api.root.addResource('webhooks');
 
     // POST /webhooks
     const postWebhook = new lambda.Function(
@@ -508,7 +508,7 @@ export default class extends cdk.Stack {
       postWebhook,
     );
 
-    wehooksApi.addMethod('POST', postWebhookIntegration);
+    webhooksApi.addMethod('POST', postWebhookIntegration);
     webhooksTable.grantReadWriteData(postWebhook);
     regionsTable.grantReadData(postWebhook);
     trailsTable.grantReadData(postWebhook);
@@ -526,10 +526,39 @@ export default class extends cdk.Stack {
 
     const putWebhookIntegration = new apigateway.LambdaIntegration(putWebhook);
 
-    wehooksApi.addMethod('PUT', putWebhookIntegration);
+    webhooksApi.addMethod('PUT', putWebhookIntegration);
     webhooksTable.grantReadWriteData(putWebhook);
     regionsTable.grantReadData(putWebhook);
     trailsTable.grantReadData(putWebhook);
+
+    // webhook/run
+    const wehooksRunApi = webhooksApi.addResource('run');
+
+    // POST /webhooks
+    const postWebhookRunHandler = new lambda.Function(
+      this,
+      projectPrefix('postWebhookRun'),
+      {
+        functionName: projectPrefix('postWebhookRun'),
+        runtime: lambda.Runtime.NODEJS_12_X,
+        code: lambda.Code.fromAsset(packagePath),
+        handler: 'api/build/src/handlers/postWebhookRun.default',
+        environment: envVars,
+        timeout: cdk.Duration.seconds(10),
+        memorySize: 512,
+      },
+    );
+
+    const postWebhookRunIntegration = new apigateway.LambdaIntegration(
+      postWebhookRunHandler,
+    );
+
+    wehooksRunApi.addMethod('POST', postWebhookRunIntegration);
+    webhooksTable.grantReadWriteData(postWebhookRunHandler);
+    regionsTable.grantReadData(postWebhookRunHandler);
+    regionStatusTable.grantReadData(postWebhookRunHandler);
+    trailStatusTable.grantReadData(postWebhookRunHandler);
+    trailsTable.grantReadData(postWebhookRunHandler);
 
     // Test webhook
     const webhookTestApi = api.root.addResource('webhook-test');

@@ -15,6 +15,7 @@ import postTrail from '../handlers/postTrail';
 import getRegion from '../handlers/getRegion';
 import putRegion from '../handlers/putRegion';
 import postWebhook from '../handlers/postWebhook';
+import postWebhookRun from '../handlers/postWebhookRun';
 import putWebhook from '../handlers/putWebhook';
 import runSyncRegions from '../handlers/runSyncRegions';
 import runWebhooks from '../handlers/runWebhooks';
@@ -52,6 +53,7 @@ app.post('/trails/status', toExpressApiHandler(getTrailStatus));
 
 app.post('/webhooks', toExpressApiHandler(postWebhook));
 app.put('/webhooks', toExpressApiHandler(putWebhook));
+app.post('/webhooks/run', toExpressApiHandler(postWebhookRun));
 
 // TODO: Deprecate
 app.get('/status', toExpressApiHandler(getLegacyTrailStatus));

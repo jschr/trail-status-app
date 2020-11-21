@@ -1,8 +1,7 @@
-import fetch, { Response } from 'node-fetch';
-import pupa from 'pupa';
 import withSQSHandler from '../withSQSHandler';
 import WebhookModel from '../models/WebhookModel';
 import buildRegionStatus, { RegionStatus } from '../buildRegionStatus';
+import runWebhook from '../runWebhook';
 
 export default withSQSHandler(async event => {
   if (!Array.isArray(event?.Records) || !event.Records.length) {
@@ -40,7 +39,7 @@ export default withSQSHandler(async event => {
     }
 
     try {
-      const [status, url] = await runWebook(webhook, regionStatus);
+      const [status, url] = await runWebhook(webhook, regionStatus);
 
       await webhook.save({
         lastRanAt: new Date().toISOString(),
@@ -66,62 +65,6 @@ export default withSQSHandler(async event => {
     }
   }
 });
-
-const runWebook = async (
-  webhook: WebhookModel,
-  regionStatus: RegionStatus,
-): Promise<[number, string]> => {
-  const method = webhook.method;
-  let url: string;
-  let body: string;
-
-  if (webhook.trailId) {
-    const { trails, ...regionStatusWithoutTrails } = regionStatus;
-    const trailStatus = trails.find(t => t.id === webhook.trailId);
-    if (!trailStatus) {
-      // If the trail status hasn't been found this means it probably still hasn't been sync'd.
-      throw new Error(`Trail status for trail '${webhook.trailId}' not found`);
-    }
-    const trailStatusWithRegion = {
-      ...trailStatus,
-      region: regionStatusWithoutTrails,
-    };
-
-    url = pupa(webhook.url, trailStatusWithRegion);
-    body = JSON.stringify(trailStatusWithRegion);
-  } else {
-    url = pupa(webhook.url, {
-      ...regionStatus,
-      message: regionStatus.message,
-    });
-    body = JSON.stringify(regionStatus);
-  }
-
-  let res: Response;
-  if (method.toLowerCase() === 'post') {
-    res = await fetch(`${url}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    });
-  } else if (method.toLowerCase() === 'get') {
-    res = await fetch(`${url}`, { method: 'GET' });
-  } else {
-    throw new Error(`Invalid webhook method '${webhook.method}'`);
-  }
-
-  if (!res.ok) {
-    const errorMessage = `Invalid response '${res.status}' from '${url}'`;
-    await webhook.save({
-      lastRanAt: new Date().toISOString(),
-      error: errorMessage,
-    });
-
-    throw new Error(errorMessage);
-  }
-
-  return [res.status, url];
-};
 
 const createRegionStatusCache = () => {
   const cache: Record<string, RegionStatus | null> = {};

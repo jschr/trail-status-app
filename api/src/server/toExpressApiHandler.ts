@@ -18,8 +18,6 @@ export default (
       // TODO: Figure out how to turn off the auto lowercase or switch from Express
       requestHeaders.Authorization = requestHeaders.authorization;
 
-      console.log('REQUEST URL', req.url);
-
       const result = await fn(
         mockApiGatewayEvent({
           queryStringParameters: req.query,
