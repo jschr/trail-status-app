@@ -249,6 +249,7 @@ export default class extends cdk.Stack {
     regionsApi.addMethod('GET', getRegionIntegration);
     regionsTable.grantReadData(getRegionHandler);
     trailsTable.grantReadData(getRegionHandler);
+    webhooksTable.grantReadData(getRegionHandler);
     userTable.grantReadData(getRegionHandler);
 
     // PUT /regions
