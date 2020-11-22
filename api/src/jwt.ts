@@ -19,6 +19,7 @@ export interface DecodedToken {
   username: string;
   profilePictureUrl: string | null;
   permissions: string[];
+  regions: Array<{ id: string; name: string }>;
   iat: number;
   exp: number;
   aud: string;
@@ -37,10 +38,18 @@ if (env('API_SUBDOMAIN', false)) {
   apiDomain = `${env('API_SUBDOMAIN', false)}.${apiDomain}`;
 }
 
-export const createUserSession = (userId: string, username: string) => {
+export const createUserSession = (
+  userId: string,
+  username: string,
+  regions: Array<{ id: string; name: string }>,
+) => {
   return jwt.sign(
     {
       username,
+      regions: regions.map(r => ({
+        id: r.id,
+        name: r.name,
+      })),
       permissions: [
         Permissions.RegionRead,
         Permissions.RegionUpdate,
@@ -76,4 +85,11 @@ export const verify = (token: string): DecodedToken => {
     throw new Error('Invalid permissions');
   }
   return decodedToken;
+};
+
+export const canAccessRegion = (
+  decodedToken: DecodedToken,
+  regionId: string,
+) => {
+  return !!decodedToken.regions.find(r => r.id === regionId);
 };

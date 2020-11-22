@@ -2,8 +2,12 @@ import { assert } from '@trail-status-app/utilities';
 import WebhookModel from '../models/WebhookModel';
 import { json } from '../responses';
 import withApiHandler from '../withApiHandler';
-import { Permissions as P } from '../jwt';
-import { BadRequestError, NotFoundError } from '../HttpError';
+import { Permissions as P, canAccessRegion } from '../jwt';
+import {
+  BadRequestError,
+  NotFoundError,
+  UnauthorizedError,
+} from '../HttpError';
 import { parseQuery, parseBody } from '../requests';
 
 interface PutWebhookQuery {
@@ -27,7 +31,12 @@ export default withApiHandler([P.WebhookCreate], async event => {
     throw new NotFoundError(`Could not find webhook for '${id}'`);
   }
 
-  // TODO: Ensure user has access to webhook's region.
+  // Ensure user has access to region.
+  if (!canAccessRegion(event.decodedToken, webhook.regionId)) {
+    throw new UnauthorizedError(
+      `User does not have access to region '${webhook.regionId}'`,
+    );
+  }
 
   await webhook.save(body);
 

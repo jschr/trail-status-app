@@ -4,8 +4,12 @@ import RegionModel from '../models/RegionModel';
 import TrailModel from '../models/TrailModel';
 import { json } from '../responses';
 import withApiHandler from '../withApiHandler';
-import { Permissions as P } from '../jwt';
-import { BadRequestError, NotFoundError } from '../HttpError';
+import { Permissions as P, canAccessRegion } from '../jwt';
+import {
+  BadRequestError,
+  NotFoundError,
+  UnauthorizedError,
+} from '../HttpError';
 import { parseBody } from '../requests';
 
 interface PostTrailBody {
@@ -25,7 +29,12 @@ export default withApiHandler([P.TrailCreate], async event => {
     throw new NotFoundError(`Region not found for id '${regionId}'`);
   }
 
-  // TODO: Ensure user has access to region.
+  // Ensure user has access to region.
+  if (!canAccessRegion(event.decodedToken, region.id)) {
+    throw new UnauthorizedError(
+      `User does not have access to region '${region.id}'`,
+    );
+  }
 
   const trail = new TrailModel({
     id: uuid(),

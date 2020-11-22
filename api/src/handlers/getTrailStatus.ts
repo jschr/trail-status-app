@@ -5,12 +5,12 @@ import withApiHandler from '../withApiHandler';
 import { BadRequestError, NotFoundError } from '../HttpError';
 import { parseQuery } from '../requests';
 
-interface GetTrailStatus {
+interface GetTrailStatusQuery {
   id: string;
 }
 
 export default withApiHandler([], async event => {
-  const { id } = assertGetTrailStatus(parseQuery(event));
+  const { id } = assertGetTrailStatusQuery(parseQuery(event));
   const trailStatus = await TrailStatusModel.get(id);
 
   if (!trailStatus) {
@@ -20,7 +20,7 @@ export default withApiHandler([], async event => {
   return json(trailStatus);
 });
 
-const assertGetTrailStatus = (query: any): GetTrailStatus => {
+const assertGetTrailStatusQuery = (query: any): GetTrailStatusQuery => {
   assert(
     !query || typeof query !== 'object',
     new BadRequestError('Invalid query.'),
@@ -31,5 +31,5 @@ const assertGetTrailStatus = (query: any): GetTrailStatus => {
     new BadRequestError('Invalid id provided in query.'),
   );
 
-  return query as GetTrailStatus;
+  return query as GetTrailStatusQuery;
 };

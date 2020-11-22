@@ -5,8 +5,12 @@ import TrailModel from '../models/TrailModel';
 import WebhookModel from '../models/WebhookModel';
 import { json } from '../responses';
 import withApiHandler from '../withApiHandler';
-import { Permissions as P } from '../jwt';
-import { BadRequestError, NotFoundError } from '../HttpError';
+import { Permissions as P, canAccessRegion } from '../jwt';
+import {
+  BadRequestError,
+  NotFoundError,
+  UnauthorizedError,
+} from '../HttpError';
 import { parseBody } from '../requests';
 
 interface PostWebhookBody {
@@ -36,7 +40,12 @@ export default withApiHandler([P.WebhookCreate], async event => {
     throw new NotFoundError(`Region not found for id '${regionId}'`);
   }
 
-  // TODO: Ensure user has access to region.
+  // Ensure user has access to region.
+  if (!canAccessRegion(event.decodedToken, region.id)) {
+    throw new UnauthorizedError(
+      `User does not have access to region '${region.id}'`,
+    );
+  }
 
   // Ensure trail exists if provided.
   if (trailId) {

@@ -65,11 +65,11 @@ export interface User {
   id: string;
   username: string;
   name: string;
-  profilePictureUrl: string;
 }
 
 export const getUser = async (accessToken: string): Promise<User> => {
-  const userUrl = `${igGraphUrl}/me?fields=id,username,name,profile_picture_url&access_token=${accessToken}`;
+  const userUrl = `${igGraphUrl}/me?fields=id,username,name&access_token=${accessToken}`;
+
   const userResp = await fetch(userUrl);
 
   if (!userResp.ok) {
@@ -87,7 +87,6 @@ export const getUser = async (accessToken: string): Promise<User> => {
     id: userPayload.id,
     username: userPayload.username,
     name: userPayload.name,
-    profilePictureUrl: userPayload.profilePictureUrl,
   };
 };
 

@@ -5,17 +5,17 @@ import { BadRequestError } from '../HttpError';
 import { parseQuery } from '../requests';
 import buildRegionStatus from '../buildRegionStatus';
 
-interface GetRegionStatus {
+interface GetRegionStatusQuery {
   id: string;
 }
 
 export default withApiHandler([], async event => {
-  const { id } = assertGetRegionStatus(parseQuery(event));
+  const { id } = assertGetRegionStatusQuery(parseQuery(event));
   const regionStatus = await buildRegionStatus(id);
   return json(regionStatus);
 });
 
-const assertGetRegionStatus = (query: any): GetRegionStatus => {
+const assertGetRegionStatusQuery = (query: any): GetRegionStatusQuery => {
   assert(
     !query || typeof query !== 'object',
     new BadRequestError('Invalid query.'),
@@ -26,5 +26,5 @@ const assertGetRegionStatus = (query: any): GetRegionStatus => {
     new BadRequestError('Invalid id provided in query.'),
   );
 
-  return query as GetRegionStatus;
+  return query as GetRegionStatusQuery;
 };

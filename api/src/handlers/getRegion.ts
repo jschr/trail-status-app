@@ -3,24 +3,32 @@ import RegionModel from '../models/RegionModel';
 import TrailModel from '../models/TrailModel';
 import { json } from '../responses';
 import withApiHandler from '../withApiHandler';
-import { BadRequestError, NotFoundError } from '../HttpError';
+import {
+  BadRequestError,
+  NotFoundError,
+  UnauthorizedError,
+} from '../HttpError';
 import { parseQuery } from '../requests';
-import { Permissions as P } from '../jwt';
+import { Permissions as P, canAccessRegion } from '../jwt';
 
-interface GetRegion {
+interface GetRegionQuery {
   id: string;
 }
 
 export default withApiHandler([P.RegionRead], async event => {
-  const { id } = assertGetRegion(parseQuery(event));
+  const { id } = assertGetRegionQuery(parseQuery(event));
 
   const region = await RegionModel.get(id);
-
   if (!region) {
     throw new NotFoundError(`Could not find region for '${region}'`);
   }
 
-  // TODO: Ensure user has access to region.
+  // Ensure user has access to region.
+  if (!canAccessRegion(event.decodedToken, region.id)) {
+    throw new UnauthorizedError(
+      `User does not have access to region '${region.id}'`,
+    );
+  }
 
   const trails = await TrailModel.allByRegion(region.id);
 
@@ -30,7 +38,7 @@ export default withApiHandler([P.RegionRead], async event => {
   });
 });
 
-const assertGetRegion = (query: any): GetRegion => {
+const assertGetRegionQuery = (query: any): GetRegionQuery => {
   assert(
     !query || typeof query !== 'object',
     new BadRequestError('Invalid query.'),

@@ -82,8 +82,8 @@ export default class RegionModel {
       const attrMap = this.toAttributeMap({ userId });
 
       const params: AWS.DynamoDB.QueryInput = {
-        TableName: tables.trails.name,
-        IndexName: tables.trails.indexes.trailsByRegion.name,
+        TableName: tables.regions.name,
+        IndexName: tables.regions.indexes.regionsByUser.name,
         KeyConditionExpression: '#userId = :userId',
         ExpressionAttributeNames: {
           '#userId': 'userId',

@@ -2,8 +2,12 @@ import { assert } from '@trail-status-app/utilities';
 import RegionModel from '../models/RegionModel';
 import { json } from '../responses';
 import withApiHandler from '../withApiHandler';
-import { Permissions as P } from '../jwt';
-import { BadRequestError, NotFoundError } from '../HttpError';
+import { Permissions as P, canAccessRegion } from '../jwt';
+import {
+  BadRequestError,
+  NotFoundError,
+  UnauthorizedError,
+} from '../HttpError';
 import { parseQuery, parseBody } from '../requests';
 
 interface PutRegionQuery {
@@ -28,7 +32,12 @@ export default withApiHandler([P.RegionUpdate], async event => {
     throw new NotFoundError(`Could not find region for '${id}'`);
   }
 
-  // TODO: Ensure user has access to region.
+  // Ensure user has access to region.
+  if (!canAccessRegion(event.decodedToken, region.id)) {
+    throw new UnauthorizedError(
+      `User does not have access to region '${region.id}'`,
+    );
+  }
 
   await region.save({
     name,

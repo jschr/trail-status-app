@@ -2,8 +2,12 @@ import { assert } from '@trail-status-app/utilities';
 import WebhookModel from '../models/WebhookModel';
 import { json } from '../responses';
 import withApiHandler from '../withApiHandler';
-import { Permissions as P } from '../jwt';
-import { BadRequestError, NotFoundError } from '../HttpError';
+import { Permissions as P, canAccessRegion } from '../jwt';
+import {
+  BadRequestError,
+  NotFoundError,
+  UnauthorizedError,
+} from '../HttpError';
 import { parseBody } from '../requests';
 import buildRegionStatus from '../buildRegionStatus';
 import runWebhook from '../runWebhook';
@@ -27,7 +31,12 @@ export default withApiHandler([P.WebhookRun], async event => {
     );
   }
 
-  // TODO: Ensure user has access to webhook's region.
+  // Ensure user has access to region.
+  if (!canAccessRegion(event.decodedToken, webhook.regionId)) {
+    throw new UnauthorizedError(
+      `User does not have access to region '${webhook.regionId}'`,
+    );
+  }
 
   try {
     const [status, url] = await runWebhook(webhook, regionStatus);

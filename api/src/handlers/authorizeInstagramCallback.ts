@@ -26,9 +26,7 @@ export default withApiHandler([], async event => {
     throw new BadRequestError('Failed getting access token.', err);
   });
 
-  const { username, name, profilePictureUrl } = await instagram.getUser(
-    accessToken,
-  );
+  const { username, name } = await instagram.getUser(accessToken);
 
   const userId = `instagram|${igUserId}`;
   let user = await UserModel.get(userId);
@@ -44,7 +42,6 @@ export default withApiHandler([], async event => {
   const expiresAt = new Date(+now + expiresIn * 1000);
   await user.save({
     username,
-    profilePictureUrl,
     accessToken,
     expiresAt: expiresAt.toISOString(),
     lastLoginAt: now.toISOString(),
@@ -66,22 +63,22 @@ export default withApiHandler([], async event => {
   }
 
   // Ensure each region has a trail.
-  await Promise.all(
-    regions.map(async region => {
-      const trails = await TrailModel.allByRegion(region.id);
-      if (trails.length === 0) {
-        const trail = new TrailModel({
-          id: uuid(),
-          regionId: region.id,
-          createdAt: new Date().toISOString(),
-        });
-        await trail.save();
-        trails.push(trail);
-      }
-    }),
-  );
+  // await Promise.all(
+  //   regions.map(async region => {
+  //     const trails = await TrailModel.allByRegion(region.id);
+  //     if (trails.length === 0) {
+  //       const trail = new TrailModel({
+  //         id: uuid(),
+  //         regionId: region.id,
+  //         createdAt: new Date().toISOString(),
+  //       });
+  //       await trail.save();
+  //       trails.push(trail);
+  //     }
+  //   }),
+  // );
 
-  const sessionToken = jwt.createUserSession(userId, username);
+  const sessionToken = jwt.createUserSession(userId, username, regions);
 
   return redirect(`${env('FRONTEND_ENDPOINT')}?sessionToken=${sessionToken}`);
 });

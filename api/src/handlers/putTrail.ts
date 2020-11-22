@@ -2,8 +2,12 @@ import { assert } from '@trail-status-app/utilities';
 import TrailModel from '../models/TrailModel';
 import { json } from '../responses';
 import withApiHandler from '../withApiHandler';
-import { Permissions as P } from '../jwt';
-import { BadRequestError, NotFoundError } from '../HttpError';
+import { Permissions as P, canAccessRegion } from '../jwt';
+import {
+  BadRequestError,
+  NotFoundError,
+  UnauthorizedError,
+} from '../HttpError';
 import { parseQuery, parseBody } from '../requests';
 
 interface PutTrailQuery {
@@ -25,7 +29,12 @@ export default withApiHandler([P.TrailUpdate], async event => {
     throw new NotFoundError(`Could not find trail for '${id}'`);
   }
 
-  // TODO: Ensure user has access to trail's region.
+  // Ensure user has access to region.
+  if (!canAccessRegion(event.decodedToken, trail.regionId)) {
+    throw new UnauthorizedError(
+      `User does not have access to region '${trail.regionId}'`,
+    );
+  }
 
   await trail.save({
     name,
