@@ -11,10 +11,11 @@ import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import IconButton from '@material-ui/core/IconButton';
 import AddCircleOutlineIcon from '@material-ui/icons/AddCircleOutline';
-import useUser from '../hooks/useUser';
-import useRegion from '../hooks/useRegion';
-import Container from '../components/Container';
-import TrailDialog from '../components/TrailDialog';
+import useUser from '../../hooks/useUser';
+import useRegion from '../../hooks/useRegion';
+import Container from '../../components/Container';
+import TrailDialog from './TrailDialog';
+import WebhookDialog from './WebhookDialog';
 
 const RegionPage = () => {
   const [isSaving, setIsSaving] = useState(false);
@@ -138,7 +139,6 @@ const RegionPage = () => {
             {region?.trails.map(trail => (
               <Fragment key={trail.id}>
                 <ListItem
-                  dense
                   button
                   onClick={() => {
                     setSelectedTrailId(trail.id);
@@ -175,7 +175,6 @@ const RegionPage = () => {
             {region?.webhooks.map(webhook => (
               <Fragment key={webhook.id}>
                 <ListItem
-                  dense
                   button
                   onClick={() => {
                     setSelectedWebhookId(webhook.id);
@@ -199,6 +198,19 @@ const RegionPage = () => {
           handleClose={() => {
             setIsTrailDialogOpen(false);
             setSelectedTrailId('');
+          }}
+          refetchRegion={refetchRegion}
+        />
+      )}
+
+      {region && isWebhookDialogOpen && (
+        <WebhookDialog
+          open={isWebhookDialogOpen}
+          region={region}
+          webhook={selectedWebhook}
+          handleClose={() => {
+            setIsWebhookDialogOpen(false);
+            setSelectedWebhookId('');
           }}
           refetchRegion={refetchRegion}
         />

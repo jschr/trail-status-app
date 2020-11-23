@@ -7,8 +7,8 @@ import TextField from '@material-ui/core/TextField';
 import Button from '@material-ui/core/Button';
 import Box from '@material-ui/core/Box';
 import Typography from '@material-ui/core/Typography';
-import api, { Trail, Region } from '../api';
-import useSaveTrail from '../hooks/useSaveTrail';
+import api, { Trail, Region } from '../../api';
+import useSaveTrail from '../../hooks/useSaveTrail';
 
 export interface TrailDialogProps {
   open: boolean;
@@ -78,7 +78,7 @@ const TrailDialog = ({
             />
           </Box>
 
-          <Box mt={4}>
+          <Box mt={3}>
             <Typography color="textSecondary" variant="overline">
               Hashtag Settings
             </Typography>
@@ -90,7 +90,7 @@ const TrailDialog = ({
             </Typography>
           </Box>
 
-          <Box mt={4} mb={1}>
+          <Box mt={3} mb={1}>
             <TextField
               fullWidth
               label="Trail closed"
