@@ -65,12 +65,12 @@ const assertPutTrailsBody = (body: any): PutTrailsBody => {
   );
 
   assert(
-    typeof body.openHashtag !== 'string',
-    new BadRequestError('Invalid openHashtag provided in body.'),
+    'name' in body && typeof body.name !== 'string',
+    new BadRequestError('Invalid closeHashtag provided in body.'),
   );
 
   assert(
-    typeof body.closeHashtag !== 'string',
+    'closeHashtag' in body && typeof body.closeHashtag !== 'string',
     new BadRequestError('Invalid closeHashtag provided in body.'),
   );
 

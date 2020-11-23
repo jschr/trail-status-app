@@ -5,9 +5,9 @@ import CssBaseline from '@material-ui/core/CssBaseline';
 import blue from '@material-ui/core/colors/blue';
 import { Router, Switch, Route, Redirect } from 'react-router-dom';
 import LoginPage from './pages/LoginPage';
-import SettingsPage from './pages/SettingsPage';
-import TermsOfService from './pages/TermsOfService';
-import PrivacyPolicy from './pages/PrivacyPolicy';
+import RegionPage from './pages/RegionPage';
+import TermsOfServicePage from './pages/TermsOfServicePage';
+import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
 import history from './history';
 
 export default function App() {
@@ -30,16 +30,16 @@ export default function App() {
       <Router history={history}>
         <Switch>
           <Route exact path="/">
-            <SettingsPage />
+            <RegionPage />
           </Route>
           <Route path="/login">
             <LoginPage />
           </Route>
           <Route path="/tos">
-            <TermsOfService />
+            <TermsOfServicePage />
           </Route>
           <Route path="/privacy-policy">
-            <PrivacyPolicy />
+            <PrivacyPolicyPage />
           </Route>
           <Route path="*">
             <Redirect to="/" />

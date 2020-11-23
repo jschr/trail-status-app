@@ -8,7 +8,7 @@ import Box from '@material-ui/core/Box';
 import Container from '../components/Container';
 import api from '../api';
 
-const LoginPage: React.FunctionComponent = () => {
+const LoginPage = () => {
   return (
     <Container maxWidth="xs">
       <Box pt={20} pb={20}>

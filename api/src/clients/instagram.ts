@@ -64,11 +64,10 @@ export const handleRedirectCallback = async (
 export interface User {
   id: string;
   username: string;
-  name: string;
 }
 
 export const getUser = async (accessToken: string): Promise<User> => {
-  const userUrl = `${igGraphUrl}/me?fields=id,username,name&access_token=${accessToken}`;
+  const userUrl = `${igGraphUrl}/me?fields=id,username&access_token=${accessToken}`;
 
   const userResp = await fetch(userUrl);
 
@@ -86,7 +85,6 @@ export const getUser = async (accessToken: string): Promise<User> => {
   return {
     id: userPayload.id,
     username: userPayload.username,
-    name: userPayload.name,
   };
 };
 

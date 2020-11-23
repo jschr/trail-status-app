@@ -7,7 +7,6 @@ import withApiHandler from '../withApiHandler';
 import { BadRequestError } from '../HttpError';
 import UserModel from '../models/UserModel';
 import RegionModel from '../models/RegionModel';
-import TrailModel from '../models/TrailModel';
 import * as jwt from '../jwt';
 
 interface AuthorizeInstagramCallback {
@@ -26,7 +25,7 @@ export default withApiHandler([], async event => {
     throw new BadRequestError('Failed getting access token.', err);
   });
 
-  const { username, name } = await instagram.getUser(accessToken);
+  const { username } = await instagram.getUser(accessToken);
 
   const userId = `instagram|${igUserId}`;
   let user = await UserModel.get(userId);
@@ -53,7 +52,7 @@ export default withApiHandler([], async event => {
     const region = new RegionModel({
       id: uuid(),
       userId,
-      name,
+      name: `${username}'s Region`,
       openHashtag: 'trailsopen',
       closeHashtag: 'trailsclosed',
       createdAt: new Date().toISOString(),
@@ -61,22 +60,6 @@ export default withApiHandler([], async event => {
     await region.save();
     regions.push(region);
   }
-
-  // Ensure each region has a trail.
-  // await Promise.all(
-  //   regions.map(async region => {
-  //     const trails = await TrailModel.allByRegion(region.id);
-  //     if (trails.length === 0) {
-  //       const trail = new TrailModel({
-  //         id: uuid(),
-  //         regionId: region.id,
-  //         createdAt: new Date().toISOString(),
-  //       });
-  //       await trail.save();
-  //       trails.push(trail);
-  //     }
-  //   }),
-  // );
 
   const sessionToken = jwt.createUserSession(userId, username, regions);
 
