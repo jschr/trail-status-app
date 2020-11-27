@@ -1,37 +1,61 @@
-import React, { useState, Fragment } from 'react';
 import Box from '@material-ui/core/Box';
 import Grid from '@material-ui/core/Grid';
 import CardHeader from '@material-ui/core/CardHeader';
 import Divider from '@material-ui/core/Divider';
 import Button from '@material-ui/core/Button';
 import Link from '@material-ui/core/Link';
-import TextField from '@material-ui/core/TextField';
 import Typography from '@material-ui/core/Typography';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import IconButton from '@material-ui/core/IconButton';
 import AddCircleOutlineIcon from '@material-ui/icons/AddCircleOutline';
+import React, { Fragment, useState, useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { useQuery, useMutation } from 'react-query';
+import api, { Webhook, Region } from '../../api';
 import useUser from '../../hooks/useUser';
 import useRegion from '../../hooks/useRegion';
 import Container from '../../components/Container';
+import TextField from '../../components/TextField';
 import TrailDialog from './TrailDialog';
 import WebhookDialog from './WebhookDialog';
 
+interface RegionInputs {
+  name: string;
+  openHashtag: string;
+  closeHashtag: string;
+}
+
 const RegionPage = () => {
-  const [isSaving, setIsSaving] = useState(false);
+  const { data: user } = useQuery('user', () => api.getUser());
+  const regionId = user?.regions[0]?.id;
+
+  const { data: region } = useQuery(['region', regionId], () =>
+    regionId ? api.getRegion(regionId) : null,
+  );
+
+  const [saveRegion, { status }] = useMutation(
+    (params: { id: string; inputs: RegionInputs }) => {
+      return api.updateRegion(params.id, params.inputs);
+    },
+  );
+
+  const { register, handleSubmit, setValue, reset } = useForm<RegionInputs>();
+
   const [selectedTrailId, setSelectedTrailId] = useState('');
   const [selectedWebhookId, setSelectedWebhookId] = useState('');
   const [isTrailDialogOpen, setIsTrailDialogOpen] = useState(false);
   const [isWebhookDialogOpen, setIsWebhookDialogOpen] = useState(false);
 
-  const user = useUser();
-  const regionId = user?.regions[0]?.id;
-  const [region, refetchRegion] = useRegion(regionId);
-
   const selectedTrail = region?.trails.find(t => t.id === selectedTrailId);
   const selectedWebhook = region?.webhooks.find(
     w => w.id === selectedWebhookId,
   );
+
+  // Reset the form when region is loaded or changed.
+  useEffect(() => {
+    if (region) reset(region);
+  }, [region]);
 
   return (
     <Container maxWidth="md">
@@ -43,14 +67,10 @@ const RegionPage = () => {
           <Box mt={6}>
             <TextField
               fullWidth
-              size="small"
-              variant="outlined"
               label="Region name"
-              helperText=""
-              value={region?.name ?? ''}
-              // onChange={e =>
-              //   updateSettingsState({ openHashtag: e.target.value })
-              // }
+              name="name"
+              defaultValue={region?.name}
+              inputRef={register({ required: true })}
             />
           </Box>
 
@@ -77,30 +97,24 @@ const RegionPage = () => {
           <Box mt={4}>
             <TextField
               fullWidth
-              size="small"
-              variant="outlined"
               label="Region open"
+              name="openHashtag"
+              defaultValue={region?.openHashtag}
+              inputRef={register({ required: true })}
               helperText={`Example: Trails are open! ${region?.openHashtag ??
                 ''}`}
-              value={region?.openHashtag ?? ''}
-              // onChange={e =>
-              //   updateSettingsState({ openHashtag: e.target.value })
-              // }
             />
           </Box>
 
           <Box mt={3}>
             <TextField
               fullWidth
-              size="small"
-              variant="outlined"
-              label="Region closed"
+              label="Region close"
+              name="closeHashtag"
+              defaultValue={region?.closeHashtag}
+              inputRef={register({ required: true })}
               helperText={`Example: Trails are too wet to ride! ${region?.closeHashtag ??
                 ''}`}
-              value={region?.closeHashtag ?? ''}
-              // onChange={e =>
-              //   updateSettingsState({ closeHashtag: e.target.value })
-              // }
             />
           </Box>
 
@@ -113,7 +127,7 @@ const RegionPage = () => {
               // disabled={isSaving || !hasChanged}
               // onClick={saveSettings}
             >
-              {isSaving ? 'Saving...' : 'Save Region'}
+              {status === 'loading' ? 'Saving...' : 'Save Region'}
             </Button>
           </Box>
         </Grid>
@@ -199,7 +213,6 @@ const RegionPage = () => {
             setIsTrailDialogOpen(false);
             setSelectedTrailId('');
           }}
-          refetchRegion={refetchRegion}
         />
       )}
 
@@ -212,7 +225,6 @@ const RegionPage = () => {
             setIsWebhookDialogOpen(false);
             setSelectedWebhookId('');
           }}
-          refetchRegion={refetchRegion}
         />
       )}
     </Container>

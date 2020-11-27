@@ -11,6 +11,7 @@ import IconButton from '@material-ui/core/IconButton';
 import Grid from '@material-ui/core/Grid';
 import Typography from '@material-ui/core/Typography';
 import { useForm } from 'react-hook-form';
+import { useMutation, useQueryCache } from 'react-query';
 import api, { Webhook, Region } from '../../api';
 import SelectField from '../../components/SelectField';
 import TextField from '../../components/TextField';
@@ -20,39 +21,44 @@ export interface WebhookDialogProps {
   region: Region;
   webhook?: Webhook;
   handleClose: () => void;
-  refetchRegion: () => void;
 }
 
-type WebhookInputs = {
+interface WebhookInputs {
   name: string;
   description: string;
-  trailId?: string;
+  trailId: string;
   method: string;
   url: string;
-};
+}
 
 const WebhookDialog = ({
   webhook,
   region,
   open,
   handleClose,
-  refetchRegion,
 }: WebhookDialogProps) => {
-  const { register, handleSubmit, watch, errors } = useForm<WebhookInputs>();
+  const { register, handleSubmit } = useForm<WebhookInputs>();
 
-  const selectedTrailId = watch('trailId');
-  const selectedTrail = region.trails.find(t => t.id === selectedTrailId);
+  const queryCache = useQueryCache();
+
+  const [saveWebhook, { status }] = useMutation(
+    async (params: { id?: string; inputs: WebhookInputs }) => {
+      if (params.id) {
+        await api.updateWebhook(params.id, params.inputs);
+      } else {
+        await api.createWebhook(params.inputs);
+      }
+
+      queryCache.invalidateQueries(['region', region.id]);
+    },
+  );
 
   const onSubmit = useCallback(
     async (inputs: WebhookInputs) => {
-      console.log('inputs', inputs);
-      // setIsSaving(true);
-      // await saveTrail({ name, closeHashtag, regionId: region.id });
-      // setIsSaving(false);
-      // refetchRegion();
-      // handleClose();
+      await saveWebhook({ id: webhook?.id, inputs });
+      handleClose();
     },
-    [handleClose, refetchRegion],
+    [handleClose],
   );
 
   return (
@@ -66,12 +72,12 @@ const WebhookDialog = ({
             <DialogContent>
               <Box>
                 <TextField
+                  autoFocus={!webhook}
                   label="Webhook name"
                   name="name"
                   defaultValue={webhook?.name}
                   inputRef={register({ required: true })}
                   fullWidth
-                  autoFocus={!webhook}
                 />
               </Box>
 
@@ -170,11 +176,10 @@ const WebhookDialog = ({
           <Button
             type="submit"
             color="primary"
+            disabled={status === 'loading'}
             // disabled={isSaving || !hasChanged || !isValid}
-            // disabled={isSaving}
           >
-            {/* {isSaving ? 'Saving...' : 'Save'} */}
-            Save
+            {status === 'loading' ? 'Saving...' : 'Save'}
           </Button>
         </DialogActions>
       </form>

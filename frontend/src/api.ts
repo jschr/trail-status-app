@@ -22,7 +22,7 @@ if (typeof querystring.sessionToken === 'string') {
 }
 
 let requests = 0;
-
+let doneTimeout: ReturnType<typeof setTimeout>;
 export default new ApiClient({
   accessToken,
   onUnauthorized: () => history.push('/login'),
@@ -32,6 +32,13 @@ export default new ApiClient({
   },
   onRequestEnd: () => {
     requests -= 1;
-    if (!requests) nprogress.done();
+
+    if (doneTimeout) {
+      clearTimeout(doneTimeout);
+    }
+
+    setTimeout(() => {
+      if (!requests) nprogress.done();
+    }, 50);
   },
 });

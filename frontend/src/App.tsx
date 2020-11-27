@@ -4,11 +4,20 @@ import { createMuiTheme, ThemeProvider } from '@material-ui/core/styles';
 import CssBaseline from '@material-ui/core/CssBaseline';
 import blue from '@material-ui/core/colors/blue';
 import { Router, Switch, Route, Redirect } from 'react-router-dom';
+import { ReactQueryCacheProvider, QueryCache } from 'react-query';
 import LoginPage from './pages/LoginPage';
 import RegionPage from './pages/RegionPage';
 import TermsOfServicePage from './pages/TermsOfServicePage';
 import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
 import history from './history';
+
+const queryCache = new QueryCache({
+  defaultConfig: {
+    queries: {
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 export default function App() {
   const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)');
@@ -25,27 +34,29 @@ export default function App() {
   );
 
   return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <Router history={history}>
-        <Switch>
-          <Route exact path="/">
-            <RegionPage />
-          </Route>
-          <Route path="/login">
-            <LoginPage />
-          </Route>
-          <Route path="/tos">
-            <TermsOfServicePage />
-          </Route>
-          <Route path="/privacy-policy">
-            <PrivacyPolicyPage />
-          </Route>
-          <Route path="*">
-            <Redirect to="/" />
-          </Route>
-        </Switch>
-      </Router>
-    </ThemeProvider>
+    <ReactQueryCacheProvider queryCache={queryCache}>
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <Router history={history}>
+          <Switch>
+            <Route exact path="/">
+              <RegionPage />
+            </Route>
+            <Route path="/login">
+              <LoginPage />
+            </Route>
+            <Route path="/tos">
+              <TermsOfServicePage />
+            </Route>
+            <Route path="/privacy-policy">
+              <PrivacyPolicyPage />
+            </Route>
+            <Route path="*">
+              <Redirect to="/" />
+            </Route>
+          </Switch>
+        </Router>
+      </ThemeProvider>
+    </ReactQueryCacheProvider>
   );
 }

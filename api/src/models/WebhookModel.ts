@@ -150,14 +150,14 @@ export default class WebhookModel {
     if (webhook.name !== undefined) {
       attrMap.name = { S: webhook.name };
     }
+    if (webhook.description !== undefined) {
+      attrMap.description = { S: webhook.description };
+    }
     if (webhook.method !== undefined) {
       attrMap.method = { S: webhook.method };
     }
     if (webhook.url !== undefined) {
       attrMap.url = { S: webhook.url };
-    }
-    if (webhook.description !== undefined) {
-      attrMap.description = { S: webhook.description };
     }
     if (webhook.lastRanAt !== undefined) {
       attrMap.lastRanAt = { S: webhook.lastRanAt };
@@ -279,6 +279,7 @@ export default class WebhookModel {
       trailId: this.trailId,
       runPriority: this.runPriority,
       name: this.name,
+      description: this.description,
       url: this.url,
       lastRanAt: this.lastRanAt,
       error: this.error,

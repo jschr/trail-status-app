@@ -15,7 +15,6 @@ export interface TrailDialogProps {
   region: Region;
   trail?: Trail;
   handleClose: () => void;
-  refetchRegion: () => void;
 }
 
 const TrailDialog = ({
@@ -23,7 +22,6 @@ const TrailDialog = ({
   region,
   open,
   handleClose,
-  refetchRegion,
 }: TrailDialogProps) => {
   const [name, setName] = useState(trail?.name);
   const [closeHashtag, setCloseHashtag] = useState(trail?.closeHashtag);
@@ -40,9 +38,8 @@ const TrailDialog = ({
     setIsSaving(true);
     await saveTrail({ name, closeHashtag, regionId: region.id });
     setIsSaving(false);
-    refetchRegion();
     handleClose();
-  }, [name, closeHashtag, handleClose, setIsSaving, refetchRegion]);
+  }, [name, closeHashtag, handleClose, setIsSaving]);
 
   useEffect(() => {
     if (trail) return;

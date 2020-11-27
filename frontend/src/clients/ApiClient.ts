@@ -90,10 +90,24 @@ export default class ApiClient {
     return await this.makeProtectedRequest(`${apiEndpoint}/regions?id=${id}`);
   }
 
+  async updateRegion(
+    id: string,
+    body: {
+      name?: string;
+      openHashtag?: string;
+      closeHashtag?: string;
+    },
+  ): Promise<Webhook> {
+    return await this.makeProtectedRequest(`${apiEndpoint}/regions?id=${id}`, {
+      method: 'PUT',
+      body,
+    });
+  }
+
   async updateTrail(
     id: string,
     body: { name?: string; closeHashtag?: string },
-  ): Promise<void> {
+  ): Promise<Trail> {
     return await this.makeProtectedRequest(`${apiEndpoint}/trails?id=${id}`, {
       method: 'PUT',
       body,
@@ -104,8 +118,37 @@ export default class ApiClient {
     name: string;
     closeHashtag: string;
     regionId: string;
-  }): Promise<void> {
+  }): Promise<Trail> {
     return await this.makeProtectedRequest(`${apiEndpoint}/trails`, {
+      method: 'POST',
+      body,
+    });
+  }
+
+  async updateWebhook(
+    id: string,
+    body: {
+      name?: string;
+      description?: string;
+      trailId?: string;
+      method?: string;
+      url?: string;
+    },
+  ): Promise<Webhook> {
+    return await this.makeProtectedRequest(`${apiEndpoint}/webhooks?id=${id}`, {
+      method: 'PUT',
+      body,
+    });
+  }
+
+  async createWebhook(body: {
+    name: string;
+    description?: string;
+    trailId?: string;
+    method: string;
+    url: string;
+  }): Promise<Webhook> {
+    return await this.makeProtectedRequest(`${apiEndpoint}/webhooks`, {
       method: 'POST',
       body,
     });
