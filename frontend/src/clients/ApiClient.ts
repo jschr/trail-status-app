@@ -97,7 +97,7 @@ export default class ApiClient {
       openHashtag?: string;
       closeHashtag?: string;
     },
-  ): Promise<Webhook> {
+  ): Promise<Region> {
     return await this.makeProtectedRequest(`${apiEndpoint}/regions?id=${id}`, {
       method: 'PUT',
       body,

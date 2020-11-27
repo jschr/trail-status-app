@@ -37,7 +37,7 @@ const WebhookDialog = ({
   open,
   handleClose,
 }: WebhookDialogProps) => {
-  const { register, handleSubmit } = useForm<WebhookInputs>();
+  const { register, handleSubmit, formState } = useForm<WebhookInputs>();
 
   const queryCache = useQueryCache();
 
@@ -60,6 +60,8 @@ const WebhookDialog = ({
     },
     [handleClose],
   );
+
+  const isDirty = Object.values(formState.dirtyFields).length > 0;
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="md">
@@ -176,8 +178,7 @@ const WebhookDialog = ({
           <Button
             type="submit"
             color="primary"
-            disabled={status === 'loading'}
-            // disabled={isSaving || !hasChanged || !isValid}
+            disabled={status === 'loading' || !isDirty}
           >
             {status === 'loading' ? 'Saving...' : 'Save'}
           </Button>
