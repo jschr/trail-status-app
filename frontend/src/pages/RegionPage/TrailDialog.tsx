@@ -3,12 +3,14 @@ import Dialog from '@material-ui/core/Dialog';
 import DialogActions from '@material-ui/core/DialogActions';
 import DialogContent from '@material-ui/core/DialogContent';
 import DialogTitle from '@material-ui/core/DialogTitle';
-import TextField from '@material-ui/core/TextField';
 import Button from '@material-ui/core/Button';
 import Box from '@material-ui/core/Box';
 import Typography from '@material-ui/core/Typography';
+import { useForm } from 'react-hook-form';
+import { useMutation, useQueryCache } from 'react-query';
 import api, { Trail, Region } from '../../api';
-import useSaveTrail from '../../hooks/useSaveTrail';
+import SelectField from '../../components/SelectField';
+import TextField from '../../components/TextField';
 
 export interface TrailDialogProps {
   open: boolean;
@@ -17,48 +19,66 @@ export interface TrailDialogProps {
   handleClose: () => void;
 }
 
+interface TrailInputs {
+  name: string;
+  closeHashtag: string;
+}
+
 const TrailDialog = ({
   trail,
   region,
   open,
   handleClose,
 }: TrailDialogProps) => {
-  const [name, setName] = useState(trail?.name);
-  const [closeHashtag, setCloseHashtag] = useState(trail?.closeHashtag);
-  const [isSaving, setIsSaving] = useState(false);
+  const { register, handleSubmit, formState, watch, setValue } = useForm<
+    TrailInputs
+  >({
+    defaultValues: {
+      name: trail?.name,
+      closeHashtag: trail?.closeHashtag,
+    },
+  });
 
-  const saveTrail = useSaveTrail(trail);
+  const name = watch('name');
+  const closeHashtag = watch('closeHashtag');
+  const isDirty = Object.values(formState.dirtyFields).length > 0;
 
-  const isValid = !!name && !!closeHashtag;
-  const hasChanged = trail
-    ? trail.name !== name || trail.closeHashtag !== closeHashtag
-    : true;
+  const queryCache = useQueryCache();
 
-  const saveAndClose = useCallback(async () => {
-    setIsSaving(true);
-    await saveTrail({ name, closeHashtag, regionId: region.id });
-    setIsSaving(false);
-    handleClose();
-  }, [name, closeHashtag, handleClose, setIsSaving]);
+  const [saveTrail, { status }] = useMutation(
+    async (params: { id?: string; inputs: TrailInputs }) => {
+      if (params.id) {
+        await api.updateTrail(params.id, params.inputs);
+      } else {
+        await api.createTrail({ ...params.inputs, regionId: region.id });
+      }
+
+      queryCache.invalidateQueries(['region', region.id]);
+    },
+  );
+
+  const onSubmit = useCallback(
+    async (inputs: TrailInputs) => {
+      await saveTrail({ id: trail?.id, inputs });
+      handleClose();
+    },
+    [handleClose],
+  );
 
   useEffect(() => {
     if (trail) return;
-    setCloseHashtag(
+    setValue(
+      'closeHashtag',
       `#${(name || '')
         .toLowerCase()
         .replace(/\s/, '_')
         .replace(`'`, '')}closed`,
     );
-  }, [trail, name, setCloseHashtag]);
+  }, [trail, name, setValue]);
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="xs">
-      <form
-        onSubmit={e => {
-          e.preventDefault();
-          saveAndClose();
-        }}
-      >
+      <form onSubmit={handleSubmit(onSubmit)}>
         <DialogTitle>
           {trail ? `Edit ${trail.name} Trail` : 'Add New Trail'}
         </DialogTitle>
@@ -67,11 +87,9 @@ const TrailDialog = ({
             <TextField
               fullWidth
               autoFocus={!trail}
-              size="small"
-              variant="outlined"
               label="Trail name"
-              value={name ?? ''}
-              onChange={e => setName(e.target.value)}
+              name="name"
+              inputRef={register({ required: true })}
             />
           </Box>
 
@@ -91,11 +109,8 @@ const TrailDialog = ({
             <TextField
               fullWidth
               label="Trail closed"
-              type="text"
-              size="small"
-              variant="outlined"
-              value={closeHashtag ?? '#'}
-              onChange={e => setCloseHashtag(e.target.value)}
+              name="closeHashtag"
+              inputRef={register({ required: true })}
               helperText={`Example: The trails are open but please avoid ${name ||
                 ''}! ${region.openHashtag} ${closeHashtag || ''}`}
             />
@@ -112,9 +127,9 @@ const TrailDialog = ({
           <Button
             type="submit"
             color="primary"
-            disabled={isSaving || !hasChanged || !isValid}
+            disabled={status === 'loading' || !isDirty}
           >
-            {isSaving ? 'Saving...' : 'Save'}
+            {status === 'loading' ? 'Saving...' : 'Save'}
           </Button>
         </DialogActions>
       </form>
