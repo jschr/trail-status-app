@@ -64,8 +64,10 @@ const TrailDialog = ({
     [handleClose, saveTrail, trail],
   );
 
+  // Set the default hashtag for a new trail when updating the name.
   useEffect(() => {
     if (trail) return;
+    if (!name) return;
     setValue(
       'closeHashtag',
       `#${(name || '')
