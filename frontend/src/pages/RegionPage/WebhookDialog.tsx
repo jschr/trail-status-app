@@ -56,7 +56,7 @@ const WebhookDialog = ({
       await saveWebhook({ id: webhook?.id, inputs });
       handleClose();
     },
-    [handleClose],
+    [handleClose, saveWebhook, webhook],
   );
 
   const isDirty = Object.values(formState.dirtyFields).length > 0;

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useEffect, useCallback } from 'react';
 import Dialog from '@material-ui/core/Dialog';
 import DialogActions from '@material-ui/core/DialogActions';
 import DialogContent from '@material-ui/core/DialogContent';
@@ -9,7 +9,6 @@ import Typography from '@material-ui/core/Typography';
 import { useForm } from 'react-hook-form';
 import { useMutation, useQueryCache } from 'react-query';
 import api, { Trail, Region } from '../../api';
-import SelectField from '../../components/SelectField';
 import TextField from '../../components/TextField';
 
 export interface TrailDialogProps {
@@ -62,7 +61,7 @@ const TrailDialog = ({
       await saveTrail({ id: trail?.id, inputs });
       handleClose();
     },
-    [handleClose],
+    [handleClose, saveTrail, trail],
   );
 
   useEffect(() => {

@@ -45,9 +45,7 @@ const RegionPage = () => {
     },
   );
 
-  const { register, handleSubmit, setValue, reset, formState } = useForm<
-    RegionInputs
-  >();
+  const { register, handleSubmit, reset, formState } = useForm<RegionInputs>();
 
   // TODO: Use react-router for this
   const [selectedTrailId, setSelectedTrailId] = useState('');
@@ -67,13 +65,13 @@ const RegionPage = () => {
         await saveRegion({ id: region.id, inputs });
       }
     },
-    [region],
+    [region, saveRegion],
   );
 
   // Reset the form when region is loaded or changed.
   useEffect(() => {
     if (region) reset(region);
-  }, [region]);
+  }, [region, reset]);
 
   return (
     <Container maxWidth="md">
