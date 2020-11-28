@@ -21,6 +21,7 @@ interface PostWebhookBody {
   description?: string;
   method: string;
   url: string;
+  enabled: boolean;
 }
 
 export default withApiHandler([P.WebhookCreate], async event => {
@@ -88,6 +89,11 @@ const assertPostWebhookBody = (body: any): PostWebhookBody => {
   assert(
     typeof body.regionId !== 'string',
     new BadRequestError('Invalid regionId provided.'),
+  );
+
+  assert(
+    typeof body.enabled !== 'boolean',
+    new BadRequestError('Invalid enabled provided.'),
   );
 
   assert(

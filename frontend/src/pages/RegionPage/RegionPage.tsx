@@ -7,7 +7,8 @@ import Link from '@material-ui/core/Link';
 import Typography from '@material-ui/core/Typography';
 import List from '@material-ui/core/List';
 import AddCircleOutlineIcon from '@material-ui/icons/AddCircleOutline';
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useEffect, useCallback } from 'react';
+import { Switch, Route, Redirect, useHistory } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { useQuery, useMutation, useQueryCache } from 'react-query';
 import api from '../../api';
@@ -16,6 +17,7 @@ import TextField from '../../components/TextField';
 import IconButton from '../../components/IconButton';
 import TrailItem from './TrailItem';
 import TrailDialog from './TrailDialog';
+import TrailDeleteDialog from './TrailDeleteDialog';
 import WebhookItem from './WebhookItem';
 import WebhookDialog from './WebhookDialog';
 
@@ -26,6 +28,7 @@ interface RegionInputs {
 }
 
 const RegionPage = () => {
+  const history = useHistory();
   const queryCache = useQueryCache();
 
   const { data: user } = useQuery('user', () => api.getUser());
@@ -49,18 +52,6 @@ const RegionPage = () => {
 
   const { register, handleSubmit, reset, formState } = useForm<RegionInputs>();
 
-  // TODO: Use react-router for this
-  const [selectedTrailId, setSelectedTrailId] = useState('');
-  const [selectedWebhookId, setSelectedWebhookId] = useState('');
-  const [isTrailDialogOpen, setIsTrailDialogOpen] = useState(false);
-  const [isWebhookDialogOpen, setIsWebhookDialogOpen] = useState(false);
-
-  const isDirty = Object.values(formState.dirtyFields).length > 0;
-  const selectedTrail = region?.trails.find(t => t.id === selectedTrailId);
-  const selectedWebhook = region?.webhooks.find(
-    w => w.id === selectedWebhookId,
-  );
-
   const onSubmit = useCallback(
     async (inputs: RegionInputs) => {
       if (region) {
@@ -78,6 +69,8 @@ const RegionPage = () => {
   if (regionStatus === 'loading') {
     return null;
   }
+
+  const isDirty = Object.values(formState.dirtyFields).length > 0;
 
   return (
     <Container maxWidth="md">
@@ -166,7 +159,7 @@ const RegionPage = () => {
             <Typography color="textSecondary" variant="overline">
               Trails
             </Typography>
-            <IconButton onClick={() => setIsTrailDialogOpen(true)}>
+            <IconButton onClick={() => history.push('trails/new')}>
               <AddCircleOutlineIcon />
             </IconButton>
           </Box>
@@ -175,13 +168,8 @@ const RegionPage = () => {
               <TrailItem
                 key={trail.id}
                 trail={trail}
-                onEdit={() => {
-                  setSelectedTrailId(trail.id);
-                  setIsTrailDialogOpen(true);
-                }}
-                onDelete={() => {
-                  console.log('delete');
-                }}
+                onEdit={() => history.push(`trails/${trail.id}/edit`)}
+                onDelete={() => history.push(`trails/${trail.id}/delete`)}
               />
             ))}
           </List>
@@ -196,12 +184,7 @@ const RegionPage = () => {
             <Typography color="textSecondary" variant="overline">
               Webhooks
             </Typography>
-            <IconButton
-              onClick={() => {
-                setSelectedWebhookId('');
-                setIsWebhookDialogOpen(true);
-              }}
-            >
+            <IconButton onClick={() => history.push('webhooks/new')}>
               <AddCircleOutlineIcon />
             </IconButton>
           </Box>
@@ -210,41 +193,74 @@ const RegionPage = () => {
               <WebhookItem
                 key={webhook.id}
                 webhook={webhook}
-                onEdit={() => {
-                  setSelectedWebhookId(webhook.id);
-                  setIsWebhookDialogOpen(true);
-                }}
-                onDelete={() => {
-                  console.log('delete');
-                }}
+                onEdit={() => history.push(`webhooks/${webhook.id}/edit`)}
+                onDelete={() => history.push(`webhooks/${webhook.id}/delete`)}
               />
             ))}
           </List>
         </Grid>
       </Grid>
 
-      {region && isTrailDialogOpen && (
-        <TrailDialog
-          open={isTrailDialogOpen}
-          region={region}
-          trail={selectedTrail}
-          handleClose={() => {
-            setIsTrailDialogOpen(false);
-            setSelectedTrailId('');
-          }}
-        />
-      )}
+      {region && (
+        <Switch>
+          <Route
+            path="/trails/new"
+            render={() => (
+              <TrailDialog
+                region={region}
+                handleClose={() => history.push('/')}
+              />
+            )}
+          />
 
-      {region && isWebhookDialogOpen && (
-        <WebhookDialog
-          open={isWebhookDialogOpen}
-          region={region}
-          webhook={selectedWebhook}
-          handleClose={() => {
-            setIsWebhookDialogOpen(false);
-            setSelectedWebhookId('');
-          }}
-        />
+          <Route
+            path="/trails/:id/edit"
+            render={({ match }) => (
+              <TrailDialog
+                region={region}
+                trail={region.trails.find(t => t.id === match.params.id)}
+                handleClose={() => history.push('/')}
+              />
+            )}
+          />
+
+          <Route
+            path="/trails/:id/delete"
+            render={({ match }) => {
+              const trail = region.trails.find(t => t.id === match.params.id);
+              if (!trail) {
+                return <Redirect to="/" />;
+              }
+              return (
+                <TrailDeleteDialog
+                  trail={trail}
+                  region={region}
+                  handleClose={() => history.push('/')}
+                />
+              );
+            }}
+          />
+
+          <Route
+            path="/webhooks/new"
+            render={() => (
+              <WebhookDialog
+                region={region}
+                handleClose={() => history.push('/')}
+              />
+            )}
+          />
+          <Route
+            path="/webhooks/:id/edit"
+            render={({ match }) => (
+              <WebhookDialog
+                region={region}
+                webhook={region.webhooks.find(w => w.id === match.params.id)}
+                handleClose={() => history.push('/')}
+              />
+            )}
+          />
+        </Switch>
       )}
     </Container>
   );

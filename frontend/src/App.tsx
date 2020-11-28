@@ -39,7 +39,7 @@ export default function App() {
         <CssBaseline />
         <Router history={history}>
           <Switch>
-            <Route exact path="/">
+            <Route exact path={['/', '/trails/*', '/webhooks/*']}>
               <RegionPage />
             </Route>
             <Route path="/login">

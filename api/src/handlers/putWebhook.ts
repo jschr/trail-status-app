@@ -20,6 +20,7 @@ interface PutWebhookBody {
   description?: string;
   method?: string;
   url?: string;
+  enabled?: boolean;
 }
 
 export default withApiHandler([P.WebhookCreate], async event => {
@@ -80,6 +81,11 @@ const assertPutWebhookBody = (body: any): PutWebhookBody => {
   assert(
     'url' in body && typeof body.url !== 'string',
     new BadRequestError('Invalid url provided.'),
+  );
+
+  assert(
+    'enabled' in body && typeof body.enabled !== 'boolean',
+    new BadRequestError('Invalid enabled provided.'),
   );
 
   assert(

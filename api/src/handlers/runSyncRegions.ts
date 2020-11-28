@@ -209,6 +209,13 @@ const setTrailStatus = async (
 };
 
 const createWebhookJob = async (webhook: WebhookModel) => {
+  if (!webhook.enabled) {
+    console.info(
+      `Webhook '${webhook.id}' region '${webhook.regionId}' is not enabled, skip creating job`,
+    );
+    return;
+  }
+
   const params: AWS.SQS.SendMessageRequest = {
     MessageGroupId: webhook.regionId,
     MessageDeduplicationId: webhook.id,

@@ -12,7 +12,6 @@ import api, { Trail, Region } from '../../api';
 import TextField from '../../components/TextField';
 
 export interface TrailDialogProps {
-  open: boolean;
   region: Region;
   trail?: Trail;
   handleClose: () => void;
@@ -23,12 +22,7 @@ interface TrailInputs {
   closeHashtag: string;
 }
 
-const TrailDialog = ({
-  trail,
-  region,
-  open,
-  handleClose,
-}: TrailDialogProps) => {
+const TrailDialog = ({ trail, region, handleClose }: TrailDialogProps) => {
   const { register, handleSubmit, formState, watch, setValue } = useForm<
     TrailInputs
   >({
@@ -56,11 +50,6 @@ const TrailDialog = ({
     },
   );
 
-  const [deleteTrail, deleteTrailState] = useMutation(async (id: string) => {
-    await api.deleteTrail(id);
-    queryCache.invalidateQueries(['region', region.id]);
-  });
-
   const onSubmit = useCallback(
     async (inputs: TrailInputs) => {
       await saveTrail({ id: trail?.id, inputs });
@@ -68,13 +57,6 @@ const TrailDialog = ({
     },
     [trail, saveTrail, handleClose],
   );
-
-  const onDelete = useCallback(async () => {
-    if (trail) {
-      await deleteTrail(trail.id);
-    }
-    handleClose();
-  }, [trail, deleteTrail, handleClose]);
 
   // Set the default hashtag for a new trail when updating the name.
   useEffect(() => {
@@ -84,13 +66,13 @@ const TrailDialog = ({
       'closeHashtag',
       `#${(name || '')
         .toLowerCase()
-        .replace(/\s/, '_')
+        .replace(/\s/, '')
         .replace(`'`, '')}closed`,
     );
   }, [trail, name, setValue]);
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="xs">
+    <Dialog open onClose={handleClose} maxWidth="xs">
       <form onSubmit={handleSubmit(onSubmit)}>
         <DialogTitle>
           {trail ? `Edit ${trail.name} Trail` : 'Add New Trail'}
@@ -130,15 +112,6 @@ const TrailDialog = ({
           </Box>
         </DialogContent>
         <DialogActions>
-          {trail && (
-            <Button
-              onClick={onDelete}
-              color="secondary"
-              disabled={deleteTrailState.status === 'loading'}
-            >
-              {deleteTrailState.status === 'loading' ? 'Deleting...' : 'Delete'}
-            </Button>
-          )}
           <Box flex={1} />
           <Button onClick={handleClose} color="primary">
             Cancel

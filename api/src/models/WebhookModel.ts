@@ -11,6 +11,7 @@ export interface Webhook {
   description?: string;
   method: string;
   url: string;
+  enabled: boolean;
   lastRanAt: string;
   error: string;
   updatedAt: string;
@@ -159,6 +160,9 @@ export default class WebhookModel {
     if (webhook.url !== undefined) {
       attrMap.url = { S: webhook.url };
     }
+    if (webhook.enabled !== undefined) {
+      attrMap.enabled = { BOOL: webhook.enabled };
+    }
     if (webhook.lastRanAt !== undefined) {
       attrMap.lastRanAt = { S: webhook.lastRanAt };
     }
@@ -188,6 +192,7 @@ export default class WebhookModel {
       runPriority: Number(attrMap.runPriority?.N),
       method: attrMap.method?.S,
       url: attrMap.url?.S,
+      enabled: attrMap.enabled?.BOOL,
       name: attrMap.name?.S,
       description: attrMap.description?.S,
       lastRanAt: attrMap.lastRanAt?.S,
@@ -271,6 +276,10 @@ export default class WebhookModel {
     return this.attrs.url ?? '';
   }
 
+  get enabled() {
+    return this.attrs.enabled ?? false;
+  }
+
   get lastRanAt() {
     return this.attrs.lastRanAt ?? '';
   }
@@ -297,6 +306,7 @@ export default class WebhookModel {
       description: this.description,
       url: this.url,
       method: this.method,
+      enabled: this.enabled,
       lastRanAt: this.lastRanAt,
       error: this.error,
       updatedAt: this.updatedAt,

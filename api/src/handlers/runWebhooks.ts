@@ -32,9 +32,18 @@ export default withSQSHandler(async event => {
       continue;
     }
 
+    if (!webhook.enabled) {
+      console.info(
+        `Webhook '${webhookId}' region '${webhook.regionId}' is not enabled, skipping.`,
+      );
+      continue;
+    }
+
     const regionStatus = await getRegionStatus(webhook.regionId);
     if (!regionStatus) {
-      console.warn(`Failed to find region status for '${webhook.regionId}'`);
+      console.warn(
+        `Failed to find region status for '${webhook.regionId}' region '${webhook.regionId}'`,
+      );
       continue;
     }
 
@@ -47,7 +56,7 @@ export default withSQSHandler(async event => {
       });
 
       console.info(
-        `Successfully ran webhook '${webhookId}', received status '${status}' from '${url}'`,
+        `Successfully ran webhook '${webhookId}' region '${webhook.regionId}', received status '${status}' from '${url}'`,
       );
     } catch (err) {
       await webhook.save({
@@ -60,7 +69,7 @@ export default withSQSHandler(async event => {
       // messages are sent in the batch and one fails, the entire batch is re-tried. Webhooks
       // should not expect to messages to be delivered only once.
       throw new Error(
-        `Failed to process webhook '${webhook.id}', ${err.message}`,
+        `Failed to process webhook '${webhook.id}' region '${webhook.regionId}', ${err.message}`,
       );
     }
   }

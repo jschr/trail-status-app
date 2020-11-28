@@ -6,16 +6,17 @@ import DialogTitle from '@material-ui/core/DialogTitle';
 import Button from '@material-ui/core/Button';
 import Box from '@material-ui/core/Box';
 import Link from '@material-ui/core/Link';
+import Switch from '@material-ui/core/Switch';
 import Grid from '@material-ui/core/Grid';
 import Typography from '@material-ui/core/Typography';
-import { useForm } from 'react-hook-form';
+import FormControlLabel from '@material-ui/core/FormControlLabel';
+import { useForm, Controller } from 'react-hook-form';
 import { useMutation, useQueryCache } from 'react-query';
 import api, { Webhook, Region } from '../../api';
 import SelectField from '../../components/SelectField';
 import TextField from '../../components/TextField';
 
 export interface WebhookDialogProps {
-  open: boolean;
   region: Region;
   webhook?: Webhook;
   handleClose: () => void;
@@ -27,15 +28,17 @@ interface WebhookInputs {
   trailId: string;
   method: string;
   url: string;
+  enabled: boolean;
 }
 
 const WebhookDialog = ({
   webhook,
   region,
-  open,
   handleClose,
 }: WebhookDialogProps) => {
-  const { register, handleSubmit, formState } = useForm<WebhookInputs>();
+  const { register, handleSubmit, formState, control } = useForm<WebhookInputs>(
+    { defaultValues: webhook ? webhook : { enabled: true } },
+  );
 
   const queryCache = useQueryCache();
 
@@ -76,7 +79,7 @@ const WebhookDialog = ({
   const isDirty = Object.values(formState.dirtyFields).length > 0;
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="md">
+    <Dialog open onClose={handleClose} maxWidth="md">
       <form onSubmit={handleSubmit(onSubmit)}>
         <Grid container>
           <Grid item xs={12} sm={5}>
@@ -89,7 +92,6 @@ const WebhookDialog = ({
                   autoFocus={!webhook}
                   label="Webhook name"
                   name="name"
-                  defaultValue={webhook?.name}
                   inputRef={register({ required: true })}
                   fullWidth
                 />
@@ -99,7 +101,6 @@ const WebhookDialog = ({
                 <TextField
                   label="Description (optional)"
                   name="description"
-                  defaultValue={webhook?.description}
                   fullWidth
                   multiline
                   rows={2}
@@ -123,7 +124,6 @@ const WebhookDialog = ({
                 <SelectField
                   label="Trigger when"
                   name="trailId"
-                  defaultValue={webhook?.trailId}
                   inputRef={register}
                   fullWidth
                 >
@@ -156,7 +156,6 @@ const WebhookDialog = ({
                 <SelectField
                   label="Method"
                   name="method"
-                  defaultValue={webhook?.method ?? 'GET'}
                   inputRef={register({ required: true })}
                 >
                   <option value="GET">GET</option>
@@ -168,10 +167,28 @@ const WebhookDialog = ({
                 <TextField
                   label="URL"
                   name="url"
-                  defaultValue={webhook?.url}
                   inputRef={register({ required: true })}
                   fullWidth
                   multiline
+                />
+              </Box>
+
+              <Box mt={2}>
+                <FormControlLabel
+                  control={
+                    <Controller
+                      control={control}
+                      name="enabled"
+                      render={({ value, onChange }) => (
+                        <Switch
+                          color="primary"
+                          checked={value ?? false}
+                          onChange={e => onChange(e.currentTarget.checked)}
+                        />
+                      )}
+                    />
+                  }
+                  label="Enabled"
                 />
               </Box>
 
