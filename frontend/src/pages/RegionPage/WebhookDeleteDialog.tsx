@@ -8,58 +8,50 @@ import Button from '@material-ui/core/Button';
 import Box from '@material-ui/core/Box';
 import WarningIcon from '@material-ui/icons/Warning';
 import { useMutation, useQueryCache } from 'react-query';
-import api, { Trail, Region } from '../../api';
+import api, { Webhook, Region } from '../../api';
 
-export interface TrailDeleteDialogProps {
-  trail: Trail;
+export interface WebhookDialogProps {
+  webhook: Webhook;
   region: Region;
   handleClose: () => void;
 }
 
-const TrailDeleteDialog = ({
-  trail,
+const WebhookDialog = ({
+  webhook,
   region,
   handleClose,
-}: TrailDeleteDialogProps) => {
-  const trailWebhooks = region.webhooks.filter(w => w.trailId === trail.id);
+}: WebhookDialogProps) => {
+  const trail = region.trails.find(t => t.id === webhook.trailId);
 
   const queryCache = useQueryCache();
 
-  const [deleteTrail, deleteTrailState] = useMutation(async (id: string) => {
-    await api.deleteTrail(id);
-    await Promise.all(
-      trailWebhooks.map(w => api.updateWebhook(w.id, { enabled: false })),
-    );
-    queryCache.invalidateQueries(['region', trail.regionId]);
-  });
+  const [deleteWebhook, deleteWebhookState] = useMutation(
+    async (id: string) => {
+      await api.deleteWebhook(id);
+      queryCache.invalidateQueries(['region', webhook.regionId]);
+    },
+  );
 
   const onDelete = useCallback(async () => {
-    await deleteTrail(trail.id);
+    await deleteWebhook(webhook.id);
     handleClose();
-  }, [trail, deleteTrail, handleClose]);
+  }, [webhook, deleteWebhook, handleClose]);
 
   return (
     <Dialog open onClose={handleClose} maxWidth="xs">
       <DialogTitle>
         <Box display="flex" alignItems="center">
           <WarningIcon fontSize="large" />
-          &nbsp;&nbsp;Delete "{trail.name}"?
+          &nbsp;&nbsp;Delete "{webhook.name}"?
         </Box>
       </DialogTitle>
       <DialogContent>
         <DialogContentText>
-          Deleting this trail will remove it from the status of{' '}
-          <strong>{region.name}</strong>{' '}
-          {trailWebhooks.length > 0
-            ? ' and disable the following webhooks: '
-            : '.'}
-          {trailWebhooks.length > 0 && (
-            <ul>
-              {trailWebhooks.map(w => (
-                <li>{w.name}</li>
-              ))}
-            </ul>
-          )}
+          Deleting this webhook will no longer trigger when the status of{' '}
+          <strong>
+            {webhook.trailId ? (trail ? trail.name : '[Deleted]') : region.name}
+          </strong>{' '}
+          changes.
         </DialogContentText>
       </DialogContent>
       <DialogActions>
@@ -69,13 +61,13 @@ const TrailDeleteDialog = ({
         <Button
           onClick={onDelete}
           color="secondary"
-          disabled={deleteTrailState.status === 'loading'}
+          disabled={deleteWebhookState.status === 'loading'}
         >
-          {deleteTrailState.status === 'loading' ? 'Deleting...' : 'Delete'}
+          {deleteWebhookState.status === 'loading' ? 'Deleting...' : 'Delete'}
         </Button>
       </DialogActions>
     </Dialog>
   );
 };
 
-export default TrailDeleteDialog;
+export default WebhookDialog;

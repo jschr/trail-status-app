@@ -20,6 +20,7 @@ import TrailDialog from './TrailDialog';
 import TrailDeleteDialog from './TrailDeleteDialog';
 import WebhookItem from './WebhookItem';
 import WebhookDialog from './WebhookDialog';
+import WebhookDeleteDialog from './WebhookDeleteDialog';
 
 interface RegionInputs {
   name: string;
@@ -250,6 +251,7 @@ const RegionPage = () => {
               />
             )}
           />
+
           <Route
             path="/webhooks/:id/edit"
             render={({ match }) => (
@@ -259,6 +261,25 @@ const RegionPage = () => {
                 handleClose={() => history.push('/')}
               />
             )}
+          />
+
+          <Route
+            path="/webhooks/:id/delete"
+            render={({ match }) => {
+              const webhook = region.webhooks.find(
+                t => t.id === match.params.id,
+              );
+              if (!webhook) {
+                return <Redirect to="/" />;
+              }
+              return (
+                <WebhookDeleteDialog
+                  webhook={webhook}
+                  region={region}
+                  handleClose={() => history.push('/')}
+                />
+              );
+            }}
           />
         </Switch>
       )}

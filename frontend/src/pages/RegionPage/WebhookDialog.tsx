@@ -10,6 +10,7 @@ import Switch from '@material-ui/core/Switch';
 import Grid from '@material-ui/core/Grid';
 import Typography from '@material-ui/core/Typography';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
+import FormHelperText from '@material-ui/core/FormHelperText';
 import { useForm, Controller } from 'react-hook-form';
 import { useMutation, useQueryCache } from 'react-query';
 import api, { Webhook, Region } from '../../api';
@@ -36,9 +37,9 @@ const WebhookDialog = ({
   region,
   handleClose,
 }: WebhookDialogProps) => {
-  const { register, handleSubmit, formState, control } = useForm<WebhookInputs>(
-    { defaultValues: webhook ? webhook : { enabled: true } },
-  );
+  const { register, handleSubmit, formState, control, watch } = useForm<
+    WebhookInputs
+  >({ defaultValues: webhook ? webhook : { enabled: true } });
 
   const queryCache = useQueryCache();
 
@@ -54,13 +55,6 @@ const WebhookDialog = ({
     },
   );
 
-  const [deleteWebhook, deleteWebhookState] = useMutation(
-    async (id: string) => {
-      await api.deleteWebhook(id);
-      queryCache.invalidateQueries(['region', region.id]);
-    },
-  );
-
   const onSubmit = useCallback(
     async (inputs: WebhookInputs) => {
       await saveWebhook({ id: webhook?.id, inputs });
@@ -69,12 +63,11 @@ const WebhookDialog = ({
     [handleClose, saveWebhook, webhook],
   );
 
-  const onDelete = useCallback(async () => {
-    if (webhook) {
-      await deleteWebhook(webhook.id);
-    }
-    handleClose();
-  }, [webhook, deleteWebhook, handleClose]);
+  const trailId = watch('trailId');
+  const enabled = watch('enabled');
+
+  const trail = region.trails.find(t => t.id === trailId);
+  const isTrailDeleted = !!trailId && !trail;
 
   const isDirty = Object.values(formState.dirtyFields).length > 0;
 
@@ -126,7 +119,13 @@ const WebhookDialog = ({
                   name="trailId"
                   inputRef={register}
                   fullWidth
+                  error={isTrailDeleted}
                 >
+                  {isTrailDeleted && (
+                    <option value={webhook?.trailId} disabled>
+                      [Deleted]
+                    </option>
+                  )}
                   <option value="">Region status changes</option>
                   {region?.trails.map(t => (
                     <option key={t.id} value={t.id}>
@@ -134,6 +133,44 @@ const WebhookDialog = ({
                     </option>
                   ))}
                 </SelectField>
+
+                <Box mt={2}>
+                  <FormControlLabel
+                    label="Enabled"
+                    control={
+                      <Controller
+                        control={control}
+                        name="enabled"
+                        render={({ value, onChange }) => (
+                          <Switch
+                            color="primary"
+                            checked={value ?? false}
+                            onChange={e => onChange(e.currentTarget.checked)}
+                          />
+                        )}
+                      />
+                    }
+                  />
+                  <FormHelperText>
+                    {enabled ? (
+                      <>
+                        Webhook will trigger when the status of{' '}
+                        {
+                          <strong>
+                            {trailId
+                              ? trail
+                                ? trail.name
+                                : '[Deleted]'
+                              : region.name}
+                          </strong>
+                        }{' '}
+                        changes.
+                      </>
+                    ) : (
+                      'Webhook is disabled and will not trigger.'
+                    )}
+                  </FormHelperText>
+                </Box>
               </Box>
             </DialogContent>
           </Grid>
@@ -173,42 +210,11 @@ const WebhookDialog = ({
                 />
               </Box>
 
-              <Box mt={2}>
-                <FormControlLabel
-                  control={
-                    <Controller
-                      control={control}
-                      name="enabled"
-                      render={({ value, onChange }) => (
-                        <Switch
-                          color="primary"
-                          checked={value ?? false}
-                          onChange={e => onChange(e.currentTarget.checked)}
-                        />
-                      )}
-                    />
-                  }
-                  label="Enabled"
-                />
-              </Box>
-
               <Box mt={2}></Box>
             </DialogContent>
           </Grid>
         </Grid>
         <DialogActions>
-          {webhook && (
-            <Button
-              onClick={onDelete}
-              color="secondary"
-              disabled={deleteWebhookState.status === 'loading'}
-            >
-              {deleteWebhookState.status === 'loading'
-                ? 'Deleting...'
-                : 'Delete'}
-            </Button>
-          )}
-          <Box flex={1} />
           <Button onClick={handleClose} color="primary">
             Cancel
           </Button>

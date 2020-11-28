@@ -139,6 +139,7 @@ export default class ApiClient {
       trailId?: string;
       method?: string;
       url?: string;
+      enabled?: boolean;
     },
   ): Promise<Webhook> {
     return await this.makeProtectedRequest(`${apiEndpoint}/webhooks?id=${id}`, {
@@ -154,6 +155,7 @@ export default class ApiClient {
     trailId?: string;
     method: string;
     url: string;
+    enabled: boolean;
   }): Promise<Webhook> {
     return await this.makeProtectedRequest(`${apiEndpoint}/webhooks`, {
       method: 'POST',
