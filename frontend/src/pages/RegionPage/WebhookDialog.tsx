@@ -39,14 +39,21 @@ const WebhookDialog = ({
 
   const queryCache = useQueryCache();
 
-  const [saveWebhook, { status }] = useMutation(
+  const [saveWebhook, saveWebhookState] = useMutation(
     async (params: { id?: string; inputs: WebhookInputs }) => {
       if (params.id) {
         await api.updateWebhook(params.id, params.inputs);
       } else {
-        await api.createWebhook(params.inputs);
+        await api.createWebhook({ ...params.inputs, regionId: region.id });
       }
 
+      queryCache.invalidateQueries(['region', region.id]);
+    },
+  );
+
+  const [deleteWebhook, deleteWebhookState] = useMutation(
+    async (id: string) => {
+      await api.deleteWebhook(id);
       queryCache.invalidateQueries(['region', region.id]);
     },
   );
@@ -58,6 +65,13 @@ const WebhookDialog = ({
     },
     [handleClose, saveWebhook, webhook],
   );
+
+  const onDelete = useCallback(async () => {
+    if (webhook) {
+      await deleteWebhook(webhook.id);
+    }
+    handleClose();
+  }, [webhook, deleteWebhook, handleClose]);
 
   const isDirty = Object.values(formState.dirtyFields).length > 0;
 
@@ -166,9 +180,17 @@ const WebhookDialog = ({
           </Grid>
         </Grid>
         <DialogActions>
-          <Button onClick={handleClose} color="secondary">
-            Delete
-          </Button>
+          {webhook && (
+            <Button
+              onClick={onDelete}
+              color="secondary"
+              disabled={deleteWebhookState.status === 'loading'}
+            >
+              {deleteWebhookState.status === 'loading'
+                ? 'Deleting...'
+                : 'Delete'}
+            </Button>
+          )}
           <Box flex={1} />
           <Button onClick={handleClose} color="primary">
             Cancel
@@ -176,9 +198,9 @@ const WebhookDialog = ({
           <Button
             type="submit"
             color="primary"
-            disabled={status === 'loading' || !isDirty}
+            disabled={saveWebhookState.status === 'loading' || !isDirty}
           >
-            {status === 'loading' ? 'Saving...' : 'Save'}
+            {saveWebhookState.status === 'loading' ? 'Saving...' : 'Save'}
           </Button>
         </DialogActions>
       </form>

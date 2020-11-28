@@ -24,20 +24,12 @@ interface PostWebhookBody {
 }
 
 export default withApiHandler([P.WebhookCreate], async event => {
-  const {
-    name,
-    regionId,
-    method,
-    url,
-    trailId = '',
-    runPriority = 0,
-    description = '',
-  } = assertPostWebhookBody(parseBody(event));
+  const body = assertPostWebhookBody(parseBody(event));
 
   // Ensure region exists.
-  const region = await RegionModel.get(regionId);
+  const region = await RegionModel.get(body.regionId);
   if (!region) {
-    throw new NotFoundError(`Region not found for id '${regionId}'`);
+    throw new NotFoundError(`Region not found for id '${body.regionId}'`);
   }
 
   // Ensure user has access to region.
@@ -48,22 +40,22 @@ export default withApiHandler([P.WebhookCreate], async event => {
   }
 
   // Ensure trail exists if provided.
-  if (trailId) {
-    const trail = await TrailModel.get(trailId);
+  if (body.trailId) {
+    const trail = await TrailModel.get(body.trailId);
     if (!trail) {
-      throw new NotFoundError(`Trail not found for id '${trailId}'`);
+      throw new NotFoundError(`Trail not found for id '${body.trailId}'`);
     }
   }
 
+  if (body.url) {
+    body.url = body.url.replace(/\n/g, '');
+  }
+
   const webhook = new WebhookModel({
+    ...body,
+    // Make sure runPriority is set because if it's undefined it won't be found by the region index.
+    runPriority: body.runPriority ?? 0,
     id: uuid(),
-    name,
-    regionId,
-    trailId,
-    runPriority,
-    description,
-    method,
-    url,
     createdAt: new Date().toISOString(),
   });
 
@@ -91,6 +83,11 @@ const assertPostWebhookBody = (body: any): PostWebhookBody => {
   assert(
     typeof body.url !== 'string',
     new BadRequestError('Invalid url provided.'),
+  );
+
+  assert(
+    typeof body.regionId !== 'string',
+    new BadRequestError('Invalid regionId provided.'),
   );
 
   assert(

@@ -125,6 +125,12 @@ export default class ApiClient {
     });
   }
 
+  async deleteTrail(id: string): Promise<void> {
+    await this.makeProtectedRequest(`${apiEndpoint}/trails?id=${id}`, {
+      method: 'DELETE',
+    });
+  }
+
   async updateWebhook(
     id: string,
     body: {
@@ -144,6 +150,7 @@ export default class ApiClient {
   async createWebhook(body: {
     name: string;
     description?: string;
+    regionId: string;
     trailId?: string;
     method: string;
     url: string;
@@ -151,6 +158,12 @@ export default class ApiClient {
     return await this.makeProtectedRequest(`${apiEndpoint}/webhooks`, {
       method: 'POST',
       body,
+    });
+  }
+
+  async deleteWebhook(id: string): Promise<void> {
+    await this.makeProtectedRequest(`${apiEndpoint}/webhooks?id=${id}`, {
+      method: 'DELETE',
     });
   }
 

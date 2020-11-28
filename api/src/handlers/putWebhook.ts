@@ -38,6 +38,10 @@ export default withApiHandler([P.WebhookCreate], async event => {
     );
   }
 
+  if (body.url) {
+    body.url = body.url.replace(/\n/g, '');
+  }
+
   await webhook.save(body);
 
   return json(webhook);

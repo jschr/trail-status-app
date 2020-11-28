@@ -44,7 +44,7 @@ const TrailDialog = ({
 
   const queryCache = useQueryCache();
 
-  const [saveTrail, { status }] = useMutation(
+  const [saveTrail, saveTrailState] = useMutation(
     async (params: { id?: string; inputs: TrailInputs }) => {
       if (params.id) {
         await api.updateTrail(params.id, params.inputs);
@@ -56,13 +56,25 @@ const TrailDialog = ({
     },
   );
 
+  const [deleteTrail, deleteTrailState] = useMutation(async (id: string) => {
+    await api.deleteTrail(id);
+    queryCache.invalidateQueries(['region', region.id]);
+  });
+
   const onSubmit = useCallback(
     async (inputs: TrailInputs) => {
       await saveTrail({ id: trail?.id, inputs });
       handleClose();
     },
-    [handleClose, saveTrail, trail],
+    [trail, saveTrail, handleClose],
   );
+
+  const onDelete = useCallback(async () => {
+    if (trail) {
+      await deleteTrail(trail.id);
+    }
+    handleClose();
+  }, [trail, deleteTrail, handleClose]);
 
   // Set the default hashtag for a new trail when updating the name.
   useEffect(() => {
@@ -118,9 +130,15 @@ const TrailDialog = ({
           </Box>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleClose} color="secondary">
-            Delete
-          </Button>
+          {trail && (
+            <Button
+              onClick={onDelete}
+              color="secondary"
+              disabled={deleteTrailState.status === 'loading'}
+            >
+              {deleteTrailState.status === 'loading' ? 'Deleting...' : 'Delete'}
+            </Button>
+          )}
           <Box flex={1} />
           <Button onClick={handleClose} color="primary">
             Cancel
@@ -128,9 +146,9 @@ const TrailDialog = ({
           <Button
             type="submit"
             color="primary"
-            disabled={status === 'loading' || !isDirty}
+            disabled={saveTrailState.status === 'loading' || !isDirty}
           >
-            {status === 'loading' ? 'Saving...' : 'Save'}
+            {saveTrailState.status === 'loading' ? 'Saving...' : 'Save'}
           </Button>
         </DialogActions>
       </form>

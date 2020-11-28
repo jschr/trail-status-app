@@ -224,6 +224,21 @@ export default class WebhookModel {
     }
   }
 
+  public async delete(): Promise<void> {
+    const params: AWS.DynamoDB.DeleteItemInput = {
+      TableName: tables.webhooks.name,
+      Key: WebhookModel.toAttributeMap({ id: this.attrs.id }),
+    };
+
+    try {
+      await dynamodb.deleteItem(params).promise();
+    } catch (err) {
+      throw new Error(
+        `WebhookModel.delete failed for id '${this.attrs.id}' with '${err.message}'`,
+      );
+    }
+  }
+
   get id() {
     return this.attrs.id ?? '';
   }
@@ -281,6 +296,7 @@ export default class WebhookModel {
       name: this.name,
       description: this.description,
       url: this.url,
+      method: this.method,
       lastRanAt: this.lastRanAt,
       error: this.error,
       updatedAt: this.updatedAt,

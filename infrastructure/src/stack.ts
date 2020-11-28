@@ -376,6 +376,29 @@ export default class extends cdk.Stack {
     trailsTable.grantReadWriteData(putTrailHandler);
     regionsTable.grantReadWriteData(putTrailHandler);
 
+    // DELETE /trails
+    const deleteTrailHandler = new lambda.Function(
+      this,
+      projectPrefix('deleteTrail'),
+      {
+        functionName: projectPrefix('deleteTrail'),
+        runtime: lambda.Runtime.NODEJS_12_X,
+        code: lambda.Code.fromAsset(packagePath),
+        handler: 'api/build/src/handlers/deleteTrail.default',
+        environment: envVars,
+        timeout: cdk.Duration.seconds(10),
+        memorySize: 512,
+      },
+    );
+
+    const deleteTrailIntegration = new apigateway.LambdaIntegration(
+      deleteTrailHandler,
+    );
+
+    trailsApi.addMethod('DELETE', deleteTrailIntegration);
+    trailsTable.grantReadWriteData(deleteTrailHandler);
+    regionsTable.grantReadWriteData(deleteTrailHandler);
+
     // /trails/status
     const trailStatusApi = trailsApi.addResource('status');
     trailStatusApi.addCorsPreflight({ allowOrigins: ['*'] });
@@ -515,22 +538,52 @@ export default class extends cdk.Stack {
     trailsTable.grantReadData(postWebhook);
 
     // PUT /webhooks
-    const putWebhook = new lambda.Function(this, projectPrefix('putWebhook'), {
-      functionName: projectPrefix('putWebhook'),
-      runtime: lambda.Runtime.NODEJS_12_X,
-      code: lambda.Code.fromAsset(packagePath),
-      handler: 'api/build/src/handlers/putWebhook.default',
-      environment: envVars,
-      timeout: cdk.Duration.seconds(10),
-      memorySize: 512,
-    });
+    const putWebhookHandler = new lambda.Function(
+      this,
+      projectPrefix('putWebhook'),
+      {
+        functionName: projectPrefix('putWebhook'),
+        runtime: lambda.Runtime.NODEJS_12_X,
+        code: lambda.Code.fromAsset(packagePath),
+        handler: 'api/build/src/handlers/putWebhook.default',
+        environment: envVars,
+        timeout: cdk.Duration.seconds(10),
+        memorySize: 512,
+      },
+    );
 
-    const putWebhookIntegration = new apigateway.LambdaIntegration(putWebhook);
+    const putWebhookIntegration = new apigateway.LambdaIntegration(
+      putWebhookHandler,
+    );
 
     webhooksApi.addMethod('PUT', putWebhookIntegration);
-    webhooksTable.grantReadWriteData(putWebhook);
-    regionsTable.grantReadData(putWebhook);
-    trailsTable.grantReadData(putWebhook);
+    webhooksTable.grantReadWriteData(putWebhookHandler);
+    regionsTable.grantReadData(putWebhookHandler);
+    trailsTable.grantReadData(putWebhookHandler);
+
+    // DELETE /trails
+    const deleteWebhookHandler = new lambda.Function(
+      this,
+      projectPrefix('deleteWebhook'),
+      {
+        functionName: projectPrefix('deleteWebhook'),
+        runtime: lambda.Runtime.NODEJS_12_X,
+        code: lambda.Code.fromAsset(packagePath),
+        handler: 'api/build/src/handlers/deleteWebhook.default',
+        environment: envVars,
+        timeout: cdk.Duration.seconds(10),
+        memorySize: 512,
+      },
+    );
+
+    const deleteWebhookIntegration = new apigateway.LambdaIntegration(
+      deleteWebhookHandler,
+    );
+
+    webhooksApi.addMethod('DELETE', deleteWebhookIntegration);
+    webhooksTable.grantReadWriteData(deleteWebhookHandler);
+    regionsTable.grantReadData(deleteWebhookHandler);
+    trailsTable.grantReadData(deleteWebhookHandler);
 
     // webhook/run
     const wehooksRunApi = webhooksApi.addResource('run');

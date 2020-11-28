@@ -2,19 +2,23 @@ import { fail } from './responses';
 import * as jwt from './jwt';
 import { UnauthorizedError } from './HttpError';
 
-export interface WithApiEvent extends AWSLambda.APIGatewayEvent {
+export interface ApiEvent extends AWSLambda.APIGatewayEvent {
   decodedToken: jwt.DecodedToken;
 }
 
-export type WithApiHandler = AWSLambda.Handler<
-  WithApiEvent,
+export type ApiHandler = AWSLambda.Handler<
+  ApiEvent,
   AWSLambda.APIGatewayProxyResult
 >;
 
 export default (
   scopes: jwt.Permissions[],
-  fn: WithApiHandler,
-): WithApiHandler => (event: AWSLambda.APIGatewayEvent, context, callback) => {
+  fn: ApiHandler,
+): AWSLambda.Handler => (
+  event: AWSLambda.APIGatewayEvent,
+  context,
+  callback,
+) => {
   if (scopes.length > 0) {
     const authHeader = event.headers.Authorization || '';
     const [, token] = authHeader.split(' ');
@@ -30,7 +34,7 @@ export default (
         throw new Error('Missing permission');
       }
 
-      (event as WithApiEvent).decodedToken = decodedToken;
+      (event as ApiEvent).decodedToken = decodedToken;
     } catch (err) {
       return Promise.resolve(
         fail(new UnauthorizedError('Invalid or missing JWT', err)),
@@ -38,7 +42,7 @@ export default (
     }
   }
 
-  const returnVal = fn(event as WithApiEvent, context, callback);
+  const returnVal = fn(event as ApiEvent, context, callback);
 
   if (returnVal) {
     return returnVal.catch(err => fail(err));

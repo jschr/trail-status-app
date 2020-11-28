@@ -12,11 +12,13 @@ import authorizeInstagram from '../handlers/authorizeInstagram';
 import authorizeInstagramCallback from '../handlers/authorizeInstagramCallback';
 import putTrail from '../handlers/putTrail';
 import postTrail from '../handlers/postTrail';
+import deleteTrail from '../handlers/deleteTrail';
 import getRegion from '../handlers/getRegion';
 import putRegion from '../handlers/putRegion';
 import postWebhook from '../handlers/postWebhook';
 import postWebhookRun from '../handlers/postWebhookRun';
 import putWebhook from '../handlers/putWebhook';
+import deleteWebhook from '../handlers/deleteWebhook';
 import runSyncRegions from '../handlers/runSyncRegions';
 import runWebhooks from '../handlers/runWebhooks';
 import testWebhook from '../handlers/testWebhook';
@@ -47,12 +49,14 @@ app.get('/regions', toExpressApiHandler(getRegion));
 app.put('/regions', toExpressApiHandler(putRegion));
 app.get('/regions/status', toExpressApiHandler(getRegionStatus));
 
-app.put('/trails', toExpressApiHandler(putTrail));
 app.post('/trails', toExpressApiHandler(postTrail));
+app.put('/trails', toExpressApiHandler(putTrail));
+app.delete('/trails', toExpressApiHandler(deleteTrail));
 app.post('/trails/status', toExpressApiHandler(getTrailStatus));
 
 app.post('/webhooks', toExpressApiHandler(postWebhook));
 app.put('/webhooks', toExpressApiHandler(putWebhook));
+app.delete('/webhooks', toExpressApiHandler(deleteWebhook));
 app.post('/webhooks/run', toExpressApiHandler(postWebhookRun));
 
 // TODO: Deprecate

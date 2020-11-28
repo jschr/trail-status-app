@@ -182,6 +182,21 @@ export default class TrailModel {
     }
   }
 
+  public async delete(): Promise<void> {
+    const params: AWS.DynamoDB.DeleteItemInput = {
+      TableName: tables.trails.name,
+      Key: TrailModel.toAttributeMap({ id: this.attrs.id }),
+    };
+
+    try {
+      await dynamodb.deleteItem(params).promise();
+    } catch (err) {
+      throw new Error(
+        `TrailModel.delete failed for id '${this.attrs.id}' with '${err.message}'`,
+      );
+    }
+  }
+
   get id() {
     return this.attrs.id ?? '';
   }
