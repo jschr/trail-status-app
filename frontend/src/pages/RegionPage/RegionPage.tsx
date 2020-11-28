@@ -6,16 +6,17 @@ import Button from '@material-ui/core/Button';
 import Link from '@material-ui/core/Link';
 import Typography from '@material-ui/core/Typography';
 import List from '@material-ui/core/List';
-import ListItem from '@material-ui/core/ListItem';
-import IconButton from '@material-ui/core/IconButton';
 import AddCircleOutlineIcon from '@material-ui/icons/AddCircleOutline';
-import React, { Fragment, useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { useQuery, useMutation, useQueryCache } from 'react-query';
 import api from '../../api';
 import Container from '../../components/Container';
 import TextField from '../../components/TextField';
+import IconButton from '../../components/IconButton';
+import TrailItem from './TrailItem';
 import TrailDialog from './TrailDialog';
+import WebhookItem from './WebhookItem';
 import WebhookDialog from './WebhookDialog';
 
 interface RegionInputs {
@@ -30,8 +31,9 @@ const RegionPage = () => {
   const { data: user } = useQuery('user', () => api.getUser());
   const regionId = user?.regions[0]?.id;
 
-  const { data: region } = useQuery(['region', regionId], () =>
-    regionId ? api.getRegion(regionId) : null,
+  const { data: region, status: regionStatus } = useQuery(
+    ['region', regionId],
+    () => (regionId ? api.getRegion(regionId) : null),
   );
 
   const [saveRegion, { status }] = useMutation(
@@ -72,6 +74,10 @@ const RegionPage = () => {
   useEffect(() => {
     if (region) reset(region);
   }, [region, reset]);
+
+  if (regionStatus === 'loading') {
+    return null;
+  }
 
   return (
     <Container maxWidth="md">
@@ -152,6 +158,7 @@ const RegionPage = () => {
         <Grid item xs={12} sm={7}>
           <Box
             mt={4}
+            pr={0.5}
             display="flex"
             justifyContent="space-between"
             alignItems="center"
@@ -159,32 +166,29 @@ const RegionPage = () => {
             <Typography color="textSecondary" variant="overline">
               Trails
             </Typography>
-            <IconButton
-              color="primary"
-              onClick={() => setIsTrailDialogOpen(true)}
-            >
+            <IconButton onClick={() => setIsTrailDialogOpen(true)}>
               <AddCircleOutlineIcon />
             </IconButton>
           </Box>
           <List>
             {region?.trails.map(trail => (
-              <Fragment key={trail.id}>
-                <ListItem
-                  button
-                  onClick={() => {
-                    setSelectedTrailId(trail.id);
-                    setIsTrailDialogOpen(true);
-                  }}
-                >
-                  {trail.name || <em>Unknown</em>}
-                </ListItem>
-                <Divider />
-              </Fragment>
+              <TrailItem
+                key={trail.id}
+                trail={trail}
+                onEdit={() => {
+                  setSelectedTrailId(trail.id);
+                  setIsTrailDialogOpen(true);
+                }}
+                onDelete={() => {
+                  console.log('delete');
+                }}
+              />
             ))}
           </List>
 
           <Box
             mt={6}
+            pr={0.5}
             display="flex"
             justifyContent="space-between"
             alignItems="center"
@@ -193,7 +197,6 @@ const RegionPage = () => {
               Webhooks
             </Typography>
             <IconButton
-              color="primary"
               onClick={() => {
                 setSelectedWebhookId('');
                 setIsWebhookDialogOpen(true);
@@ -204,18 +207,17 @@ const RegionPage = () => {
           </Box>
           <List>
             {region?.webhooks.map(webhook => (
-              <Fragment key={webhook.id}>
-                <ListItem
-                  button
-                  onClick={() => {
-                    setSelectedWebhookId(webhook.id);
-                    setIsWebhookDialogOpen(true);
-                  }}
-                >
-                  {webhook.name || <em>Unamed</em>}
-                </ListItem>
-                <Divider />
-              </Fragment>
+              <WebhookItem
+                key={webhook.id}
+                webhook={webhook}
+                onEdit={() => {
+                  setSelectedWebhookId(webhook.id);
+                  setIsWebhookDialogOpen(true);
+                }}
+                onDelete={() => {
+                  console.log('delete');
+                }}
+              />
             ))}
           </List>
         </Grid>
