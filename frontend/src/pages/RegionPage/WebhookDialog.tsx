@@ -10,15 +10,29 @@ import Switch from '@material-ui/core/Switch';
 import Grid from '@material-ui/core/Grid';
 import Typography from '@material-ui/core/Typography';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
+import FormLabel from '@material-ui/core/FormLabel';
 import FormHelperText from '@material-ui/core/FormHelperText';
 import { useForm, Controller } from 'react-hook-form';
-import { useMutation, useQueryCache } from 'react-query';
-import api, { Webhook, Region } from '../../api';
+import { useQuery, useMutation, useQueryCache } from 'react-query';
+import pupa from 'pupa';
+import traverse from 'traverse';
+import api, { Webhook, Region, RegionStatus } from '../../api';
 import SelectField from '../../components/SelectField';
 import TextField from '../../components/TextField';
 
+const urlSafeObject = (obj: any) => {
+  return traverse(obj).map(function(x) {
+    if (typeof x === 'string') {
+      this.update(encodeURIComponent(x));
+    } else if (x === undefined || x === null) {
+      this.update('');
+    }
+  });
+};
+
 export interface WebhookDialogProps {
   region: Region;
+  regionStatus?: RegionStatus | null;
   webhook?: Webhook;
   handleClose: () => void;
 }
@@ -35,11 +49,24 @@ interface WebhookInputs {
 const WebhookDialog = ({
   webhook,
   region,
+  regionStatus,
   handleClose,
 }: WebhookDialogProps) => {
   const { register, handleSubmit, formState, control, watch } = useForm<
     WebhookInputs
   >({ defaultValues: webhook ? webhook : { enabled: true } });
+
+  const trailId = watch('trailId');
+  const enabled = watch('enabled');
+  const url = watch('url');
+
+  const trail = region.trails.find(t => t.id === trailId);
+
+  const { data: trailStatus } = useQuery(
+    ['trailStatus', trailId],
+    () => (trailId ? api.getTrailStatus(trailId) : null),
+    { staleTime: Infinity },
+  );
 
   const queryCache = useQueryCache();
 
@@ -63,13 +90,17 @@ const WebhookDialog = ({
     [handleClose, saveWebhook, webhook],
   );
 
-  const trailId = watch('trailId');
-  const enabled = watch('enabled');
-
-  const trail = region.trails.find(t => t.id === trailId);
   const isTrailDeleted = !!trailId && !trail;
-
   const isDirty = Object.values(formState.dirtyFields).length > 0;
+
+  let urlExample = '';
+  if (url) {
+    if (trailId && trail && trailStatus) {
+      urlExample = pupa(url, urlSafeObject(trailStatus));
+    } else if (!trailId && regionStatus) {
+      urlExample = pupa(url, urlSafeObject(regionStatus));
+    }
+  }
 
   return (
     <Dialog open onClose={handleClose} maxWidth="md">
@@ -207,10 +238,28 @@ const WebhookDialog = ({
                   inputRef={register({ required: true })}
                   fullWidth
                   multiline
+                  helperText={
+                    urlExample && (
+                      <>
+                        <em>Example:</em>&nbsp;
+                        <Link
+                          color="inherit"
+                          href={urlExample}
+                          target="_blank"
+                          style={{
+                            whiteSpace: 'pre-wrap',
+                            lineBreak: 'anywhere',
+                          }}
+                        >
+                          {urlExample.length > 480
+                            ? `${urlExample.slice(0, 480)}...`
+                            : urlExample}
+                        </Link>
+                      </>
+                    )
+                  }
                 />
               </Box>
-
-              <Box mt={2}></Box>
             </DialogContent>
           </Grid>
         </Grid>

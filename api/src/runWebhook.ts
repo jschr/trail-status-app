@@ -8,6 +8,8 @@ const urlSafeObject = (obj: any) => {
   return traverse(obj).map(function(x) {
     if (typeof x === 'string') {
       this.update(encodeURIComponent(x));
+    } else if (x === undefined || x === null) {
+      this.update('');
     }
   });
 };

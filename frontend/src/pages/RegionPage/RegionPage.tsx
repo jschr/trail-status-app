@@ -35,9 +35,13 @@ const RegionPage = () => {
   const { data: user } = useQuery('user', () => api.getUser());
   const regionId = user?.regions[0]?.id;
 
-  const { data: region, status: regionStatus } = useQuery(
+  const { data: region, status: getRegionStatus } = useQuery(
     ['region', regionId],
     () => (regionId ? api.getRegion(regionId) : null),
+  );
+
+  const { data: regionStatus } = useQuery(['regionStatus', regionId], () =>
+    regionId ? api.getRegionStatus(regionId) : null,
   );
 
   const [saveRegion, { status }] = useMutation(
@@ -67,7 +71,7 @@ const RegionPage = () => {
     if (region) reset(region);
   }, [region, reset]);
 
-  if (regionStatus === 'loading') {
+  if (getRegionStatus === 'loading') {
     return null;
   }
 
@@ -247,6 +251,7 @@ const RegionPage = () => {
             render={() => (
               <WebhookDialog
                 region={region}
+                regionStatus={regionStatus}
                 handleClose={() => history.push('/')}
               />
             )}
@@ -257,6 +262,7 @@ const RegionPage = () => {
             render={({ match }) => (
               <WebhookDialog
                 region={region}
+                regionStatus={regionStatus}
                 webhook={region.webhooks.find(w => w.id === match.params.id)}
                 handleClose={() => history.push('/')}
               />

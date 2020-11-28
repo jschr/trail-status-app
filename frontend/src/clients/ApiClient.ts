@@ -26,6 +26,25 @@ export interface Region {
   webhooks: Webhook[];
 }
 
+export interface RegionStatus {
+  id: string;
+  name: string;
+  status: string;
+  message: string;
+  imageUrl: string;
+  instagramPostId: string;
+  instagramPermalink: string;
+  updatedAt: string;
+  trails: Array<TrailStatus>;
+}
+
+export interface TrailStatus {
+  id: string;
+  name: string;
+  status: string;
+  updatedAt: string;
+}
+
 export interface Trail {
   id: string;
   name: string;
@@ -84,6 +103,18 @@ export default class ApiClient {
       username: decodedToken.username,
       regions: decodedToken.regions || [],
     };
+  }
+
+  async getRegionStatus(id: string): Promise<RegionStatus> {
+    return await this.makeProtectedRequest(
+      `${apiEndpoint}/regions/status?id=${id}`,
+    );
+  }
+
+  async getTrailStatus(id: string): Promise<TrailStatus> {
+    return await this.makeProtectedRequest(
+      `${apiEndpoint}/status?trailId=${id}`,
+    );
   }
 
   async getRegion(id: string): Promise<Region> {
