@@ -10,7 +10,6 @@ import Switch from '@material-ui/core/Switch';
 import Grid from '@material-ui/core/Grid';
 import Typography from '@material-ui/core/Typography';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
-import FormLabel from '@material-ui/core/FormLabel';
 import FormHelperText from '@material-ui/core/FormHelperText';
 import { useForm, Controller } from 'react-hook-form';
 import { useQuery, useMutation, useQueryCache } from 'react-query';
@@ -21,6 +20,7 @@ import SelectField from '../../components/SelectField';
 import TextField from '../../components/TextField';
 
 const urlSafeObject = (obj: any) => {
+  // eslint-disable-next-line
   return traverse(obj).map(function(x) {
     if (typeof x === 'string') {
       this.update(encodeURIComponent(x));

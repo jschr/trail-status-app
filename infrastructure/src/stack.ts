@@ -351,6 +351,8 @@ export default class extends cdk.Stack {
 
     trailsApi.addMethod('POST', postTrailIntegration);
     trailsTable.grantReadWriteData(postTrailHandler);
+    regionStatusTable.grantReadData(postTrailHandler);
+    trailStatusTable.grantReadWriteData(postTrailHandler);
     regionsTable.grantReadWriteData(postTrailHandler);
 
     // PUT /trails

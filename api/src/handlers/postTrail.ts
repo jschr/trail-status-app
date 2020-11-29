@@ -1,7 +1,9 @@
 import { assert } from '@trail-status-app/utilities';
 import uuid from 'uuid/v4';
 import RegionModel from '../models/RegionModel';
+import RegionStatusModel from '../models/RegionStatusModel';
 import TrailModel from '../models/TrailModel';
+import TrailStatusModel from '../models/TrailStatusModel';
 import { json } from '../responses';
 import withApiHandler from '../withApiHandler';
 import { Permissions as P, canAccessRegion } from '../jwt';
@@ -45,6 +47,18 @@ export default withApiHandler([P.TrailCreate], async event => {
   });
 
   await trail.save();
+
+  // Set trail status to the current region status.
+  const regionStatus = await RegionStatusModel.get(region.id);
+  if (regionStatus) {
+    const trailStatus = new TrailStatusModel({
+      id: trail.id,
+      status: regionStatus.status,
+      createdAt: new Date().toISOString(),
+    });
+
+    await trailStatus.save();
+  }
 
   return json(trail);
 });

@@ -44,6 +44,7 @@ const TrailDialog = ({ trail, region, handleClose }: TrailDialogProps) => {
         await api.updateTrail(params.id, params.inputs);
       } else {
         await api.createTrail({ ...params.inputs, regionId: region.id });
+        queryCache.invalidateQueries(['regionStatus', region.id]);
       }
 
       queryCache.invalidateQueries(['region', region.id]);

@@ -63,6 +63,7 @@ export interface Webhook {
   description?: string;
   method: string;
   url: string;
+  enabled: boolean;
   lastRanAt: string;
   error: string;
   updatedAt: string;

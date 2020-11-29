@@ -49,7 +49,7 @@ const TrailDeleteDialog = ({
       <DialogContent>
         <DialogContentText>
           Deleting this trail will remove it from the status of{' '}
-          <strong>{region.name}</strong>{' '}
+          <strong>{region.name}</strong>
           {trailWebhooks.length > 0
             ? ' and disable the following webhooks: '
             : '.'}

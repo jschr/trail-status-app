@@ -15,6 +15,8 @@ import api from '../../api';
 import Container from '../../components/Container';
 import TextField from '../../components/TextField';
 import IconButton from '../../components/IconButton';
+import StatusText from '../../components/StatusText';
+import TimeAgo from '../../components/TimeAgo';
 import TrailItem from './TrailItem';
 import TrailDialog from './TrailDialog';
 import TrailDeleteDialog from './TrailDeleteDialog';
@@ -79,7 +81,39 @@ const RegionPage = () => {
 
   return (
     <Container maxWidth="md">
-      <CardHeader title={region?.name ?? ''} />
+      <Box>
+        <CardHeader
+          title={
+            <>
+              {region?.name ?? ''}
+              <Box position="relative">
+                <Typography variant="body2">
+                  <Box component="span" mr={1} color="text.secondary">
+                    Status:
+                  </Box>
+                  <Box component="span" mr={3}>
+                    <StatusText status={regionStatus?.status} />
+                  </Box>
+
+                  <Box component="span" mr={1} color="text.secondary">
+                    Updated:
+                  </Box>
+                  <Box component="span" mr={2}>
+                    <Link
+                      href={regionStatus?.instagramPermalink}
+                      target="_blank"
+                      color="inherit"
+                    >
+                      <TimeAgo datetime={regionStatus?.updatedAt} />
+                    </Link>
+                  </Box>
+                </Typography>
+              </Box>
+            </>
+          }
+        />
+      </Box>
+
       <Divider style={{ opacity: 0.5 }} />
 
       <Grid container spacing={8}>
@@ -173,6 +207,7 @@ const RegionPage = () => {
               <TrailItem
                 key={trail.id}
                 trail={trail}
+                regionStatus={regionStatus}
                 onEdit={() => history.push(`trails/${trail.id}/edit`)}
                 onDelete={() => history.push(`trails/${trail.id}/delete`)}
               />
@@ -198,7 +233,9 @@ const RegionPage = () => {
               <WebhookItem
                 key={webhook.id}
                 webhook={webhook}
+                region={region}
                 onEdit={() => history.push(`webhooks/${webhook.id}/edit`)}
+                onRun={() => history.push(`webhooks/${webhook.id}/run`)}
                 onDelete={() => history.push(`webhooks/${webhook.id}/delete`)}
               />
             ))}
