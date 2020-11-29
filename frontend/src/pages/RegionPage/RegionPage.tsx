@@ -6,8 +6,11 @@ import Button from '@material-ui/core/Button';
 import Link from '@material-ui/core/Link';
 import Typography from '@material-ui/core/Typography';
 import List from '@material-ui/core/List';
+import Menu from '@material-ui/core/Menu';
+import MenuItem from '@material-ui/core/MenuItem';
 import AddCircleOutlineIcon from '@material-ui/icons/AddCircleOutline';
-import React, { useEffect, useCallback } from 'react';
+import ExpandMoreRoundedIcon from '@material-ui/icons/ExpandMoreRounded';
+import React, { useEffect, useCallback, useState } from 'react';
 import {
   Switch,
   Route,
@@ -75,6 +78,8 @@ const RegionPage = ({ match }: RegionPageProps) => {
 
   const { register, handleSubmit, reset, formState } = useForm<RegionInputs>();
 
+  const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
+
   const onSubmit = useCallback(
     async (inputs: RegionInputs) => {
       if (region) {
@@ -89,6 +94,11 @@ const RegionPage = ({ match }: RegionPageProps) => {
     if (region) reset(region);
   }, [region, reset]);
 
+  // Persist last selected regionId to localStorage.
+  useEffect(() => {
+    localStorage.setItem('selectedRegionId', regionId);
+  }, [regionId]);
+
   if (getRegionStatus === 'loading') {
     return null;
   }
@@ -101,7 +111,32 @@ const RegionPage = ({ match }: RegionPageProps) => {
         <CardHeader
           title={
             <>
-              {region?.name ?? ''}
+              <Box display="flex" alignItems="center">
+                <Box component="span" mr={1}>
+                  {region?.name ?? ''}
+                </Box>
+                <IconButton onClick={event => setAnchorEl(event.currentTarget)}>
+                  <ExpandMoreRoundedIcon />
+                </IconButton>
+                <Menu
+                  anchorEl={anchorEl}
+                  open={Boolean(anchorEl)}
+                  onClose={() => setAnchorEl(null)}
+                >
+                  {user?.regions.map(region => (
+                    <MenuItem
+                      selected={region.id === regionId}
+                      key={region.id}
+                      onClick={() => {
+                        setAnchorEl(null);
+                        history.push(`/regions/${region.id}`);
+                      }}
+                    >
+                      {region.name}
+                    </MenuItem>
+                  ))}
+                </Menu>
+              </Box>
               <Box position="relative">
                 <Typography variant="body2">
                   <Box component="span" mr={1} color="text.secondary">
@@ -255,7 +290,6 @@ const RegionPage = ({ match }: RegionPageProps) => {
               <WebhookItem
                 key={webhook.id}
                 webhook={webhook}
-                region={region}
                 onEdit={() =>
                   history.push(`${match.url}/webhooks/${webhook.id}/edit`)
                 }

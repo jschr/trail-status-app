@@ -5,7 +5,10 @@ import api from '../api';
 
 const IndexPage = () => {
   const { data: user } = useQuery('user', () => api.getUser());
-  const regionId = user?.regions[0]?.id;
+  const selectedRegionId = localStorage.getItem('selectedRegionId');
+  const selectedRegion = user?.regions.find(r => r.id === selectedRegionId);
+  const firstRegion = user?.regions[0];
+  const regionId = selectedRegion?.id || firstRegion?.id;
 
   if (regionId) {
     return <Redirect to={`/regions/${regionId}`} />;

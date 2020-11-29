@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import ListItem from '@material-ui/core/ListItem';
-import ListItemText from '@material-ui/core/ListItemText';
+import Typography from '@material-ui/core/Typography';
 import MoreVertIcon from '@material-ui/icons/MoreVert';
-import Divider from '@material-ui/core/Divider';
 import Menu from '@material-ui/core/Menu';
 import Box from '@material-ui/core/Box';
 import MenuItem from '@material-ui/core/MenuItem';
@@ -30,63 +29,64 @@ const TrailItem = ({
   const trailStatus = regionStatus?.trails.find(t => t.id === trail.id);
 
   return (
-    <>
-      <ListItem dense button onClick={onEdit} selected={Boolean(anchorEl)}>
-        <ListItemText
-          primary={trail.name || <em>Unknown</em>}
-          secondary={
-            <>
-              <Box component="span" mr={1} color="text.secondary">
-                Status:
-              </Box>
-              <Box component="span" mr={3}>
-                <StatusText status={trailStatus?.status} />
-              </Box>
-              {/* <Box component="span" mr={1} color="text.secondary">
-          Close Hashtag:
+    <ListItem
+      dense
+      divider
+      button
+      onClick={onEdit}
+      selected={Boolean(anchorEl)}
+    >
+      <Box>
+        <Typography variant="subtitle1">
+          {trail.name || <em>Unknown</em>}
+        </Typography>
+        <Box component="span" mr={1} color="text.secondary">
+          Status:
         </Box>
         <Box component="span" mr={3}>
-          {trail?.closeHashtag}
-        </Box> */}
-            </>
-          }
-        />
-        <ListItemSecondaryAction>
-          <IconButton
-            edge="end"
-            style={{ opacity: 0.35 }}
-            onClick={event => setAnchorEl(event.currentTarget)}
+          <StatusText status={trailStatus?.status} />
+        </Box>
+      </Box>
+      {/* <Box component="span" mr={1} color="text.secondary">
+        Close Hashtag:
+      </Box>
+      <Box component="span" mr={3}>
+        {trail?.closeHashtag}
+      </Box> */}
+      <ListItemSecondaryAction>
+        <IconButton
+          edge="end"
+          style={{ opacity: 0.35 }}
+          onClick={event => setAnchorEl(event.currentTarget)}
+        >
+          <MoreVertIcon />
+        </IconButton>
+        <Menu
+          anchorEl={anchorEl}
+          open={Boolean(anchorEl)}
+          onClose={() => setAnchorEl(null)}
+        >
+          <MenuItem
+            onClick={() => {
+              setAnchorEl(null);
+              onEdit();
+            }}
           >
-            <MoreVertIcon />
-          </IconButton>
-          <Menu
-            anchorEl={anchorEl}
-            open={Boolean(anchorEl)}
-            onClose={() => setAnchorEl(null)}
+            <EditIcon />
+            &nbsp;&nbsp; Edit
+          </MenuItem>
+          <MenuItem
+            onClick={() => {
+              setAnchorEl(null);
+              onDelete();
+            }}
           >
-            <MenuItem
-              onClick={() => {
-                setAnchorEl(null);
-                onEdit();
-              }}
-            >
-              <EditIcon />
-              &nbsp;&nbsp; Edit
-            </MenuItem>
-            <MenuItem
-              onClick={() => {
-                setAnchorEl(null);
-                onDelete();
-              }}
-            >
-              <DeleteIcon />
-              &nbsp;&nbsp; Delete
-            </MenuItem>
-          </Menu>
-        </ListItemSecondaryAction>
-      </ListItem>
-      <Divider />
-    </>
+            <DeleteIcon />
+            &nbsp;&nbsp; Delete
+          </MenuItem>
+        </Menu>
+      </ListItemSecondaryAction>
+    </ListItem>
   );
 };
 
