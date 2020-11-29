@@ -124,6 +124,21 @@ export default class TrailStatusModel {
     }
   }
 
+  public async delete(): Promise<void> {
+    const params: AWS.DynamoDB.DeleteItemInput = {
+      TableName: tables.trailStatus.name,
+      Key: TrailStatusModel.toAttributeMap({ id: this.attrs.id }),
+    };
+
+    try {
+      await dynamodb.deleteItem(params).promise();
+    } catch (err) {
+      throw new Error(
+        `TrailStatusModel.delete failed for id '${this.attrs.id}' with '${err.message}'`,
+      );
+    }
+  }
+
   get id() {
     return this.attrs.id ?? '';
   }

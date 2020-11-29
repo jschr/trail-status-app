@@ -5,6 +5,7 @@ import CssBaseline from '@material-ui/core/CssBaseline';
 import blue from '@material-ui/core/colors/blue';
 import { Router, Switch, Route, Redirect } from 'react-router-dom';
 import { ReactQueryCacheProvider, QueryCache } from 'react-query';
+import IndexPage from './pages/IndexPage';
 import LoginPage from './pages/LoginPage';
 import RegionPage from './pages/RegionPage';
 import TermsOfServicePage from './pages/TermsOfServicePage';
@@ -15,6 +16,7 @@ const queryCache = new QueryCache({
   defaultConfig: {
     queries: {
       refetchOnWindowFocus: false,
+      retry: false,
     },
   },
 });
@@ -39,21 +41,20 @@ export default function App() {
         <CssBaseline />
         <Router history={history}>
           <Switch>
-            <Route exact path={['/', '/trails/*', '/webhooks/*']}>
-              <RegionPage />
-            </Route>
-            <Route path="/login">
-              <LoginPage />
-            </Route>
-            <Route path="/tos">
-              <TermsOfServicePage />
-            </Route>
-            <Route path="/privacy-policy">
-              <PrivacyPolicyPage />
-            </Route>
-            <Route path="*">
-              <Redirect to="/" />
-            </Route>
+            <Route
+              path={['/regions/:id', '/regions/:id/*']}
+              component={RegionPage}
+            />
+
+            <Route path="/login" component={LoginPage} />
+
+            <Route path="/tos" component={TermsOfServicePage} />
+
+            <Route path="/privacy-policy" component={PrivacyPolicyPage} />
+
+            <Route path="/" component={IndexPage} />
+
+            <Route path="*" render={() => <Redirect to="/" />} />
           </Switch>
         </Router>
       </ThemeProvider>

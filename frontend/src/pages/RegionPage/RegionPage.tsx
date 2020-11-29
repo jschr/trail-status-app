@@ -8,7 +8,13 @@ import Typography from '@material-ui/core/Typography';
 import List from '@material-ui/core/List';
 import AddCircleOutlineIcon from '@material-ui/icons/AddCircleOutline';
 import React, { useEffect, useCallback } from 'react';
-import { Switch, Route, Redirect, useHistory } from 'react-router-dom';
+import {
+  Switch,
+  Route,
+  Redirect,
+  useHistory,
+  RouteComponentProps,
+} from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { useQuery, useMutation, useQueryCache } from 'react-query';
 import api from '../../api';
@@ -24,26 +30,31 @@ import WebhookItem from './WebhookItem';
 import WebhookDialog from './WebhookDialog';
 import WebhookDeleteDialog from './WebhookDeleteDialog';
 
+interface RegionPageProps extends RouteComponentProps<{ id: string }> {}
+
 interface RegionInputs {
   name: string;
   openHashtag: string;
   closeHashtag: string;
 }
 
-const RegionPage = () => {
+const RegionPage = ({ match }: RegionPageProps) => {
   const history = useHistory();
   const queryCache = useQueryCache();
 
+  const regionId = match.params.id;
+
   const { data: user } = useQuery('user', () => api.getUser());
-  const regionId = user?.regions[0]?.id;
 
   const { data: region, status: getRegionStatus } = useQuery(
     ['region', regionId],
     () => (regionId ? api.getRegion(regionId) : null),
   );
 
-  const { data: regionStatus } = useQuery(['regionStatus', regionId], () =>
-    regionId ? api.getRegionStatus(regionId) : null,
+  const { data: regionStatus } = useQuery(
+    ['regionStatus', regionId],
+    () => (regionId ? api.getRegionStatus(regionId) : null),
+    { staleTime: 2 * 60 * 1000, refetchOnWindowFocus: true },
   );
 
   const [runWebhook] = useMutation(async (id: string) => {
@@ -203,7 +214,7 @@ const RegionPage = () => {
             <Typography color="textSecondary" variant="overline">
               Trails
             </Typography>
-            <IconButton onClick={() => history.push('trails/new')}>
+            <IconButton onClick={() => history.push(`${match.url}/trails/new`)}>
               <AddCircleOutlineIcon />
             </IconButton>
           </Box>
@@ -213,8 +224,12 @@ const RegionPage = () => {
                 key={trail.id}
                 trail={trail}
                 regionStatus={regionStatus}
-                onEdit={() => history.push(`trails/${trail.id}/edit`)}
-                onDelete={() => history.push(`trails/${trail.id}/delete`)}
+                onEdit={() =>
+                  history.push(`${match.url}/trails/${trail.id}/edit`)
+                }
+                onDelete={() =>
+                  history.push(`${match.url}/trails/${trail.id}/delete`)
+                }
               />
             ))}
           </List>
@@ -229,7 +244,9 @@ const RegionPage = () => {
             <Typography color="textSecondary" variant="overline">
               Webhooks
             </Typography>
-            <IconButton onClick={() => history.push('webhooks/new')}>
+            <IconButton
+              onClick={() => history.push(`${match.url}/webhooks/new`)}
+            >
               <AddCircleOutlineIcon />
             </IconButton>
           </Box>
@@ -239,8 +256,12 @@ const RegionPage = () => {
                 key={webhook.id}
                 webhook={webhook}
                 region={region}
-                onEdit={() => history.push(`webhooks/${webhook.id}/edit`)}
-                onDelete={() => history.push(`webhooks/${webhook.id}/delete`)}
+                onEdit={() =>
+                  history.push(`${match.url}/webhooks/${webhook.id}/edit`)
+                }
+                onDelete={() =>
+                  history.push(`${match.url}/webhooks/${webhook.id}/delete`)
+                }
                 onRun={() => runWebhook(webhook.id)}
               />
             ))}
@@ -251,28 +272,28 @@ const RegionPage = () => {
       {region && (
         <Switch>
           <Route
-            path="/trails/new"
+            path={`${match.url}/trails/new`}
             render={() => (
               <TrailDialog
                 region={region}
-                handleClose={() => history.push('/')}
+                handleClose={() => history.push(`/regions/${regionId}`)}
               />
             )}
           />
 
           <Route
-            path="/trails/:id/edit"
+            path={`${match.url}/trails/:id/edit`}
             render={({ match }) => (
               <TrailDialog
                 region={region}
                 trail={region.trails.find(t => t.id === match.params.id)}
-                handleClose={() => history.push('/')}
+                handleClose={() => history.push(`/regions/${regionId}`)}
               />
             )}
           />
 
           <Route
-            path="/trails/:id/delete"
+            path={`${match.url}/trails/:id/delete`}
             render={({ match }) => {
               const trail = region.trails.find(t => t.id === match.params.id);
               if (!trail) {
@@ -282,37 +303,37 @@ const RegionPage = () => {
                 <TrailDeleteDialog
                   trail={trail}
                   region={region}
-                  handleClose={() => history.push('/')}
+                  handleClose={() => history.push(`/regions/${regionId}`)}
                 />
               );
             }}
           />
 
           <Route
-            path="/webhooks/new"
+            path={`${match.url}/webhooks/new`}
             render={() => (
               <WebhookDialog
                 region={region}
                 regionStatus={regionStatus}
-                handleClose={() => history.push('/')}
+                handleClose={() => history.push(`/regions/${regionId}`)}
               />
             )}
           />
 
           <Route
-            path="/webhooks/:id/edit"
+            path={`${match.url}/webhooks/:id/edit`}
             render={({ match }) => (
               <WebhookDialog
                 region={region}
                 regionStatus={regionStatus}
                 webhook={region.webhooks.find(w => w.id === match.params.id)}
-                handleClose={() => history.push('/')}
+                handleClose={() => history.push(`/regions/${regionId}`)}
               />
             )}
           />
 
           <Route
-            path="/webhooks/:id/delete"
+            path={`${match.url}/webhooks/:id/delete`}
             render={({ match }) => {
               const webhook = region.webhooks.find(
                 t => t.id === match.params.id,
@@ -324,7 +345,7 @@ const RegionPage = () => {
                 <WebhookDeleteDialog
                   webhook={webhook}
                   region={region}
-                  handleClose={() => history.push('/')}
+                  handleClose={() => history.push(`/regions/${regionId}`)}
                 />
               );
             }}

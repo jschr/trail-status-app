@@ -1,5 +1,6 @@
 import { assert } from '@trail-status-app/utilities';
 import TrailModel from '../models/TrailModel';
+import TrailStatusModel from '../models/TrailStatusModel';
 import { json } from '../responses';
 import withApiHandler from '../withApiHandler';
 import { Permissions as P, canAccessRegion } from '../jwt';
@@ -28,6 +29,11 @@ export default withApiHandler([P.TrailUpdate], async event => {
     throw new UnauthorizedError(
       `User does not have access to region '${trail.regionId}'`,
     );
+  }
+
+  const trailStatus = await TrailStatusModel.get(trail.id);
+  if (trailStatus) {
+    await trailStatus.delete();
   }
 
   await trail.delete();

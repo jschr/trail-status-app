@@ -1,17 +1,16 @@
 import React, { useState } from 'react';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemText from '@material-ui/core/ListItemText';
-import ListItemSecondaryAction from '@material-ui/core/ListItemSecondaryAction';
 import MoreVertIcon from '@material-ui/icons/MoreVert';
 import Divider from '@material-ui/core/Divider';
 import Menu from '@material-ui/core/Menu';
-import Typography from '@material-ui/core/Typography';
 import Box from '@material-ui/core/Box';
 import MenuItem from '@material-ui/core/MenuItem';
 import EditIcon from '@material-ui/icons/Edit';
 import DeleteIcon from '@material-ui/icons/Delete';
 import IconButton from '../../components/IconButton';
 import StatusText from '../../components/StatusText';
+import ListItemSecondaryAction from '../../components/ListItemSecondaryAction';
 import { Trail, RegionStatus } from '../../api';
 
 interface TrailItemsProps {
@@ -34,24 +33,21 @@ const TrailItem = ({
     <>
       <ListItem dense button onClick={onEdit} selected={Boolean(anchorEl)}>
         <ListItemText
-          primary={
+          primary={trail.name || <em>Unknown</em>}
+          secondary={
             <>
-              {trail.name || <em>Unknown</em>}
-              <Typography variant="body2">
-                <Box component="span" mr={1} color="text.secondary">
-                  Status:
-                </Box>
-                <Box component="span" mr={3}>
-                  <StatusText status={trailStatus?.status} />
-                </Box>
-
-                {/* <Box component="span" mr={1} color="text.secondary">
-                  Close Hashtag:
-                </Box>
-                <Box component="span" mr={3}>
-                  {trail?.closeHashtag}
-                </Box> */}
-              </Typography>
+              <Box component="span" mr={1} color="text.secondary">
+                Status:
+              </Box>
+              <Box component="span" mr={3}>
+                <StatusText status={trailStatus?.status} />
+              </Box>
+              {/* <Box component="span" mr={1} color="text.secondary">
+          Close Hashtag:
+        </Box>
+        <Box component="span" mr={3}>
+          {trail?.closeHashtag}
+        </Box> */}
             </>
           }
         />

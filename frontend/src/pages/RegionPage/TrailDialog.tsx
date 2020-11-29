@@ -76,7 +76,7 @@ const TrailDialog = ({ trail, region, handleClose }: TrailDialogProps) => {
     <Dialog open onClose={handleClose} maxWidth="xs">
       <form onSubmit={handleSubmit(onSubmit)}>
         <DialogTitle>
-          {trail ? `Edit ${trail.name} Trail` : 'Add New Trail'}
+          {trail ? `Edit "${trail.name}"` : 'Add New Trail'}
         </DialogTitle>
         <DialogContent>
           <Box>
@@ -120,7 +120,7 @@ const TrailDialog = ({ trail, region, handleClose }: TrailDialogProps) => {
             color="primary"
             disabled={saveTrailState.status === 'loading' || !isDirty}
           >
-            {saveTrailState.status === 'loading' ? 'Saving...' : 'Save'}
+            {saveTrailState.status === 'loading' ? 'Saving...' : 'Save Trail'}
           </Button>
         </DialogActions>
       </form>

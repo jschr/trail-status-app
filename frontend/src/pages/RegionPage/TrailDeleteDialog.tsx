@@ -42,14 +42,15 @@ const TrailDeleteDialog = ({
     <Dialog open onClose={handleClose} maxWidth="xs">
       <DialogTitle>
         <Box display="flex" alignItems="center">
-          <WarningIcon fontSize="large" />
+          <Box display="inline-flex" color="warning.main">
+            <WarningIcon fontSize="large" color="inherit" />
+          </Box>
           &nbsp;&nbsp;Delete "{trail.name}"?
         </Box>
       </DialogTitle>
       <DialogContent>
         <DialogContentText>
-          Deleting this trail will remove it from the status of{' '}
-          <strong>{region.name}</strong>
+          Deleting this trail will remove it from the region's status
           {trailWebhooks.length > 0
             ? ' and disable the following webhooks: '
             : '.'}
@@ -69,7 +70,9 @@ const TrailDeleteDialog = ({
           color="secondary"
           disabled={deleteTrailState.status === 'loading'}
         >
-          {deleteTrailState.status === 'loading' ? 'Deleting...' : 'Delete'}
+          {deleteTrailState.status === 'loading'
+            ? 'Deleting...'
+            : 'Delete Trail'}
         </Button>
       </DialogActions>
     </Dialog>

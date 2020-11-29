@@ -41,7 +41,9 @@ const WebhookDeleteDialog = ({
     <Dialog open onClose={handleClose} maxWidth="xs">
       <DialogTitle>
         <Box display="flex" alignItems="center">
-          <WarningIcon fontSize="large" />
+          <Box display="inline-flex" color="warning.main">
+            <WarningIcon fontSize="large" color="inherit" />
+          </Box>
           &nbsp;&nbsp;Delete "{webhook.name}"?
         </Box>
       </DialogTitle>
@@ -61,7 +63,9 @@ const WebhookDeleteDialog = ({
           color="secondary"
           disabled={deleteWebhookState.status === 'loading'}
         >
-          {deleteWebhookState.status === 'loading' ? 'Deleting...' : 'Delete'}
+          {deleteWebhookState.status === 'loading'
+            ? 'Deleting...'
+            : 'Delete Webhook'}
         </Button>
       </DialogActions>
     </Dialog>

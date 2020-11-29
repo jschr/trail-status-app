@@ -108,7 +108,7 @@ const WebhookDialog = ({
         <Grid container>
           <Grid item xs={12} sm={5}>
             <DialogTitle>
-              {webhook ? `Edit ${webhook.name} Webhook` : 'Add New Webhook'}
+              {webhook ? `Edit "${webhook.name}"` : 'Add New Webhook'}
             </DialogTitle>
             <DialogContent>
               <Box>
@@ -270,7 +270,9 @@ const WebhookDialog = ({
             color="primary"
             disabled={saveWebhookState.status === 'loading' || !isDirty}
           >
-            {saveWebhookState.status === 'loading' ? 'Saving...' : 'Save'}
+            {saveWebhookState.status === 'loading'
+              ? 'Saving...'
+              : 'Save Webhook'}
           </Button>
         </DialogActions>
       </form>

@@ -399,6 +399,7 @@ export default class extends cdk.Stack {
 
     trailsApi.addMethod('DELETE', deleteTrailIntegration);
     trailsTable.grantReadWriteData(deleteTrailHandler);
+    trailStatusTable.grantReadWriteData(deleteTrailHandler);
     regionsTable.grantReadWriteData(deleteTrailHandler);
 
     // /trails/status
