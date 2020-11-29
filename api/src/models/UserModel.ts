@@ -10,7 +10,12 @@ export interface User {
   expiresAt: string;
   lastLoginAt: string;
   createdAt: string;
+  sharedRegions: string[];
 }
+
+const isNotNullOrUndefined = <T>(value: T | null | undefined): value is T => {
+  return value !== null && value !== undefined;
+};
 
 export default class UserModel {
   public static async get(id: string): Promise<UserModel | null> {
@@ -86,6 +91,11 @@ export default class UserModel {
     if (user.lastLoginAt !== undefined)
       attrMap.lastLoginAt = { S: user.lastLoginAt };
     if (user.createdAt !== undefined) attrMap.createdAt = { S: user.createdAt };
+    if (user.sharedRegions !== undefined) {
+      attrMap.sharedRegions = attrMap.sharedRegions = {
+        L: user.sharedRegions.map(regionId => ({ S: regionId })),
+      };
+    }
 
     return attrMap;
   }
@@ -104,6 +114,9 @@ export default class UserModel {
       expiresAt: attrMap.expiresAt?.S,
       lastLoginAt: attrMap.lastLoginAt?.S,
       createdAt: attrMap.createdAt?.S,
+      sharedRegions: attrMap.sharedRegions?.L?.map(i => i.S).filter(
+        isNotNullOrUndefined,
+      ),
     };
   }
 
@@ -161,12 +174,17 @@ export default class UserModel {
     return this.attrs.createdAt ?? '';
   }
 
+  get sharedRegions() {
+    return this.attrs.sharedRegions ?? [];
+  }
+
   public toJSON() {
     return {
       id: this.id,
       username: this.username,
       profilePictureUrl: this.profilePictureUrl,
       createdAt: this.createdAt,
+      sharedRegions: this.sharedRegions,
     };
   }
 }

@@ -14,6 +14,10 @@ interface AuthorizeInstagramCallback {
   state: string;
 }
 
+const isNotNull = <T>(value: T | null): value is T => {
+  return value !== null;
+};
+
 export default withApiHandler([], async event => {
   const { code } = assertAuthorizeInstagramCallback(parseQuery(event));
 
@@ -61,7 +65,14 @@ export default withApiHandler([], async event => {
     regions.push(region);
   }
 
-  const sessionToken = jwt.createUserSession(userId, username, regions);
+  const sharedRegions = await RegionModel.batchGet(
+    user.sharedRegions.map(id => ({ id })),
+  );
+
+  const sessionToken = jwt.createUserSession(userId, username, [
+    ...regions,
+    ...sharedRegions.filter(isNotNull),
+  ]);
 
   return redirect(`${env('FRONTEND_ENDPOINT')}?sessionToken=${sessionToken}`);
 });

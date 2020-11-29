@@ -69,17 +69,20 @@ const syncRegion = async (regionId: string) => {
 
   let mediaWithOpenStatus: instagram.UserMedia | null = null;
   let mediaWithClosedStatus: instagram.UserMedia | null = null;
+  let permalink = '';
   for (const media of userMedia) {
     if (media.caption.includes(region.openHashtag)) {
       console.info(
         `Found open hashtag '${region.openHashtag}' for region '${region.id}'.`,
       );
+      ({ permalink } = await instagram.getMedia(media.id, accessToken));
       mediaWithOpenStatus = media;
       break;
     } else if (media.caption.includes(region.closeHashtag)) {
       console.info(
         `Found close hashtag '${region.closeHashtag}' for region '${region.id}'.`,
       );
+      ({ permalink } = await instagram.getMedia(media.id, accessToken));
       mediaWithClosedStatus = media;
       break;
     }
@@ -88,7 +91,13 @@ const syncRegion = async (regionId: string) => {
   if (mediaWithClosedStatus) {
     console.info(`Region '${region.id}' is closed.`);
     // Mark region as closed.
-    await setRegionStatus(region, 'closed', mediaWithClosedStatus, webhooks);
+    await setRegionStatus(
+      region,
+      'closed',
+      mediaWithClosedStatus,
+      webhooks,
+      permalink,
+    );
     // Mark all trails as closed.
     for (const trail of trails) {
       await setTrailStatus(trail, 'closed', webhooks);
@@ -96,7 +105,13 @@ const syncRegion = async (regionId: string) => {
   } else if (mediaWithOpenStatus) {
     console.info(`Region '${region.id}' is open.`);
     // Mark region as closed.
-    await setRegionStatus(region, 'open', mediaWithOpenStatus, webhooks);
+    await setRegionStatus(
+      region,
+      'open',
+      mediaWithOpenStatus,
+      webhooks,
+      permalink,
+    );
     // Mark all trails open except any that are closed.
     for (const trail of trails) {
       if (
@@ -137,8 +152,9 @@ const getAccessToken = async (user: UserModel): Promise<string> => {
 const setRegionStatus = async (
   region: RegionModel,
   status: 'open' | 'closed',
-  media: instagram.UserMedia,
+  userMedia: instagram.UserMedia,
   webhooks: WebhookModel[],
+  permalink: string,
 ) => {
   let regionStatus = await RegionStatusModel.get(region.id);
 
@@ -149,7 +165,7 @@ const setRegionStatus = async (
     });
   }
 
-  const message = stripHashtags(media.caption);
+  const message = stripHashtags(userMedia.caption);
 
   if (status !== regionStatus.status || message !== regionStatus.message) {
     console.info(
@@ -159,8 +175,9 @@ const setRegionStatus = async (
     await regionStatus.save({
       status,
       message,
-      instagramPostId: media.id,
-      imageUrl: media.mediaUrl,
+      instagramPostId: userMedia.id,
+      imageUrl: userMedia.mediaUrl,
+      instagramPermalink: permalink,
     });
 
     const regionWebhooks = webhooks.filter(w => !w.trailId);

@@ -117,7 +117,7 @@ export const getUserMedia = async (
   }));
 };
 
-interface Media {
+export interface Media {
   id: string;
   caption: string;
   mediaType: string;
