@@ -201,6 +201,15 @@ export default class ApiClient {
     });
   }
 
+  async runWebhook(id: string): Promise<Webhook> {
+    return await this.makeProtectedRequest(
+      `${apiEndpoint}/webhooks/run?id=${id}`,
+      {
+        method: 'POST',
+      },
+    );
+  }
+
   async makeProtectedRequest(
     url: string,
     opts: RequestOptions = { method: 'GET' },

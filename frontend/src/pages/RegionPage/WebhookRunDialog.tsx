@@ -10,62 +10,58 @@ import WarningIcon from '@material-ui/icons/Warning';
 import { useMutation, useQueryCache } from 'react-query';
 import api, { Webhook, Region } from '../../api';
 
-export interface WebhookDeleteDialogProps {
+export interface WebhookRunDialogProps {
   webhook: Webhook;
   region: Region;
   handleClose: () => void;
 }
 
-const WebhookDeleteDialog = ({
+const WebhookRunDialog = ({
   webhook,
   region,
   handleClose,
-}: WebhookDeleteDialogProps) => {
+}: WebhookRunDialogProps) => {
   const trail = region.trails.find(t => t.id === webhook.trailId);
 
   const queryCache = useQueryCache();
 
-  const [deleteWebhook, deleteWebhookState] = useMutation(
-    async (id: string) => {
-      await api.deleteWebhook(id);
-      queryCache.invalidateQueries(['region', webhook.regionId]);
-    },
-  );
+  const [runWebhook, runWebhookState] = useMutation(async (id: string) => {
+    await api.runWebhook(id);
+    queryCache.invalidateQueries(['region', webhook.regionId]);
+  });
 
-  const onDelete = useCallback(async () => {
-    await deleteWebhook(webhook.id);
-    handleClose();
-  }, [webhook, deleteWebhook, handleClose]);
+  const onRun = useCallback(async () => {
+    await runWebhook(webhook.id);
+  }, [webhook, runWebhook, handleClose]);
 
   return (
-    <Dialog open onClose={handleClose} maxWidth="xs">
+    <Dialog open onClose={handleClose} maxWidth="sm">
       <DialogTitle>
         <Box display="flex" alignItems="center">
-          <WarningIcon fontSize="large" />
-          &nbsp;&nbsp;Delete "{webhook.name}"?
+          Trigger "{webhook.name}"
         </Box>
       </DialogTitle>
       <DialogContent>
-        <DialogContentText>
+        {/* <DialogContentText>
           Deleting this webhook will no longer trigger when the status of{' '}
           <strong>
             {webhook.trailId ? (trail ? trail.name : '[Deleted]') : region.name}
           </strong>{' '}
           changes.
-        </DialogContentText>
+        </DialogContentText> */}
       </DialogContent>
       <DialogActions>
         <Button onClick={handleClose}>Cancel</Button>
         <Button
-          onClick={onDelete}
-          color="secondary"
-          disabled={deleteWebhookState.status === 'loading'}
+          color="primary"
+          disabled={runWebhookState.status === 'loading'}
+          onClick={onRun}
         >
-          {deleteWebhookState.status === 'loading' ? 'Deleting...' : 'Delete'}
+          {runWebhookState.status === 'loading' ? 'Running...' : 'Trigger'}
         </Button>
       </DialogActions>
     </Dialog>
   );
 };
 
-export default WebhookDeleteDialog;
+export default WebhookRunDialog;

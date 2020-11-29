@@ -114,9 +114,7 @@ const TrailDialog = ({ trail, region, handleClose }: TrailDialogProps) => {
         </DialogContent>
         <DialogActions>
           <Box flex={1} />
-          <Button onClick={handleClose} color="primary">
-            Cancel
-          </Button>
+          <Button onClick={handleClose}>Cancel</Button>
           <Button
             type="submit"
             color="primary"

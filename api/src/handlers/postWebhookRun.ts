@@ -8,20 +8,20 @@ import {
   NotFoundError,
   UnauthorizedError,
 } from '../HttpError';
-import { parseBody } from '../requests';
+import { parseQuery } from '../requests';
 import buildRegionStatus from '../buildRegionStatus';
 import runWebhook from '../runWebhook';
 
-interface PostRunWebhookBody {
-  webhookId: string;
+interface PutWebhookRunQuery {
+  id: string;
 }
 
 export default withApiHandler([P.WebhookRun], async event => {
-  const { webhookId } = assertPostRunWebhookBody(parseBody(event));
+  const { id } = assertPostWebhookRunQuery(parseQuery(event));
 
-  const webhook = await WebhookModel.get(webhookId);
+  const webhook = await WebhookModel.get(id);
   if (!webhook) {
-    throw new NotFoundError(`Webhook not found for id '${webhookId}'`);
+    throw new NotFoundError(`Webhook not found for id '${id}'`);
   }
 
   const regionStatus = await buildRegionStatus(webhook.regionId);
@@ -47,7 +47,7 @@ export default withApiHandler([P.WebhookRun], async event => {
     });
 
     console.info(
-      `Successfully ran webhook '${webhookId}', received status '${status}' from '${url}'`,
+      `Successfully ran webhook '${id}', received status '${status}' from '${url}'`,
     );
   } catch (err) {
     await webhook.save({
@@ -59,16 +59,16 @@ export default withApiHandler([P.WebhookRun], async event => {
   return json(webhook);
 });
 
-const assertPostRunWebhookBody = (body: any): PostRunWebhookBody => {
+const assertPostWebhookRunQuery = (query: any): PutWebhookRunQuery => {
   assert(
-    !body || typeof body !== 'object',
-    new BadRequestError('Invalid body.'),
+    !query || typeof query !== 'object',
+    new BadRequestError('Invalid query.'),
   );
 
   assert(
-    typeof body.webhookId !== 'string',
-    new BadRequestError('Invalid webhookId provided.'),
+    typeof query.id !== 'string',
+    new BadRequestError('Missing id query parameter.'),
   );
 
-  return body;
+  return query;
 };

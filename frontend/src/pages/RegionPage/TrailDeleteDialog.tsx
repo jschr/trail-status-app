@@ -63,9 +63,7 @@ const TrailDeleteDialog = ({
         </DialogContentText>
       </DialogContent>
       <DialogActions>
-        <Button onClick={handleClose} color="primary">
-          Cancel
-        </Button>
+        <Button onClick={handleClose}>Cancel</Button>
         <Button
           onClick={onDelete}
           color="secondary"

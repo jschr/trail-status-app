@@ -22,7 +22,7 @@
     "react-hook-form": "^6.11.5",
     "react-query": "^2.26.3",
     "react-router-dom": "^5.2.0",
-    "timeago-react": "^3.0.1"
+    "timeago.js": "^4.0.2"
   },
   "devDependencies": {
     "@types/react": "^16.9.0",

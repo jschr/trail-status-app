@@ -46,6 +46,11 @@ const RegionPage = () => {
     regionId ? api.getRegionStatus(regionId) : null,
   );
 
+  const [runWebhook] = useMutation(async (id: string) => {
+    await api.runWebhook(id);
+    queryCache.invalidateQueries(['region', regionId]);
+  });
+
   const [saveRegion, { status }] = useMutation(
     async (params: { id: string; inputs: RegionInputs }) => {
       const updatedRegion = await api.updateRegion(params.id, params.inputs);
@@ -202,7 +207,7 @@ const RegionPage = () => {
               <AddCircleOutlineIcon />
             </IconButton>
           </Box>
-          <List>
+          <List disablePadding>
             {region?.trails.map(trail => (
               <TrailItem
                 key={trail.id}
@@ -228,15 +233,15 @@ const RegionPage = () => {
               <AddCircleOutlineIcon />
             </IconButton>
           </Box>
-          <List>
+          <List disablePadding>
             {region?.webhooks.map(webhook => (
               <WebhookItem
                 key={webhook.id}
                 webhook={webhook}
                 region={region}
                 onEdit={() => history.push(`webhooks/${webhook.id}/edit`)}
-                onRun={() => history.push(`webhooks/${webhook.id}/run`)}
                 onDelete={() => history.push(`webhooks/${webhook.id}/delete`)}
+                onRun={() => runWebhook(webhook.id)}
               />
             ))}
           </List>

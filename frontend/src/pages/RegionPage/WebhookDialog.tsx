@@ -264,9 +264,7 @@ const WebhookDialog = ({
           </Grid>
         </Grid>
         <DialogActions>
-          <Button onClick={handleClose} color="primary">
-            Cancel
-          </Button>
+          <Button onClick={handleClose}>Cancel</Button>
           <Button
             type="submit"
             color="primary"
