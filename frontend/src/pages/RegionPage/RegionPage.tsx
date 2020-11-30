@@ -52,6 +52,7 @@ const RegionPage = ({ match }: RegionPageProps) => {
   const { data: region, status: getRegionStatus } = useQuery(
     ['region', regionId],
     () => (regionId ? api.getRegion(regionId) : null),
+    { staleTime: 2 * 60 * 1000, refetchOnWindowFocus: true },
   );
 
   const { data: regionStatus } = useQuery(

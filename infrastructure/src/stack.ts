@@ -124,7 +124,7 @@ export default class extends cdk.Stack {
       },
     );
 
-    // Set to vibility timeout to 6 times the runwebhooks lambda timeout
+    // Set to vibility timeout to 6 times the runWebhooks lambda timeout
     // https://docs.aws.amazon.com/lambda/latest/dg/with-sqs.html#events-sqs-queueconfig
     const runSyncRegionsHandlerTimeout = 15;
     const runSyncRegionsQueue = new sqs.Queue(
@@ -134,7 +134,7 @@ export default class extends cdk.Stack {
         fifo: true,
         queueName: projectPrefix('runSyncRegionsJob.fifo'),
         contentBasedDeduplication: true,
-        // Set to vibility timeout to 6 times the runwebhooks lambda timeout
+        // Set to vibility timeout to 6 times the runWebhooks lambda timeout
         // https://docs.aws.amazon.com/lambda/latest/dg/with-sqs.html#events-sqs-queueconfig
         visibilityTimeout: cdk.Duration.seconds(
           6 * runSyncRegionsHandlerTimeout,
@@ -148,29 +148,29 @@ export default class extends cdk.Stack {
 
     // Trail webhooks
 
-    const runwebhooksDeadletter = new sqs.Queue(
+    const runWebhooksDeadletter = new sqs.Queue(
       this,
-      projectPrefix('runwebhooksJobDeadletter'),
+      projectPrefix('runWebhooksJobDeadletter'),
       {
         fifo: true,
-        queueName: projectPrefix('runwebhooksJobDeadletter.fifo'),
+        queueName: projectPrefix('runWebhooksJobDeadletter.fifo'),
       },
     );
 
-    // Set to vibility timeout to 6 times the runwebhooks lambda timeout
+    // Set to vibility timeout to 6 times the runWebhooks lambda timeout
     // https://docs.aws.amazon.com/lambda/latest/dg/with-sqs.html#events-sqs-queueconfig
     const runWebhooksHandlerTimeout = 15;
     const runWebhooksQueue = new sqs.Queue(
       this,
-      projectPrefix('runwebhooksJob'),
+      projectPrefix('runWebhooksJob'),
       {
         fifo: true,
-        queueName: projectPrefix('runwebhooksJob.fifo'),
+        queueName: projectPrefix('runWebhooksJob.fifo'),
         contentBasedDeduplication: true,
 
         visibilityTimeout: cdk.Duration.seconds(6 * runWebhooksHandlerTimeout),
         deadLetterQueue: {
-          queue: runwebhooksDeadletter,
+          queue: runWebhooksDeadletter,
           maxReceiveCount: 10,
         },
       },

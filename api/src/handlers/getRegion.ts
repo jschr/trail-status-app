@@ -40,8 +40,8 @@ export default withApiHandler([P.RegionRead], async event => {
 
   return json({
     ...region.toJSON(),
-    trails: trails.map(t => t.toJSON()),
-    webhooks: webhooks.map(w => w.toJSON()),
+    trails: (trails || []).map(t => t.toJSON()),
+    webhooks: (webhooks || []).map(w => w.toJSON()),
     user: {
       username: user?.username,
     },
