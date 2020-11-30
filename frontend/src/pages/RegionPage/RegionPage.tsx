@@ -112,6 +112,8 @@ const RegionPage = ({ match }: RegionPageProps) => {
     (a, b) => +new Date(a.createdAt) - +new Date(b.createdAt),
   );
 
+  const userRegions = user?.regions || [];
+
   return (
     <Container maxWidth="md">
       <Box>
@@ -122,15 +124,19 @@ const RegionPage = ({ match }: RegionPageProps) => {
                 <Box component="span" mr={1}>
                   {region?.name ?? ''}
                 </Box>
-                <IconButton onClick={event => setAnchorEl(event.currentTarget)}>
-                  <ExpandMoreRoundedIcon />
-                </IconButton>
+                {userRegions.length > 1 && (
+                  <IconButton
+                    onClick={event => setAnchorEl(event.currentTarget)}
+                  >
+                    <ExpandMoreRoundedIcon />
+                  </IconButton>
+                )}
                 <Menu
                   anchorEl={anchorEl}
                   open={Boolean(anchorEl)}
                   onClose={() => setAnchorEl(null)}
                 >
-                  {user?.regions.map(region => (
+                  {userRegions.map(region => (
                     <MenuItem
                       selected={region.id === regionId}
                       key={region.id}
@@ -201,7 +207,7 @@ const RegionPage = ({ match }: RegionPageProps) => {
                   target="_blank"
                   color="textPrimary"
                 >
-                  <strong>@{user?.username}</strong>
+                  <strong>@{region?.user?.username}</strong>
                 </Link>{' '}
                 with a specific hashtag.
               </Typography>

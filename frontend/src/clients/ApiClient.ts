@@ -24,6 +24,9 @@ export interface Region {
   createdAt: string;
   trails: Trail[];
   webhooks: Webhook[];
+  user: {
+    username: string;
+  };
 }
 
 export interface RegionStatus {

@@ -2,6 +2,7 @@ import { assert } from '@trail-status-app/utilities';
 import RegionModel from '../models/RegionModel';
 import TrailModel from '../models/TrailModel';
 import WebhookModel from '../models/WebhookModel';
+import UserModel from '../models/UserModel';
 import { json } from '../responses';
 import withApiHandler from '../withApiHandler';
 import {
@@ -31,13 +32,19 @@ export default withApiHandler([P.RegionRead], async event => {
     );
   }
 
-  const trails = await TrailModel.allByRegion(region.id);
-  const webhooks = await WebhookModel.allByRegion(region.id);
+  const [trails, webhooks, user] = await Promise.all([
+    TrailModel.allByRegion(region.id),
+    WebhookModel.allByRegion(region.id),
+    UserModel.get(region.userId),
+  ]);
 
   return json({
     ...region.toJSON(),
     trails: trails.map(t => t.toJSON()),
     webhooks: webhooks.map(w => w.toJSON()),
+    user: {
+      username: user?.username,
+    },
   });
 });
 
