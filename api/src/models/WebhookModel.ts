@@ -211,8 +211,6 @@ export default class WebhookModel {
       updatedAt: new Date().toISOString(),
     };
 
-    console.log('SAVE WEBHOOK', updatedAttrs, newAttrs);
-
     const params: AWS.DynamoDB.PutItemInput = {
       TableName: tables.webhooks.name,
       Item: WebhookModel.toAttributeMap(newAttrs),
