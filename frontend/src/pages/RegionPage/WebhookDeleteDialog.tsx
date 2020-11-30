@@ -50,9 +50,7 @@ const WebhookDeleteDialog = ({
       <DialogContent>
         <DialogContentText>
           Deleting this webhook will no longer trigger when the status of{' '}
-          <strong>
-            {webhook.trailId ? (trail ? trail.name : '[Deleted]') : region.name}
-          </strong>{' '}
+          {webhook.trailId ? (trail ? trail.name : '[Deleted]') : 'the region'}{' '}
           changes.
         </DialogContentText>
       </DialogContent>

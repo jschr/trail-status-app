@@ -182,7 +182,7 @@ const WebhookDialog = ({
                       />
                     }
                   />
-                  <FormHelperText>
+                  <FormHelperText style={{ marginTop: 0 }}>
                     {enabled ? (
                       <>
                         Webhook will trigger when the status of{' '}
