@@ -105,6 +105,13 @@ const RegionPage = ({ match }: RegionPageProps) => {
 
   const isDirty = Object.values(formState.dirtyFields).length > 0;
 
+  const trailsSorted = (region?.trails || []).sort(
+    (a, b) => +new Date(a.createdAt) - +new Date(b.createdAt),
+  );
+  const webhooksSorted = (region?.webhooks || []).sort(
+    (a, b) => +new Date(a.createdAt) - +new Date(b.createdAt),
+  );
+
   return (
     <Container maxWidth="md">
       <Box>
@@ -254,7 +261,7 @@ const RegionPage = ({ match }: RegionPageProps) => {
             </IconButton>
           </Box>
           <List disablePadding>
-            {region?.trails.map(trail => (
+            {trailsSorted.map(trail => (
               <TrailItem
                 key={trail.id}
                 trail={trail}
@@ -286,7 +293,7 @@ const RegionPage = ({ match }: RegionPageProps) => {
             </IconButton>
           </Box>
           <List disablePadding>
-            {region?.webhooks.map(webhook => (
+            {webhooksSorted.map(webhook => (
               <WebhookItem
                 key={webhook.id}
                 webhook={webhook}
