@@ -194,7 +194,14 @@ const setRegionStatus = async (
       `Found '${regionWebhooks.length}' webhooks for region '${region.id}'`,
     );
 
-    await Promise.all(regionWebhooks.map(createWebhookJob));
+    if (status !== regionStatus.status) {
+      await Promise.all(regionWebhooks.map(createWebhookJob));
+    } else {
+      // TODO: Still fire the webhook if the webhook url uses the message variable.
+      console.info(
+        `Region '${region.id}' has the same status but different message, skip creating webhook jpbs.`,
+      );
+    }
   } else {
     console.info(
       `Region '${region.id}' has the same status and message, skipping setting status.`,
