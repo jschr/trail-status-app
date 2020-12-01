@@ -48,18 +48,21 @@ const syncRegion = async (regionId: string) => {
     throw new Error(`Failed to find region for '${regionId}'`);
   }
 
-  const trails = await TrailModel.allByRegion(region.id);
-  if (trails.length === 0) {
-    throw new Error(`Failed to find trails for '${region.id}'`);
-  }
-
   const user = await UserModel.get(region.userId);
   if (!user) {
     throw new Error(`Failed to find user for '${region.userId}'`);
   }
 
-  const webhooks = await WebhookModel.allByRegion(regionId);
-  const accessToken = await getAccessToken(user);
+  const [trails, webhooks, accessToken] = await Promise.all([
+    TrailModel.allByRegion(region.id),
+    WebhookModel.allByRegion(region.id),
+    getAccessToken(user),
+  ]);
+
+  console.info(
+    `Region ${region.id} has ${trails.length} trails and ${webhooks.length} webhooks`,
+  );
+
   let userMedia = await instagram.getUserMedia(accessToken);
 
   // Ensure media is sorted by most recent.
@@ -89,7 +92,6 @@ const syncRegion = async (regionId: string) => {
   }
 
   if (mediaWithClosedStatus) {
-    console.info(`Region '${region.id}' is closed.`);
     // Mark region as closed.
     await setRegionStatus(
       region,
@@ -103,7 +105,6 @@ const syncRegion = async (regionId: string) => {
       await setTrailStatus(trail, 'closed', webhooks);
     }
   } else if (mediaWithOpenStatus) {
-    console.info(`Region '${region.id}' is open.`);
     // Mark region as closed.
     await setRegionStatus(
       region,
@@ -211,7 +212,7 @@ const setTrailStatus = async (
   if (status !== trailStatus.status) {
     console.info(`Setting trail '${trail.id}' status to '${status}'`);
     await trailStatus.save({ status });
-    const trailWebhooks = webhooks.filter(w => !!w.trailId);
+    const trailWebhooks = webhooks.filter(w => w.trailId === trail.id);
 
     console.info(
       `Found '${trailWebhooks.length}' webhooks for trail '${trail.id}' region '${trail.regionId}'`,
@@ -220,7 +221,7 @@ const setTrailStatus = async (
     await Promise.all(trailWebhooks.map(createWebhookJob));
   } else {
     console.info(
-      `Trail '${trail.id}' region '${trail.regionId} has the same status and message, skipping setting status.`,
+      `Trail '${trail.id}' region '${trail.regionId} has the same status, skipping setting status.`,
     );
   }
 };
