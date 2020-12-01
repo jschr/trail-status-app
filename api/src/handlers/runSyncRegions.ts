@@ -101,9 +101,9 @@ const syncRegion = async (regionId: string) => {
       permalink,
     );
     // Mark all trails as closed.
-    for (const trail of trails) {
-      await setTrailStatus(trail, 'closed', webhooks);
-    }
+    await Promise.all(
+      trails.map(trail => setTrailStatus(trail, 'closed', webhooks)),
+    );
   } else if (mediaWithOpenStatus) {
     // Mark region as closed.
     await setRegionStatus(
@@ -114,6 +114,8 @@ const syncRegion = async (regionId: string) => {
       permalink,
     );
     // Mark all trails open except any that are closed.
+    const openTrails: TrailModel[] = [];
+    const closedTrails: TrailModel[] = [];
     for (const trail of trails) {
       if (
         trail.closeHashtag &&
@@ -122,11 +124,16 @@ const syncRegion = async (regionId: string) => {
         console.info(
           `Found close hashtag '${trail.closeHashtag}' for trail '${trail.id}' and region '${region.id}'.`,
         );
-        setTrailStatus(trail, 'closed', webhooks);
+        closedTrails.push(trail);
       } else {
-        setTrailStatus(trail, 'open', webhooks);
+        openTrails.push(trail);
       }
     }
+
+    await Promise.all([
+      ...openTrails.map(trail => setTrailStatus(trail, 'open', webhooks)),
+      ...closedTrails.map(trail => setTrailStatus(trail, 'closed', webhooks)),
+    ]);
   } else {
     console.info(`No status found for region '${region.id}'.`);
   }

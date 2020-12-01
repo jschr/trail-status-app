@@ -11,6 +11,14 @@ const TimeAgo = ({ datetime }: TimeAgoProps) => {
   useEffect(() => {
     if (!datetime) return;
     setTimeAgoText(format(datetime));
+
+    const interval = setInterval(() => {
+      setTimeAgoText(format(datetime));
+    }, 60 * 1000);
+
+    return () => {
+      clearInterval(interval);
+    };
   }, [datetime]);
 
   return (
