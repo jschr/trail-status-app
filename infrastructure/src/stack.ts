@@ -134,6 +134,7 @@ export default class extends cdk.Stack {
         fifo: true,
         queueName: projectPrefix('runSyncRegionsJob.fifo'),
         contentBasedDeduplication: true,
+        deliveryDelay: cdk.Duration.seconds(30),
         // Set to vibility timeout to 6 times the runWebhooks lambda timeout
         // https://docs.aws.amazon.com/lambda/latest/dg/with-sqs.html#events-sqs-queueconfig
         visibilityTimeout: cdk.Duration.seconds(
@@ -167,7 +168,7 @@ export default class extends cdk.Stack {
         fifo: true,
         queueName: projectPrefix('runWebhooksJob.fifo'),
         contentBasedDeduplication: true,
-
+        deliveryDelay: cdk.Duration.seconds(30),
         visibilityTimeout: cdk.Duration.seconds(6 * runWebhooksHandlerTimeout),
         deadLetterQueue: {
           queue: runWebhooksDeadletter,

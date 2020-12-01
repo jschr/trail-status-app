@@ -37,7 +37,10 @@ export default withSQSHandler(async event => {
     try {
       await syncRegion(regionId);
     } catch (err) {
-      console.error(err);
+      // Throw the error to retry.
+      throw new Error(
+        `Failed to sync region '${regionId}' with '${err.message}'`,
+      );
     }
   }
 });
@@ -249,7 +252,8 @@ const createWebhookJob = async (webhook: WebhookModel) => {
   }
 
   const params: AWS.SQS.SendMessageRequest = {
-    MessageGroupId: webhook.regionId,
+    // Use webhook id as group id so each run webhook job can be retried individually.
+    MessageGroupId: webhook.id,
     MessageDeduplicationId: webhook.id,
     MessageBody: JSON.stringify({ webhookId: webhook.id }),
     QueueUrl: runWebhooksQueueUrl,

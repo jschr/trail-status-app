@@ -17,7 +17,8 @@ export default withScheduledHandler(async () => {
 
 const createSyncRegionJob = async (region: RegionModel) => {
   const params: AWS.SQS.SendMessageRequest = {
-    MessageGroupId: region.userId,
+    // Use region id as group id so each sync region job can be retried individually.
+    MessageGroupId: region.id,
     MessageDeduplicationId: region.id,
     MessageBody: JSON.stringify({ regionId: region.id }),
     QueueUrl: runSyncRegionsQueueUrl,
