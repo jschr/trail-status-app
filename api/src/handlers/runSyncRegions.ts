@@ -174,8 +174,10 @@ const setRegionStatus = async (
   }
 
   const message = stripHashtags(userMedia.caption);
+  const didStatusChange = status !== regionStatus.status;
+  const didMessageChange = message !== regionStatus.message;
 
-  if (status !== regionStatus.status || message !== regionStatus.message) {
+  if (didStatusChange || didMessageChange) {
     console.info(
       `Setting region '${region.id}' status to '${status}' with message '${message}`,
     );
@@ -188,13 +190,11 @@ const setRegionStatus = async (
       instagramPermalink: permalink,
     });
 
-    const regionWebhooks = webhooks.filter(w => !w.trailId);
-
-    console.info(
-      `Found '${regionWebhooks.length}' webhooks for region '${region.id}'`,
-    );
-
-    if (status !== regionStatus.status) {
+    if (didStatusChange) {
+      const regionWebhooks = webhooks.filter(w => !w.trailId);
+      console.info(
+        `Found '${regionWebhooks.length}' webhooks for region '${region.id}'`,
+      );
       await Promise.all(regionWebhooks.map(createWebhookJob));
     } else {
       // TODO: Still fire the webhook if the webhook url uses the message variable.
@@ -235,7 +235,7 @@ const setTrailStatus = async (
     await Promise.all(trailWebhooks.map(createWebhookJob));
   } else {
     console.info(
-      `Trail '${trail.id}' region '${trail.regionId} has the same status, skipping setting status.`,
+      `Trail '${trail.id}' region '${trail.regionId}' has the same status, skipping setting status.`,
     );
   }
 };
