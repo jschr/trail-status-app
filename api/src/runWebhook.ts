@@ -69,7 +69,9 @@ export default async (
   }
 
   if (!res.ok) {
-    const errorMessage = `Invalid response '${res.status}' from '${method.toUpperCase} ${url}'`;
+    const errorMessage = `Invalid response '${
+      res.status
+    }' from '${method.toUpperCase()} ${url}'`;
     throw new Error(errorMessage);
   }
 

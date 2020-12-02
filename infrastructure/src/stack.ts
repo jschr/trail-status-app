@@ -280,30 +280,30 @@ export default class extends cdk.Stack {
     regionStatusApi.addCorsPreflight({ allowOrigins: ['*'] });
 
     // GET /regions/status
-    const getRegiontatusHandler = new lambda.Function(
+    const getRegionStatusHandler = new lambda.Function(
       this,
-      projectPrefix('getRegiontatus'),
+      projectPrefix('getRegionStatus'),
       {
-        functionName: projectPrefix('getRegiontatus'),
+        functionName: projectPrefix('getRegionStatus'),
         runtime: lambda.Runtime.NODEJS_12_X,
         code: lambda.Code.fromAsset(packagePath),
-        handler: 'api/build/src/handlers/getRegiontatus.default',
+        handler: 'api/build/src/handlers/getRegionStatus.default',
         environment: envVars,
         timeout: cdk.Duration.seconds(10),
         memorySize: 512,
       },
     );
 
-    const getRegiontatusIntegration = new apigateway.LambdaIntegration(
-      getRegiontatusHandler,
+    const getRegionStatusIntegration = new apigateway.LambdaIntegration(
+      getRegionStatusHandler,
     );
 
-    regionStatusApi.addMethod('GET', getRegiontatusIntegration);
-    regionsTable.grantReadData(getRegiontatusHandler);
-    regionStatusTable.grantReadData(getRegiontatusHandler);
-    trailsTable.grantReadData(getRegiontatusHandler);
-    trailStatusTable.grantReadData(getRegiontatusHandler);
-    userTable.grantReadData(getRegiontatusHandler);
+    regionStatusApi.addMethod('GET', getRegionStatusIntegration);
+    regionsTable.grantReadData(getRegionStatusHandler);
+    regionStatusTable.grantReadData(getRegionStatusHandler);
+    trailsTable.grantReadData(getRegionStatusHandler);
+    trailStatusTable.grantReadData(getRegionStatusHandler);
+    userTable.grantReadData(getRegionStatusHandler);
 
     // /trails
     const trailsApi = api.root.addResource('trails');
@@ -512,10 +512,12 @@ export default class extends cdk.Stack {
       authorizeInstagramCallbackIntegration,
     );
     userTable.grantReadWriteData(authorizeInstagramCallbackHandler);
+    regionsTable.grantReadWriteData(authorizeInstagramCallbackHandler);
     trailsTable.grantReadWriteData(authorizeInstagramCallbackHandler);
 
     // webhook
     const webhooksApi = api.root.addResource('webhooks');
+    webhooksApi.addCorsPreflight({ allowOrigins: ['*'] });
 
     // POST /webhooks
     const postWebhook = new lambda.Function(
@@ -591,6 +593,7 @@ export default class extends cdk.Stack {
 
     // webhook/run
     const wehooksRunApi = webhooksApi.addResource('run');
+    wehooksRunApi.addCorsPreflight({ allowOrigins: ['*'] });
 
     // POST /webhooks
     const postWebhookRunHandler = new lambda.Function(
