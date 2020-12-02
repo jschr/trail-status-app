@@ -117,7 +117,7 @@ export default class ApiClient {
 
   async getTrailStatus(id: string): Promise<TrailStatus> {
     return await this.makeProtectedRequest(
-      `${apiEndpoint}/status?trailId=${id}`,
+      `${apiEndpoint}/status?trailId=${encodeURIComponent(id)}`,
     );
   }
 
@@ -143,10 +143,13 @@ export default class ApiClient {
     id: string,
     body: { name?: string; closeHashtag?: string },
   ): Promise<Trail> {
-    return await this.makeProtectedRequest(`${apiEndpoint}/trails?id=${id}`, {
-      method: 'PUT',
-      body,
-    });
+    return await this.makeProtectedRequest(
+      `${apiEndpoint}/trails?id=${encodeURIComponent(id)}`,
+      {
+        method: 'PUT',
+        body,
+      },
+    );
   }
 
   async createTrail(body: {
@@ -161,9 +164,12 @@ export default class ApiClient {
   }
 
   async deleteTrail(id: string): Promise<void> {
-    await this.makeProtectedRequest(`${apiEndpoint}/trails?id=${id}`, {
-      method: 'DELETE',
-    });
+    await this.makeProtectedRequest(
+      `${apiEndpoint}/trails?id=${encodeURIComponent(id)}`,
+      {
+        method: 'DELETE',
+      },
+    );
   }
 
   async updateWebhook(
