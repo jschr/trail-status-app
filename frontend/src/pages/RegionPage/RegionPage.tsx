@@ -120,61 +120,78 @@ const RegionPage = ({ match }: RegionPageProps) => {
       <Box>
         <CardHeader
           title={
-            <>
-              <Box display="flex" alignItems="center">
-                <Box component="span" mr={1}>
-                  {region?.name ?? ''}
-                </Box>
-                {userRegions.length > 1 && (
-                  <IconButton
-                    onClick={event => setAnchorEl(event.currentTarget)}
+            <Box
+              display="flex"
+              justifyContent="space-between"
+              alignItems="flex-end"
+            >
+              <Box display="flex" flexDirection="column">
+                <Box display="flex" alignItems="center">
+                  <Box component="span" mr={1}>
+                    {region?.name ?? ''}
+                  </Box>
+                  {userRegions.length > 1 && (
+                    <IconButton
+                      onClick={event => setAnchorEl(event.currentTarget)}
+                    >
+                      <ExpandMoreRoundedIcon />
+                    </IconButton>
+                  )}
+                  <Menu
+                    anchorEl={anchorEl}
+                    open={Boolean(anchorEl)}
+                    onClose={() => setAnchorEl(null)}
                   >
-                    <ExpandMoreRoundedIcon />
-                  </IconButton>
-                )}
-                <Menu
-                  anchorEl={anchorEl}
-                  open={Boolean(anchorEl)}
-                  onClose={() => setAnchorEl(null)}
-                >
-                  {userRegions.map(region => (
-                    <MenuItem
-                      selected={region.id === regionId}
-                      key={region.id}
-                      onClick={() => {
-                        setAnchorEl(null);
-                        history.push(`/regions/${region.id}`);
-                      }}
-                    >
-                      {region.name}
-                    </MenuItem>
-                  ))}
-                </Menu>
-              </Box>
-              <Box position="relative">
-                <Typography variant="body2">
-                  <Box component="span" mr={1} color="text.secondary">
-                    Status:
-                  </Box>
-                  <Box component="span" mr={3}>
-                    <StatusText status={regionStatus?.status} />
-                  </Box>
+                    {userRegions.map(region => (
+                      <MenuItem
+                        selected={region.id === regionId}
+                        key={region.id}
+                        onClick={() => {
+                          setAnchorEl(null);
+                          history.push(`/regions/${region.id}`);
+                        }}
+                      >
+                        {region.name}
+                      </MenuItem>
+                    ))}
+                  </Menu>
+                </Box>
+                <Box position="relative">
+                  <Typography variant="body2">
+                    <Box component="span" mr={1} color="text.secondary">
+                      Status:
+                    </Box>
+                    <Box component="span" mr={3}>
+                      <StatusText status={regionStatus?.status} />
+                    </Box>
 
-                  <Box component="span" mr={1} color="text.secondary">
-                    Updated:
-                  </Box>
-                  <Box component="span" mr={2}>
-                    <Link
-                      href={regionStatus?.instagramPermalink}
-                      target="_blank"
-                      color="inherit"
-                    >
-                      <TimeAgo datetime={regionStatus?.updatedAt} />
-                    </Link>
-                  </Box>
-                </Typography>
+                    <Box component="span" mr={1} color="text.secondary">
+                      Updated:
+                    </Box>
+                    <Box component="span" mr={2}>
+                      <Link
+                        href={regionStatus?.instagramPermalink}
+                        target="_blank"
+                        color="inherit"
+                      >
+                        <TimeAgo datetime={regionStatus?.updatedAt} />
+                      </Link>
+                    </Box>
+                  </Typography>
+                </Box>
               </Box>
-            </>
+
+              <Button
+                size="small"
+                style={{ opacity: 0.5 }}
+                onClick={() => {
+                  localStorage.clear();
+                  history.push('/login');
+                }}
+              >
+                Logout
+              </Button>
+            </Box>
           }
         />
       </Box>
