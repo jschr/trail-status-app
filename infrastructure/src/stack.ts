@@ -459,6 +459,7 @@ export default class extends cdk.Stack {
     trailStatusTable.grantReadData(getLegacyTrailStatusHandler);
     trailsTable.grantReadData(getLegacyTrailStatusHandler);
     userTable.grantReadData(getLegacyTrailStatusHandler);
+    regionsTable.grantReadData(getLegacyTrailStatusHandler);
 
     // instagram
     const instagramApi = api.root.addResource('instagram');
