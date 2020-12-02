@@ -459,6 +459,7 @@ export default class extends cdk.Stack {
     trailStatusTable.grantReadData(getLegacyTrailStatusHandler);
     trailsTable.grantReadData(getLegacyTrailStatusHandler);
     userTable.grantReadData(getLegacyTrailStatusHandler);
+    regionStatusTable.grantReadData(getLegacyTrailStatusHandler);
     regionsTable.grantReadData(getLegacyTrailStatusHandler);
 
     // instagram

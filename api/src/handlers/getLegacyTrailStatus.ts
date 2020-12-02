@@ -1,5 +1,6 @@
 import { assert } from '@trail-status-app/utilities';
 import TrailStatusModel from '../models/TrailStatusModel';
+import RegionStatusModel from '../models/RegionStatusModel';
 import TrailModel from '../models/TrailModel';
 import RegionModel from '../models/RegionModel';
 import UserModel from '../models/UserModel';
@@ -20,15 +21,15 @@ export default withApiHandler([], async event => {
     TrailModel.get(trailId),
   ]);
 
-  if (!trailStatus) {
-    throw new NotFoundError(`Could not find trail status for '${trailId}'`);
-  }
-
   if (!trail) {
     throw new NotFoundError(`Could not find trail settings for '${trailId}'`);
   }
 
-  const region = await RegionModel.get(trail.regionId);
+  const [region, regionStatus] = await Promise.all([
+    RegionModel.get(trail.regionId),
+    RegionStatusModel.get(trail.regionId),
+  ]);
+
   if (!region) {
     throw new NotFoundError(`Could not find region for '${trail.regionId}'`);
   }
@@ -39,8 +40,17 @@ export default withApiHandler([], async event => {
   }
 
   return json({
-    ...trailStatus.toJSON(),
-    user: user.toJSON(),
+    status: trailStatus?.status,
+    message: regionStatus?.message,
+    imageUrl: regionStatus?.imageUrl,
+    instagramPostId: regionStatus?.instagramPostId,
+    instagramPermalink: regionStatus?.instagramPermalink,
+    updatedAt: trailStatus?.updatedAt,
+    createdAt: trailStatus?.createdAt,
+    user: {
+      userId: user.id,
+      username: user.username,
+    },
   });
 });
 
