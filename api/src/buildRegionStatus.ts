@@ -1,6 +1,7 @@
 import RegionModel from './models/RegionModel';
 import RegionStatusModel from './models/RegionStatusModel';
 import TrailModel from './models/TrailModel';
+import UserModel from './models/UserModel';
 import TrailStatusModel from './models/TrailStatusModel';
 import { NotFoundError } from './HttpError';
 
@@ -14,6 +15,10 @@ export interface RegionStatus {
   instagramPermalink: string;
   updatedAt: string;
   trails: Array<TrailStatus>;
+  user: {
+    userId: string;
+    username: string;
+  };
 }
 
 export interface TrailStatus {
@@ -43,6 +48,11 @@ export default async (regionId: string): Promise<RegionStatus | null> => {
     return null;
   }
 
+  const user = await UserModel.get(region.userId);
+  if (!user) {
+    throw new NotFoundError(`Could not find user for '${region.userId}'`);
+  }
+
   const trailStatuses = await Promise.all(
     (trails || []).map(t => TrailStatusModel.get(t.id)),
   );
@@ -70,5 +80,9 @@ export default async (regionId: string): Promise<RegionStatus | null> => {
         };
       })
       .filter(isNotNull),
+    user: {
+      userId: user.id,
+      username: user.username,
+    },
   };
 };
