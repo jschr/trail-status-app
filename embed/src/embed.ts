@@ -6,7 +6,7 @@ import * as timeago from 'timeago.js';
 import * as linkify from 'linkifyjs/html';
 
 const trailStatusApi = process.env.API_ENDPOINT;
-const trailStatusIds: { [key: string]: true } = {};
+const regionIds: { [key: string]: true } = {};
 const trailStatusAttribute = 'data-trail-status';
 
 const ensureImage = async (src: string) =>
@@ -17,11 +17,11 @@ const ensureImage = async (src: string) =>
     img.src = src;
   });
 
-export const fetchTrailStatus = async (trailId: string) => {
+export const fetchRegionStatus = async (regionId: string) => {
   const container = document.querySelector(
-    `[${trailStatusAttribute}="${trailId}"]`,
+    `[${trailStatusAttribute}="${regionId}"]`,
   );
-  if (!container) throw new Error(`Failed to find DOM node for '${trailId}`);
+  if (!container) throw new Error(`Failed to find DOM node for '${regionId}`);
 
   const imageEl = container.querySelector('.trailStatusImage');
   const messageEl = container.querySelector('.trailStatusMessage');
@@ -31,7 +31,7 @@ export const fetchTrailStatus = async (trailId: string) => {
   if (!imageEl || !messageEl || !timeagoEl || !ctaEl) return;
 
   const resp = await fetch(
-    `${trailStatusApi}/status?trailId=${encodeURIComponent(trailId)}`,
+    `${trailStatusApi}/regions/status?id=${encodeURIComponent(regionId)}`,
     {
       headers: { 'Content-Type': 'application/json' },
     },
@@ -39,42 +39,42 @@ export const fetchTrailStatus = async (trailId: string) => {
 
   if (!resp.ok) {
     throw new Error(
-      `Failed to fetch trail status for '${trailId}': ${
+      `Failed to fetch region status for '${regionId}': ${
         resp.statusText
       } — ${JSON.stringify(await resp.text())}`,
     );
   }
 
-  const trailStatus = await resp.json();
-  if (!trailStatus || !trailStatus.user) return;
+  const regionStatus = await resp.json();
+  if (!regionStatus || !regionStatus.user) return;
 
-  if (trailStatus.status === 'open') {
+  if (regionStatus.status === 'open') {
     container.classList.remove('trailStatus-isClosed');
     container.classList.add('trailStatus-isOpen');
-  } else if (trailStatus.status === 'closed') {
+  } else if (regionStatus.status === 'closed') {
     container.classList.remove('trailStatus-isOpen');
     container.classList.add('trailStatus-isClosed');
   }
 
-  const imagesExists = await ensureImage(trailStatus.imageUrl);
-  if (imagesExists && imageEl && trailStatus.imageUrl) {
+  const imagesExists = await ensureImage(regionStatus.imageUrl);
+  if (imagesExists && imageEl && regionStatus.imageUrl) {
     container.classList.add('trailStatus-hasImage');
     imageEl.setAttribute(
       'style',
-      `background-image: url(${trailStatus.imageUrl})`,
+      `background-image: url(${regionStatus.imageUrl})`,
     );
-    imageEl.setAttribute('href', trailStatus.imageUrl);
+    imageEl.setAttribute('href', regionStatus.imageUrl);
   } else if (imageEl) {
     container.classList.remove('trailStatus-hasImage');
     imageEl.removeAttribute('style');
   }
 
-  messageEl.innerHTML = linkify(trailStatus.message).replace(/\n/g, '<br />');
+  messageEl.innerHTML = linkify(regionStatus.message).replace(/\n/g, '<br />');
 
-  timeagoEl.setAttribute('datetime', trailStatus.updatedAt);
+  timeagoEl.setAttribute('datetime', regionStatus.updatedAt);
   timeago.render(timeagoEl as HTMLElement);
 
-  const { username } = trailStatus.user;
+  const { username } = regionStatus.user;
   ctaEl.innerHTML = `Follow us at <a href="https://www.instagram.com/${username}/" target="_black">@${username}</a> for trail updates.`;
 
   container.classList.add('trailStatus-isLoaded');
@@ -85,11 +85,11 @@ export const register = () => {
 
   for (let i = 0; i < containers.length; i += 1) {
     const container = containers[i];
-    const trailStatusId = container.getAttribute(trailStatusAttribute);
-    if (!trailStatusId) return;
+    const regionId = container.getAttribute(trailStatusAttribute);
+    if (!regionId) return;
 
-    if (!trailStatusIds[trailStatusId]) {
-      trailStatusIds[trailStatusId] = true;
+    if (!regionIds[regionId]) {
+      regionIds[regionId] = true;
 
       container.innerHTML = [
         `<div class="trailStatusInner">`,
@@ -107,7 +107,7 @@ export const register = () => {
         `</div>`,
       ].join('');
 
-      fetchTrailStatus(trailStatusId);
+      fetchRegionStatus(regionId);
     }
   }
 };
@@ -115,7 +115,7 @@ export const register = () => {
 register();
 
 window.setInterval(() => {
-  for (const trailId of Object.keys(trailStatusIds)) {
-    fetchTrailStatus(trailId);
+  for (const regionId of Object.keys(regionIds)) {
+    fetchRegionStatus(regionId);
   }
 }, 30 * 1000);
