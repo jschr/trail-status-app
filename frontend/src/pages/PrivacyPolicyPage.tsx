@@ -1,7 +1,7 @@
 import React from 'react';
 import Container from '../components/Container';
 
-const PrivacyPolicy: React.FunctionComponent = () => {
+const PrivacyPolicyPage = () => {
   return (
     <Container maxWidth="md">
       <h1>Privacy Policy</h1>
@@ -430,4 +430,4 @@ const PrivacyPolicy: React.FunctionComponent = () => {
   );
 };
 
-export default PrivacyPolicy;
+export default PrivacyPolicyPage;

@@ -9,21 +9,66 @@ interface RequestOptions {
 }
 
 export interface User {
-  userId: string;
+  id: string;
   username: string;
+  regions: Array<{ id: string; name: string }>;
 }
 
-export interface Status {
-  trailId: string;
+export interface Region {
+  id: string;
+  userId: string;
+  name: string;
+  openHashtag: string;
+  closeHashtag: string;
+  updatedAt: string;
+  createdAt: string;
+  trails: Trail[];
+  webhooks: Webhook[];
+  user: {
+    username: string;
+  };
+}
+
+export interface RegionStatus {
+  id: string;
+  name: string;
   status: string;
+  message: string;
+  imageUrl: string;
+  instagramPostId: string;
+  instagramPermalink: string;
+  updatedAt: string;
+  trails: Array<TrailStatus>;
+}
+
+export interface TrailStatus {
+  id: string;
+  name: string;
+  status: string;
+  updatedAt: string;
+}
+
+export interface Trail {
+  id: string;
+  name: string;
+  regionId: string;
+  closeHashtag: string;
   updatedAt: string;
   createdAt: string;
 }
 
-export interface Settings {
-  trailId: string;
-  openHashtag: string;
-  closeHashtag: string;
+export interface Webhook {
+  id: string;
+  regionId: string;
+  trailId?: string;
+  runPriority: number;
+  name: string;
+  description?: string;
+  method: string;
+  url: string;
+  enabled: boolean;
+  lastRanAt: string;
+  error: string;
   updatedAt: string;
   createdAt: string;
 }
@@ -58,55 +103,120 @@ export default class ApiClient {
     const decodedToken = jwtDecode(this.accessToken);
 
     return {
-      userId: decodedToken.sub,
+      id: decodedToken.sub,
       username: decodedToken.username,
+      regions: decodedToken.regions || [],
     };
   }
 
-  async getProfilePictureUrl(username: string): Promise<string> {
-    try {
-      this.onRequestStart();
-      const profilePictureApiUrl = `https://www.instagram.com/${username}/?__a=1`;
-      const userResp = await fetch(profilePictureApiUrl);
-
-      if (!userResp.ok)
-        throw new Error('Bad response fetching profile picture');
-
-      const userPayload = await userResp.json();
-      const profilePictureUrl = userPayload.graphql.user.profile_pic_url;
-
-      this.onRequestEnd();
-
-      const image = new Image();
-      image.src = profilePictureUrl;
-      return new Promise((resolve, reject) => {
-        image.onload = () => {
-          resolve(profilePictureUrl);
-        };
-        image.onerror = () => reject();
-      });
-    } catch (err) {
-      this.onRequestEnd();
-      console.error(err);
-      return '';
-    }
-  }
-
-  async getStatus(trailId: string): Promise<Status> {
+  async getRegionStatus(id: string): Promise<RegionStatus> {
     return await this.makeProtectedRequest(
-      `${apiEndpoint}/status?trailId=${encodeURIComponent(trailId)}`,
+      `${apiEndpoint}/regions/status?id=${id}`,
     );
   }
 
-  async getSettings(): Promise<Settings> {
-    return await this.makeProtectedRequest(`${apiEndpoint}/settings`);
+  async getTrailStatus(id: string): Promise<TrailStatus> {
+    return await this.makeProtectedRequest(
+      `${apiEndpoint}/status?trailId=${encodeURIComponent(id)}`,
+    );
   }
 
-  async putSettings(body: Settings): Promise<Settings> {
-    return await this.makeProtectedRequest(`${apiEndpoint}/settings`, {
+  async getRegion(id: string): Promise<Region> {
+    return await this.makeProtectedRequest(`${apiEndpoint}/regions?id=${id}`);
+  }
+
+  async updateRegion(
+    id: string,
+    body: {
+      name?: string;
+      openHashtag?: string;
+      closeHashtag?: string;
+    },
+  ): Promise<Region> {
+    return await this.makeProtectedRequest(`${apiEndpoint}/regions?id=${id}`, {
       method: 'PUT',
       body,
     });
+  }
+
+  async updateTrail(
+    id: string,
+    body: { name?: string; closeHashtag?: string },
+  ): Promise<Trail> {
+    return await this.makeProtectedRequest(
+      `${apiEndpoint}/trails?id=${encodeURIComponent(id)}`,
+      {
+        method: 'PUT',
+        body,
+      },
+    );
+  }
+
+  async createTrail(body: {
+    name: string;
+    closeHashtag: string;
+    regionId: string;
+  }): Promise<Trail> {
+    return await this.makeProtectedRequest(`${apiEndpoint}/trails`, {
+      method: 'POST',
+      body,
+    });
+  }
+
+  async deleteTrail(id: string): Promise<void> {
+    await this.makeProtectedRequest(
+      `${apiEndpoint}/trails?id=${encodeURIComponent(id)}`,
+      {
+        method: 'DELETE',
+      },
+    );
+  }
+
+  async updateWebhook(
+    id: string,
+    body: {
+      name?: string;
+      description?: string;
+      trailId?: string;
+      method?: string;
+      url?: string;
+      enabled?: boolean;
+    },
+  ): Promise<Webhook> {
+    return await this.makeProtectedRequest(`${apiEndpoint}/webhooks?id=${id}`, {
+      method: 'PUT',
+      body,
+    });
+  }
+
+  async createWebhook(body: {
+    name: string;
+    description?: string;
+    regionId: string;
+    trailId?: string;
+    method: string;
+    url: string;
+    enabled: boolean;
+  }): Promise<Webhook> {
+    return await this.makeProtectedRequest(`${apiEndpoint}/webhooks`, {
+      method: 'POST',
+      body,
+    });
+  }
+
+  async deleteWebhook(id: string): Promise<void> {
+    await this.makeProtectedRequest(`${apiEndpoint}/webhooks?id=${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async runWebhook(id: string): Promise<Webhook> {
+    return await this.makeProtectedRequest(
+      `${apiEndpoint}/webhooks/run?id=${id}`,
+      {
+        method: 'POST',
+      },
+    );
   }
 
   async makeProtectedRequest(

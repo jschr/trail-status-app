@@ -61,13 +61,14 @@ export const handleRedirectCallback = async (
   };
 };
 
-interface User {
+export interface User {
   id: string;
   username: string;
 }
 
 export const getUser = async (accessToken: string): Promise<User> => {
   const userUrl = `${igGraphUrl}/me?fields=id,username&access_token=${accessToken}`;
+
   const userResp = await fetch(userUrl);
 
   if (!userResp.ok) {
@@ -81,19 +82,23 @@ export const getUser = async (accessToken: string): Promise<User> => {
   if (typeof userPayload.username !== 'string')
     throw new Error(`InstagramClient error getting user: Invalid username`);
 
-  return userPayload;
+  return {
+    id: userPayload.id,
+    username: userPayload.username,
+  };
 };
 
-interface UserMedia {
+export interface UserMedia {
   id: string;
   caption: string;
   mediaUrl: string;
+  timestamp: string;
 }
 
 export const getUserMedia = async (
   accessToken: string,
 ): Promise<UserMedia[]> => {
-  const userUrl = `${igGraphUrl}/me?fields=media,media.caption,media.media_url&access_token=${accessToken}`;
+  const userUrl = `${igGraphUrl}/me?fields=media,media.caption,media.media_url,media.timestamp&access_token=${accessToken}`;
   const userResp = await fetch(userUrl);
 
   if (!userResp.ok) {
@@ -108,10 +113,11 @@ export const getUserMedia = async (
     id: m.id,
     caption: m.caption,
     mediaUrl: m.media_url,
+    timestamp: m.timestamp,
   }));
 };
 
-interface Media {
+export interface Media {
   id: string;
   caption: string;
   mediaType: string;

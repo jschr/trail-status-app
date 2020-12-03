@@ -2,8 +2,15 @@ import { env } from '@trail-status-app/utilities';
 import jwt from 'jsonwebtoken';
 
 export enum Permissions {
-  SettingsRead = 'settings:read',
-  SettingsUpdate = 'settings:update',
+  RegionRead = 'region:read',
+  RegionUpdate = 'region:update',
+  TrailRead = 'trail:read',
+  TrailUpdate = 'trail:update',
+  TrailCreate = 'trail:create',
+  WebhookRead = 'webook:read',
+  WebhookCreate = 'webook:create',
+  WebhookUpdate = 'webook:update',
+  WebhookRun = 'webook:run',
   StatusRead = 'status:read',
   StatusUpdate = 'status:update',
 }
@@ -12,6 +19,7 @@ export interface DecodedToken {
   username: string;
   profilePictureUrl: string | null;
   permissions: string[];
+  regions: Array<{ id: string; name: string }>;
   iat: number;
   exp: number;
   aud: string;
@@ -30,14 +38,28 @@ if (env('API_SUBDOMAIN', false)) {
   apiDomain = `${env('API_SUBDOMAIN', false)}.${apiDomain}`;
 }
 
-export const createUserSession = (userId: string, username: string) => {
+export const createUserSession = (
+  userId: string,
+  username: string,
+  regions: Array<{ id: string; name: string }>,
+) => {
   return jwt.sign(
     {
       username,
+      regions: regions.map(r => ({
+        id: r.id,
+        name: r.name,
+      })),
       permissions: [
-        Permissions.SettingsRead,
-        Permissions.SettingsUpdate,
-        Permissions.StatusRead,
+        Permissions.RegionRead,
+        Permissions.RegionUpdate,
+        Permissions.TrailRead,
+        Permissions.TrailUpdate,
+        Permissions.TrailCreate,
+        Permissions.WebhookRead,
+        Permissions.WebhookUpdate,
+        Permissions.WebhookCreate,
+        Permissions.WebhookRun,
       ],
     },
     jwtSecret,
@@ -63,4 +85,11 @@ export const verify = (token: string): DecodedToken => {
     throw new Error('Invalid permissions');
   }
   return decodedToken;
+};
+
+export const canAccessRegion = (
+  decodedToken: DecodedToken,
+  regionId: string,
+) => {
+  return !!decodedToken.regions.find(r => r.id === regionId);
 };

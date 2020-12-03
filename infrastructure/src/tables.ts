@@ -4,37 +4,58 @@ import projectPrefix from './projectPrefix';
 export default {
   users: {
     name: projectPrefix('users'),
-    partitionKey: { name: 'userId', type: dynamodb.AttributeType.STRING },
+    partitionKey: { name: 'id', type: dynamodb.AttributeType.STRING },
   },
-  trailSettings: {
-    name: projectPrefix('trailSettings'),
-    partitionKey: { name: 'trailId', type: dynamodb.AttributeType.STRING },
+  regions: {
+    name: projectPrefix('regions'),
+    partitionKey: { name: 'id', type: dynamodb.AttributeType.STRING },
     indexes: {
-      trailSync: {
-        name: 'trailSync',
+      regionsByUser: {
+        name: 'regionsByUser',
         partitionKey: {
-          name: 'enableSync',
-          type: dynamodb.AttributeType.NUMBER,
+          name: 'userId',
+          type: dynamodb.AttributeType.STRING,
         },
         sortKey: {
-          name: 'syncPriority',
-          type: dynamodb.AttributeType.NUMBER,
+          name: 'createdAt',
+          type: dynamodb.AttributeType.STRING,
+        },
+      },
+    },
+  },
+  regionStatus: {
+    name: projectPrefix('regionStatus'),
+    partitionKey: { name: 'id', type: dynamodb.AttributeType.STRING },
+  },
+  trails: {
+    name: projectPrefix('trails'),
+    partitionKey: { name: 'id', type: dynamodb.AttributeType.STRING },
+    indexes: {
+      trailsByRegion: {
+        name: 'trailsByRegion',
+        partitionKey: {
+          name: 'regionId',
+          type: dynamodb.AttributeType.STRING,
+        },
+        sortKey: {
+          name: 'createdAt',
+          type: dynamodb.AttributeType.STRING,
         },
       },
     },
   },
   trailStatus: {
     name: projectPrefix('trailStatus'),
-    partitionKey: { name: 'trailId', type: dynamodb.AttributeType.STRING },
+    partitionKey: { name: 'id', type: dynamodb.AttributeType.STRING },
   },
   webhooks: {
-    name: projectPrefix('trailWebhooks'),
-    partitionKey: { name: 'webhookId', type: dynamodb.AttributeType.STRING },
+    name: projectPrefix('webhooks'),
+    partitionKey: { name: 'id', type: dynamodb.AttributeType.STRING },
     indexes: {
-      trailWebhooks: {
-        name: 'trailWebhooks',
+      webhooksByRegion: {
+        name: 'webhooksByRegion',
         partitionKey: {
-          name: 'trailId',
+          name: 'regionId',
           type: dynamodb.AttributeType.STRING,
         },
         sortKey: {

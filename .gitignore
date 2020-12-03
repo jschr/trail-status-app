@@ -19,3 +19,5 @@ cdk.out
 
 frontend/public/embed.js
 frontend/public/embed.css
+
+api/src/seed.ts

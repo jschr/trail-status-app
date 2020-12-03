@@ -5,13 +5,24 @@ import bodyParser from 'body-parser';
 import fs from 'fs';
 import path from 'path';
 import https from 'https';
+import getRegionStatus from '../handlers/getRegionStatus';
 import getTrailStatus from '../handlers/getTrailStatus';
+import getLegacyTrailStatus from '../handlers/getLegacyTrailStatus';
 import authorizeInstagram from '../handlers/authorizeInstagram';
 import authorizeInstagramCallback from '../handlers/authorizeInstagramCallback';
-import syncTrailStatus from '../handlers/syncTrailStatus';
-import getTrailSettings from '../handlers/getTrailSettings';
-import putTrailSettings from '../handlers/putTrailSettings';
+import putTrail from '../handlers/putTrail';
+import postTrail from '../handlers/postTrail';
+import deleteTrail from '../handlers/deleteTrail';
+import getRegion from '../handlers/getRegion';
+import putRegion from '../handlers/putRegion';
+import postWebhook from '../handlers/postWebhook';
+import postWebhookRun from '../handlers/postWebhookRun';
+import putWebhook from '../handlers/putWebhook';
+import deleteWebhook from '../handlers/deleteWebhook';
+import runSyncRegions from '../handlers/runSyncRegions';
 import runWebhooks from '../handlers/runWebhooks';
+import testWebhook from '../handlers/testWebhook';
+import scheduleSyncRegions from '../handlers/scheduleSyncRegions';
 import toExpressApiHandler from './toExpressApiHandler';
 import toExpressScheduledHandler from './toExpressScheduledHandler';
 import toExpressSQSHandler from './toExpressSQSHandler';
@@ -34,24 +45,53 @@ app.get(
   toExpressApiHandler(authorizeInstagramCallback),
 );
 
-app.get('/status', toExpressApiHandler(getTrailStatus));
+app.get('/regions', toExpressApiHandler(getRegion));
+app.put('/regions', toExpressApiHandler(putRegion));
+app.get('/regions/status', toExpressApiHandler(getRegionStatus));
 
-app.get('/settings', toExpressApiHandler(getTrailSettings));
-app.put('/settings', toExpressApiHandler(putTrailSettings));
+app.post('/trails', toExpressApiHandler(postTrail));
+app.put('/trails', toExpressApiHandler(putTrail));
+app.delete('/trails', toExpressApiHandler(deleteTrail));
+app.post('/trails/status', toExpressApiHandler(getTrailStatus));
 
-app.post('/sync-status', toExpressScheduledHandler(syncTrailStatus));
+app.post('/webhooks', toExpressApiHandler(postWebhook));
+app.put('/webhooks', toExpressApiHandler(putWebhook));
+app.delete('/webhooks', toExpressApiHandler(deleteWebhook));
+app.post('/webhooks/run', toExpressApiHandler(postWebhookRun));
+
+// TODO: Deprecate
+app.get('/status', toExpressApiHandler(getLegacyTrailStatus));
+
+app.post(
+  '/schedule-sync-regions',
+  toExpressScheduledHandler(scheduleSyncRegions),
+);
 
 // Example body:
 // {
 //   "Records": [
 //       {
-//           "groupId": "instagram|17841430372261684|default",
-//           "messageId": "b4c941b9-8aa8-40e1-91f4-90bf93bb93a9",
-//           "body": "{\"webhookId\": \"b4c941b9-8aa8-40e1-91f4-90bf93bb93a9\"}"
+//           "groupId": "[userId]>",
+//           "messageId": "[regionId]",
+//           "body": "{\"regionId\": \"[regionId]\"}"
+//       }
+//   ]
+// }
+app.post('/run-sync-regions', toExpressSQSHandler(runSyncRegions));
+
+// Example body:
+// {
+//   "Records": [
+//       {
+//           "groupId": "[regionId]",
+//           "messageId": "[webhookId]",
+//           "body": "{\"webhookId\": \"[webhookId]\"}"
 //       }
 //   ]
 // }
 app.post('/run-webhooks', toExpressSQSHandler(runWebhooks));
+
+app.post('/webhook-test', toExpressApiHandler(testWebhook));
 
 const port = env('API_PORT');
 server.listen(port, () => {

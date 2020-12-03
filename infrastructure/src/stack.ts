@@ -31,13 +31,31 @@ export default class extends cdk.Stack {
           : cdk.RemovalPolicy.RETAIN,
     });
 
-    // Trail settings table
-    const trailSettingsTable = new dynamodb.Table(
+    // Region table
+    const regionsTable = new dynamodb.Table(this, tables.regions.name, {
+      tableName: tables.regions.name,
+      partitionKey: tables.regions.partitionKey,
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      removalPolicy:
+        env('USER_RESOURCE_REMOVAL_POLICY') === 'destroy'
+          ? cdk.RemovalPolicy.DESTROY
+          : cdk.RemovalPolicy.RETAIN,
+    });
+
+    const regionsByUserIndex = tables.regions.indexes.regionsByUser;
+    regionsTable.addGlobalSecondaryIndex({
+      indexName: regionsByUserIndex.name,
+      partitionKey: regionsByUserIndex.partitionKey,
+      sortKey: regionsByUserIndex.sortKey,
+    });
+
+    // Region status table
+    const regionStatusTable = new dynamodb.Table(
       this,
-      tables.trailSettings.name,
+      tables.regionStatus.name,
       {
-        tableName: tables.trailSettings.name,
-        partitionKey: tables.trailSettings.partitionKey,
+        tableName: tables.regionStatus.name,
+        partitionKey: tables.regionStatus.partitionKey,
         billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
         removalPolicy:
           env('USER_RESOURCE_REMOVAL_POLICY') === 'destroy'
@@ -46,11 +64,22 @@ export default class extends cdk.Stack {
       },
     );
 
-    const trailSyncIndex = tables.trailSettings.indexes.trailSync;
-    trailSettingsTable.addGlobalSecondaryIndex({
-      indexName: trailSyncIndex.name,
-      partitionKey: trailSyncIndex.partitionKey,
-      sortKey: trailSyncIndex.sortKey,
+    // Trails table
+    const trailsTable = new dynamodb.Table(this, tables.trails.name, {
+      tableName: tables.trails.name,
+      partitionKey: tables.trails.partitionKey,
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      removalPolicy:
+        env('USER_RESOURCE_REMOVAL_POLICY') === 'destroy'
+          ? cdk.RemovalPolicy.DESTROY
+          : cdk.RemovalPolicy.RETAIN,
+    });
+
+    const trailsByRegionIndex = tables.trails.indexes.trailsByRegion;
+    trailsTable.addGlobalSecondaryIndex({
+      indexName: trailsByRegionIndex.name,
+      partitionKey: trailsByRegionIndex.partitionKey,
+      sortKey: trailsByRegionIndex.sortKey,
     });
 
     // Trail status table
@@ -65,7 +94,7 @@ export default class extends cdk.Stack {
     });
 
     // Webhooks table
-    const webhookTable = new dynamodb.Table(this, tables.webhooks.name, {
+    const webhooksTable = new dynamodb.Table(this, tables.webhooks.name, {
       tableName: tables.webhooks.name,
       partitionKey: tables.webhooks.partitionKey,
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
@@ -75,36 +104,78 @@ export default class extends cdk.Stack {
           : cdk.RemovalPolicy.RETAIN,
     });
 
-    const trailWebhooksIndex = tables.webhooks.indexes.trailWebhooks;
-    webhookTable.addGlobalSecondaryIndex({
-      indexName: trailWebhooksIndex.name,
-      partitionKey: trailWebhooksIndex.partitionKey,
-      sortKey: trailWebhooksIndex.sortKey,
+    const webhooksByRegionIndex = tables.webhooks.indexes.webhooksByRegion;
+    webhooksTable.addGlobalSecondaryIndex({
+      indexName: webhooksByRegionIndex.name,
+      partitionKey: webhooksByRegionIndex.partitionKey,
+      sortKey: webhooksByRegionIndex.sortKey,
     });
 
     // Queues
 
-    const webhookQueueDeadletter = new sqs.Queue(
+    // Sync regions
+
+    const runSyncRegionsDeadletter = new sqs.Queue(
       this,
-      projectPrefix('webhook-jobs-deadletter'),
+      projectPrefix('runSyncRegionsJobDeadletter'),
       {
         fifo: true,
-        queueName: projectPrefix('webhook-jobs-deadletter.fifo'),
+        queueName: projectPrefix('runSyncRegionsJobDeadletter.fifo'),
       },
     );
 
-    const webhookQueue = new sqs.Queue(this, projectPrefix('webhook-jobs'), {
-      fifo: true,
-      queueName: projectPrefix('webhook-jobs.fifo'),
-      contentBasedDeduplication: true,
-      // Set to vibility timeout to 6 times the runWebhooks lambda timeout
-      // https://docs.aws.amazon.com/lambda/latest/dg/with-sqs.html#events-sqs-queueconfig
-      visibilityTimeout: cdk.Duration.seconds(6 * 15),
-      deadLetterQueue: {
-        queue: webhookQueueDeadletter,
-        maxReceiveCount: 10,
+    // Set to vibility timeout to 6 times the runWebhooks lambda timeout
+    // https://docs.aws.amazon.com/lambda/latest/dg/with-sqs.html#events-sqs-queueconfig
+    const runSyncRegionsHandlerTimeout = 15;
+    const runSyncRegionsQueue = new sqs.Queue(
+      this,
+      projectPrefix('runSyncRegionsJob'),
+      {
+        fifo: true,
+        queueName: projectPrefix('runSyncRegionsJob.fifo'),
+        contentBasedDeduplication: true,
+        deliveryDelay: cdk.Duration.seconds(30),
+        // Set to vibility timeout to 6 times the runWebhooks lambda timeout
+        // https://docs.aws.amazon.com/lambda/latest/dg/with-sqs.html#events-sqs-queueconfig
+        visibilityTimeout: cdk.Duration.seconds(
+          6 * runSyncRegionsHandlerTimeout,
+        ),
+        deadLetterQueue: {
+          queue: runSyncRegionsDeadletter,
+          maxReceiveCount: 10,
+        },
       },
-    });
+    );
+
+    // Trail webhooks
+
+    const runWebhooksDeadletter = new sqs.Queue(
+      this,
+      projectPrefix('runWebhooksJobDeadletter'),
+      {
+        fifo: true,
+        queueName: projectPrefix('runWebhooksJobDeadletter.fifo'),
+      },
+    );
+
+    // Set to vibility timeout to 6 times the runWebhooks lambda timeout
+    // https://docs.aws.amazon.com/lambda/latest/dg/with-sqs.html#events-sqs-queueconfig
+    const runWebhooksHandlerTimeout = 15;
+    const runWebhooksQueue = new sqs.Queue(
+      this,
+      projectPrefix('runWebhooksJob'),
+      {
+        fifo: true,
+        queueName: projectPrefix('runWebhooksJob.fifo'),
+        contentBasedDeduplication: true,
+        deliveryDelay: cdk.Duration.seconds(30),
+        visibilityTimeout: cdk.Duration.seconds(6 * runWebhooksHandlerTimeout),
+        deadLetterQueue: {
+          queue: runWebhooksDeadletter,
+          maxReceiveCount: 10,
+        },
+      },
+    );
 
     // API
     const hostedZone = route53.HostedZone.fromHostedZoneAttributes(
@@ -138,7 +209,7 @@ export default class extends cdk.Stack {
       recordName: env('API_SUBDOMAIN'),
     });
 
-    const apiEnvVars = {
+    const envVars = {
       PROJECT: env('PROJECT'),
       DYNAMO_ENDPOINT: env('DYNAMO_ENDPOINT'),
       API_ENDPOINT: env('API_ENDPOINT'),
@@ -149,14 +220,194 @@ export default class extends cdk.Stack {
       JWT_SECRET: env('JWT_SECRET'),
       JWT_EXPIRES_IN: env('JWT_EXPIRES_IN'),
       FRONTEND_ENDPOINT: env('FRONTEND_ENDPOINT'),
-      WEBHOOK_QUEUE_URL: webhookQueue.queueUrl,
+      RUN_SYNC_REGIONS_QUEUE_URL: runSyncRegionsQueue.queueUrl,
+      RUN_WEBHOOKS_QUEUE_URL: runWebhooksQueue.queueUrl,
     };
 
-    // /status
-    const trailStatusApi = api.root.addResource('status');
+    // /regions
+    const regionsApi = api.root.addResource('regions');
+    regionsApi.addCorsPreflight({ allowOrigins: ['*'] });
+
+    // GET /regions
+    const getRegionHandler = new lambda.Function(
+      this,
+      projectPrefix('getRegion'),
+      {
+        functionName: projectPrefix('getRegion'),
+        runtime: lambda.Runtime.NODEJS_12_X,
+        code: lambda.Code.fromAsset(packagePath),
+        handler: 'api/build/src/handlers/getRegion.default',
+        environment: envVars,
+        timeout: cdk.Duration.seconds(10),
+        memorySize: 512,
+      },
+    );
+
+    const getRegionIntegration = new apigateway.LambdaIntegration(
+      getRegionHandler,
+    );
+
+    regionsApi.addMethod('GET', getRegionIntegration);
+    regionsTable.grantReadData(getRegionHandler);
+    trailsTable.grantReadData(getRegionHandler);
+    webhooksTable.grantReadData(getRegionHandler);
+    userTable.grantReadData(getRegionHandler);
+
+    // PUT /regions
+    const putRegionHandler = new lambda.Function(
+      this,
+      projectPrefix('putRegion'),
+      {
+        functionName: projectPrefix('putRegion'),
+        runtime: lambda.Runtime.NODEJS_12_X,
+        code: lambda.Code.fromAsset(packagePath),
+        handler: 'api/build/src/handlers/putRegion.default',
+        environment: envVars,
+        timeout: cdk.Duration.seconds(10),
+        memorySize: 512,
+      },
+    );
+
+    const putRegionIntegration = new apigateway.LambdaIntegration(
+      putRegionHandler,
+    );
+
+    regionsApi.addMethod('PUT', putRegionIntegration);
+    regionsTable.grantReadWriteData(putRegionHandler);
+
+    // /regions/status
+    const regionStatusApi = regionsApi.addResource('status');
+    regionStatusApi.addCorsPreflight({ allowOrigins: ['*'] });
+
+    // GET /regions/status
+    const getRegionStatusHandler = new lambda.Function(
+      this,
+      projectPrefix('getRegionStatus'),
+      {
+        functionName: projectPrefix('getRegionStatus'),
+        runtime: lambda.Runtime.NODEJS_12_X,
+        code: lambda.Code.fromAsset(packagePath),
+        handler: 'api/build/src/handlers/getRegionStatus.default',
+        environment: envVars,
+        timeout: cdk.Duration.seconds(10),
+        memorySize: 512,
+      },
+    );
+
+    const getRegionStatusIntegration = new apigateway.LambdaIntegration(
+      getRegionStatusHandler,
+    );
+
+    regionStatusApi.addMethod('GET', getRegionStatusIntegration);
+    regionsTable.grantReadData(getRegionStatusHandler);
+    regionStatusTable.grantReadData(getRegionStatusHandler);
+    trailsTable.grantReadData(getRegionStatusHandler);
+    trailStatusTable.grantReadData(getRegionStatusHandler);
+    userTable.grantReadData(getRegionStatusHandler);
+
+    // /trails
+    const trailsApi = api.root.addResource('trails');
+    trailsApi.addCorsPreflight({ allowOrigins: ['*'] });
+
+    // GET /trails
+    const getTrailsHandler = new lambda.Function(
+      this,
+      projectPrefix('getTrails'),
+      {
+        functionName: projectPrefix('getTrails'),
+        runtime: lambda.Runtime.NODEJS_12_X,
+        code: lambda.Code.fromAsset(packagePath),
+        handler: 'api/build/src/handlers/getTrails.default',
+        environment: envVars,
+        timeout: cdk.Duration.seconds(10),
+        memorySize: 512,
+      },
+    );
+
+    const getTrailsIntegration = new apigateway.LambdaIntegration(
+      getTrailsHandler,
+    );
+
+    trailsApi.addMethod('GET', getTrailsIntegration);
+    trailsTable.grantReadData(getTrailsHandler);
+
+    // POST /trails
+    const postTrailHandler = new lambda.Function(
+      this,
+      projectPrefix('postTrail'),
+      {
+        functionName: projectPrefix('postTrail'),
+        runtime: lambda.Runtime.NODEJS_12_X,
+        code: lambda.Code.fromAsset(packagePath),
+        handler: 'api/build/src/handlers/postTrail.default',
+        environment: envVars,
+        timeout: cdk.Duration.seconds(10),
+        memorySize: 512,
+      },
+    );
+
+    const postTrailIntegration = new apigateway.LambdaIntegration(
+      postTrailHandler,
+    );
+
+    trailsApi.addMethod('POST', postTrailIntegration);
+    trailsTable.grantReadWriteData(postTrailHandler);
+    regionStatusTable.grantReadData(postTrailHandler);
+    trailStatusTable.grantReadWriteData(postTrailHandler);
+    regionsTable.grantReadWriteData(postTrailHandler);
+
+    // PUT /trails
+    const putTrailHandler = new lambda.Function(
+      this,
+      projectPrefix('putTrail'),
+      {
+        functionName: projectPrefix('putTrail'),
+        runtime: lambda.Runtime.NODEJS_12_X,
+        code: lambda.Code.fromAsset(packagePath),
+        handler: 'api/build/src/handlers/putTrail.default',
+        environment: envVars,
+        timeout: cdk.Duration.seconds(10),
+        memorySize: 512,
+      },
+    );
+
+    const putTrailIntegration = new apigateway.LambdaIntegration(
+      putTrailHandler,
+    );
+
+    trailsApi.addMethod('PUT', putTrailIntegration);
+    trailsTable.grantReadWriteData(putTrailHandler);
+    regionsTable.grantReadWriteData(putTrailHandler);
+
+    // DELETE /trails
+    const deleteTrailHandler = new lambda.Function(
+      this,
+      projectPrefix('deleteTrail'),
+      {
+        functionName: projectPrefix('deleteTrail'),
+        runtime: lambda.Runtime.NODEJS_12_X,
+        code: lambda.Code.fromAsset(packagePath),
+        handler: 'api/build/src/handlers/deleteTrail.default',
+        environment: envVars,
+        timeout: cdk.Duration.seconds(10),
+        memorySize: 512,
+      },
+    );
+
+    const deleteTrailIntegration = new apigateway.LambdaIntegration(
+      deleteTrailHandler,
+    );
+
+    trailsApi.addMethod('DELETE', deleteTrailIntegration);
+    trailsTable.grantReadWriteData(deleteTrailHandler);
+    trailStatusTable.grantReadWriteData(deleteTrailHandler);
+    regionsTable.grantReadWriteData(deleteTrailHandler);
+
+    // /trails/status
+    const trailStatusApi = trailsApi.addResource('status');
     trailStatusApi.addCorsPreflight({ allowOrigins: ['*'] });
 
-    // GET /status
+    // GET /trails/status
     const getTrailStatusHandler = new lambda.Function(
       this,
       projectPrefix('getTrailStatus'),
@@ -165,7 +416,7 @@ export default class extends cdk.Stack {
         runtime: lambda.Runtime.NODEJS_12_X,
         code: lambda.Code.fromAsset(packagePath),
         handler: 'api/build/src/handlers/getTrailStatus.default',
-        environment: apiEnvVars,
+        environment: envVars,
         timeout: cdk.Duration.seconds(10),
         memorySize: 512,
       },
@@ -176,57 +427,40 @@ export default class extends cdk.Stack {
     );
 
     trailStatusApi.addMethod('GET', getTrailStatusIntegration);
-    trailStatusTable.grantReadData(getTrailStatusHandler);
-    trailSettingsTable.grantReadData(getTrailStatusHandler);
+    regionsTable.grantReadData(getTrailStatusHandler);
+    trailsTable.grantReadData(getTrailStatusHandler);
     userTable.grantReadData(getTrailStatusHandler);
 
-    // /settings
-    const trailSettingsApi = api.root.addResource('settings');
-    trailSettingsApi.addCorsPreflight({ allowOrigins: ['*'] });
+    // TODO: Legacy, remove when devices use new api
+    // /status
+    const legacyTrailStatusApi = api.root.addResource('status');
+    legacyTrailStatusApi.addCorsPreflight({ allowOrigins: ['*'] });
 
-    // GET /settings
-    const getTrailSettingsHandler = new lambda.Function(
+    // GET /status
+    const getLegacyTrailStatusHandler = new lambda.Function(
       this,
-      projectPrefix('getTrailSettings'),
+      projectPrefix('getLegacyTrailStatus'),
       {
-        functionName: projectPrefix('getTrailSettings'),
+        functionName: projectPrefix('getLegacyTrailStatus'),
         runtime: lambda.Runtime.NODEJS_12_X,
         code: lambda.Code.fromAsset(packagePath),
-        handler: 'api/build/src/handlers/getTrailSettings.default',
-        environment: apiEnvVars,
+        handler: 'api/build/src/handlers/getLegacyTrailStatus.default',
+        environment: envVars,
         timeout: cdk.Duration.seconds(10),
         memorySize: 512,
       },
     );
 
-    const getTrailSettingsIntegration = new apigateway.LambdaIntegration(
-      getTrailSettingsHandler,
+    const getLegacyTrailStatusIntegration = new apigateway.LambdaIntegration(
+      getLegacyTrailStatusHandler,
     );
 
-    trailSettingsApi.addMethod('GET', getTrailSettingsIntegration);
-    trailSettingsTable.grantReadData(getTrailSettingsHandler);
-
-    // PUT /settings
-    const putTrailSettingsHandler = new lambda.Function(
-      this,
-      projectPrefix('putTrailSettings'),
-      {
-        functionName: projectPrefix('putTrailSettings'),
-        runtime: lambda.Runtime.NODEJS_12_X,
-        code: lambda.Code.fromAsset(packagePath),
-        handler: 'api/build/src/handlers/putTrailSettings.default',
-        environment: apiEnvVars,
-        timeout: cdk.Duration.seconds(10),
-        memorySize: 512,
-      },
-    );
-
-    const putTrailSettingsIntegration = new apigateway.LambdaIntegration(
-      putTrailSettingsHandler,
-    );
-
-    trailSettingsApi.addMethod('PUT', putTrailSettingsIntegration);
-    trailSettingsTable.grantReadWriteData(putTrailSettingsHandler);
+    legacyTrailStatusApi.addMethod('GET', getLegacyTrailStatusIntegration);
+    trailStatusTable.grantReadData(getLegacyTrailStatusHandler);
+    trailsTable.grantReadData(getLegacyTrailStatusHandler);
+    userTable.grantReadData(getLegacyTrailStatusHandler);
+    regionStatusTable.grantReadData(getLegacyTrailStatusHandler);
+    regionsTable.grantReadData(getLegacyTrailStatusHandler);
 
     // instagram
     const instagramApi = api.root.addResource('instagram');
@@ -244,7 +478,7 @@ export default class extends cdk.Stack {
         runtime: lambda.Runtime.NODEJS_12_X,
         code: lambda.Code.fromAsset(packagePath),
         handler: 'api/build/src/handlers/authorizeInstagram.default',
-        environment: apiEnvVars,
+        environment: envVars,
         timeout: cdk.Duration.seconds(10),
         memorySize: 512,
       },
@@ -265,7 +499,7 @@ export default class extends cdk.Stack {
         runtime: lambda.Runtime.NODEJS_12_X,
         code: lambda.Code.fromAsset(packagePath),
         handler: 'api/build/src/handlers/authorizeInstagramCallback.default',
-        environment: apiEnvVars,
+        environment: envVars,
         timeout: cdk.Duration.seconds(10),
         memorySize: 512,
       },
@@ -280,12 +514,119 @@ export default class extends cdk.Stack {
       authorizeInstagramCallbackIntegration,
     );
     userTable.grantReadWriteData(authorizeInstagramCallbackHandler);
-    trailSettingsTable.grantReadWriteData(authorizeInstagramCallbackHandler);
+    regionsTable.grantReadWriteData(authorizeInstagramCallbackHandler);
+    trailsTable.grantReadWriteData(authorizeInstagramCallbackHandler);
+
+    // webhook
+    const webhooksApi = api.root.addResource('webhooks');
+    webhooksApi.addCorsPreflight({ allowOrigins: ['*'] });
+
+    // POST /webhooks
+    const postWebhook = new lambda.Function(
+      this,
+      projectPrefix('postWebhook'),
+      {
+        functionName: projectPrefix('postWebhook'),
+        runtime: lambda.Runtime.NODEJS_12_X,
+        code: lambda.Code.fromAsset(packagePath),
+        handler: 'api/build/src/handlers/postWebhook.default',
+        environment: envVars,
+        timeout: cdk.Duration.seconds(10),
+        memorySize: 512,
+      },
+    );
+
+    const postWebhookIntegration = new apigateway.LambdaIntegration(
+      postWebhook,
+    );
+
+    webhooksApi.addMethod('POST', postWebhookIntegration);
+    webhooksTable.grantReadWriteData(postWebhook);
+    regionsTable.grantReadData(postWebhook);
+    trailsTable.grantReadData(postWebhook);
+
+    // PUT /webhooks
+    const putWebhookHandler = new lambda.Function(
+      this,
+      projectPrefix('putWebhook'),
+      {
+        functionName: projectPrefix('putWebhook'),
+        runtime: lambda.Runtime.NODEJS_12_X,
+        code: lambda.Code.fromAsset(packagePath),
+        handler: 'api/build/src/handlers/putWebhook.default',
+        environment: envVars,
+        timeout: cdk.Duration.seconds(10),
+        memorySize: 512,
+      },
+    );
+
+    const putWebhookIntegration = new apigateway.LambdaIntegration(
+      putWebhookHandler,
+    );
+
+    webhooksApi.addMethod('PUT', putWebhookIntegration);
+    webhooksTable.grantReadWriteData(putWebhookHandler);
+    regionsTable.grantReadData(putWebhookHandler);
+    trailsTable.grantReadData(putWebhookHandler);
+
+    // DELETE /trails
+    const deleteWebhookHandler = new lambda.Function(
+      this,
+      projectPrefix('deleteWebhook'),
+      {
+        functionName: projectPrefix('deleteWebhook'),
+        runtime: lambda.Runtime.NODEJS_12_X,
+        code: lambda.Code.fromAsset(packagePath),
+        handler: 'api/build/src/handlers/deleteWebhook.default',
+        environment: envVars,
+        timeout: cdk.Duration.seconds(10),
+        memorySize: 512,
+      },
+    );
+
+    const deleteWebhookIntegration = new apigateway.LambdaIntegration(
+      deleteWebhookHandler,
+    );
+
+    webhooksApi.addMethod('DELETE', deleteWebhookIntegration);
+    webhooksTable.grantReadWriteData(deleteWebhookHandler);
+    regionsTable.grantReadData(deleteWebhookHandler);
+    trailsTable.grantReadData(deleteWebhookHandler);
+
+    // webhook/run
+    const wehooksRunApi = webhooksApi.addResource('run');
+    wehooksRunApi.addCorsPreflight({ allowOrigins: ['*'] });
+
+    // POST /webhooks
+    const postWebhookRunHandler = new lambda.Function(
+      this,
+      projectPrefix('postWebhookRun'),
+      {
+        functionName: projectPrefix('postWebhookRun'),
+        runtime: lambda.Runtime.NODEJS_12_X,
+        code: lambda.Code.fromAsset(packagePath),
+        handler: 'api/build/src/handlers/postWebhookRun.default',
+        environment: envVars,
+        timeout: cdk.Duration.seconds(10),
+        memorySize: 512,
+      },
+    );
+
+    const postWebhookRunIntegration = new apigateway.LambdaIntegration(
+      postWebhookRunHandler,
+    );
+
+    wehooksRunApi.addMethod('POST', postWebhookRunIntegration);
+    webhooksTable.grantReadWriteData(postWebhookRunHandler);
+    regionsTable.grantReadData(postWebhookRunHandler);
+    regionStatusTable.grantReadData(postWebhookRunHandler);
+    trailStatusTable.grantReadData(postWebhookRunHandler);
+    trailsTable.grantReadData(postWebhookRunHandler);
 
     // Test webhook
     const webhookTestApi = api.root.addResource('webhook-test');
 
-    // POST /webhook-test
+    // POST and GET /webhook-test
     const testWebhookHandler = new lambda.Function(
       this,
       projectPrefix('testWebhook'),
@@ -294,7 +635,7 @@ export default class extends cdk.Stack {
         runtime: lambda.Runtime.NODEJS_12_X,
         code: lambda.Code.fromAsset(packagePath),
         handler: 'api/build/src/handlers/testWebhook.default',
-        environment: apiEnvVars,
+        environment: envVars,
         timeout: cdk.Duration.seconds(10),
         memorySize: 512,
       },
@@ -305,48 +646,80 @@ export default class extends cdk.Stack {
     );
 
     webhookTestApi.addMethod('POST', testWebhookIntegration);
+    webhookTestApi.addMethod('GET', testWebhookIntegration);
 
     // Schedules
 
-    // Sync trail status
+    // Sync regions
 
-    const syncTrailStatusRule = new events.Rule(
+    const scheduleSyncRegionsRule = new events.Rule(
       this,
-      projectPrefix('syncTrailStatusRule'),
+      projectPrefix('scheduleSyncRegionsRule'),
       {
         schedule: events.Schedule.rate(cdk.Duration.minutes(2)),
       },
     );
 
-    const syncTrailStatusHandler = new lambda.Function(
+    const scheduleSyncRegionsHandler = new lambda.Function(
       this,
-      projectPrefix('syncTrailStatus'),
+      projectPrefix('scheduleSyncRegions'),
       {
-        functionName: projectPrefix('syncTrailStatus'),
+        functionName: projectPrefix('scheduleSyncRegions'),
         runtime: lambda.Runtime.NODEJS_12_X,
         code: lambda.Code.fromAsset(packagePath),
-        handler: 'api/build/src/handlers/syncTrailStatus.default',
-        environment: apiEnvVars,
-        timeout: cdk.Duration.seconds(20),
-        memorySize: 1024,
+        handler: 'api/build/src/handlers/scheduleSyncRegions.default',
+        environment: envVars,
+        timeout: cdk.Duration.seconds(10),
+        memorySize: 512,
       },
     );
 
-    trailStatusTable.grantReadWriteData(syncTrailStatusHandler);
-    trailSettingsTable.grantReadWriteData(syncTrailStatusHandler);
-    userTable.grantReadWriteData(syncTrailStatusHandler);
-    webhookTable.grantReadWriteData(syncTrailStatusHandler);
-    webhookQueue.grantSendMessages(syncTrailStatusHandler);
+    regionsTable.grantReadData(scheduleSyncRegionsHandler);
+    runSyncRegionsQueue.grantSendMessages(scheduleSyncRegionsHandler);
 
-    syncTrailStatusRule.addTarget(
-      new eventTargets.LambdaFunction(syncTrailStatusHandler),
+    scheduleSyncRegionsRule.addTarget(
+      new eventTargets.LambdaFunction(scheduleSyncRegionsHandler),
     );
 
     // Jobs
 
+    // Sync regions
+
+    const runSyncRegionsQueueEventSource = new SqsEventSource(
+      runSyncRegionsQueue,
+      {
+        // Set batch size to one. The runSyncRegions handler will be called for each region
+        // to allow re-trying each individual one if one fails rather than the entire batch.
+        batchSize: 1,
+      },
+    );
+
+    const runSyncRegionsHandler = new lambda.Function(
+      this,
+      projectPrefix('runSyncRegions'),
+      {
+        functionName: projectPrefix('runSyncRegions'),
+        runtime: lambda.Runtime.NODEJS_12_X,
+        code: lambda.Code.fromAsset(packagePath),
+        handler: 'api/build/src/handlers/runSyncRegions.default',
+        environment: envVars,
+        timeout: cdk.Duration.seconds(runSyncRegionsHandlerTimeout),
+        memorySize: 1024,
+      },
+    );
+
+    runSyncRegionsHandler.addEventSource(runSyncRegionsQueueEventSource);
+    regionsTable.grantReadData(runSyncRegionsHandler);
+    trailsTable.grantReadData(runSyncRegionsHandler);
+    regionStatusTable.grantReadWriteData(runSyncRegionsHandler);
+    trailStatusTable.grantReadWriteData(runSyncRegionsHandler);
+    webhooksTable.grantReadData(runSyncRegionsHandler);
+    userTable.grantReadWriteData(runSyncRegionsHandler);
+    runWebhooksQueue.grantSendMessages(runSyncRegionsHandler);
+
     // Run webhooks
 
-    const webhookQueueEventSource = new SqsEventSource(webhookQueue, {
+    const runWebhooksQueueEventSource = new SqsEventSource(runWebhooksQueue, {
       // Set batch size to one. The runWebhooks handler will be called for each webhook
       // to allow re-trying each individual one if one fails rather than the entire batch.
       batchSize: 1,
@@ -360,14 +733,17 @@ export default class extends cdk.Stack {
         runtime: lambda.Runtime.NODEJS_12_X,
         code: lambda.Code.fromAsset(packagePath),
         handler: 'api/build/src/handlers/runWebhooks.default',
-        environment: apiEnvVars,
-        timeout: cdk.Duration.seconds(15),
-        memorySize: 512,
+        environment: envVars,
+        timeout: cdk.Duration.seconds(runSyncRegionsHandlerTimeout),
+        memorySize: 1024,
       },
     );
 
-    runWebhooksHandler.addEventSource(webhookQueueEventSource);
-    webhookTable.grantReadWriteData(runWebhooksHandler);
+    runWebhooksHandler.addEventSource(runWebhooksQueueEventSource);
+    webhooksTable.grantReadWriteData(runWebhooksHandler);
+    regionsTable.grantReadData(runWebhooksHandler);
+    regionStatusTable.grantReadData(runWebhooksHandler);
     trailStatusTable.grantReadData(runWebhooksHandler);
+    trailsTable.grantReadData(runWebhooksHandler);
   }
 }

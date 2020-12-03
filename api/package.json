@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "ts-node-dev --no-notify src/server/index.ts",
     "build": "tsc -b",
-    "lint": "eslint -c ./.eslintrc src/**/*.ts"
+    "lint": "eslint -c ./.eslintrc src/**/*.ts",
+    "seed": "ts-node src/seed.ts"
   },
   "dependencies": {
     "@trail-status-app/infrastructure": "",
@@ -15,7 +16,9 @@
     "jsonwebtoken": "^8.5.1",
     "node-fetch": "^2.6.0",
     "oauth": "^0.9.15",
+    "pupa": "^2.1.1",
     "query-string": "^6.11.0",
+    "traverse": "^0.6.6",
     "uuid": "^3.4.0"
   },
   "devDependencies": {
@@ -25,6 +28,7 @@
     "@types/jsonwebtoken": "^8.3.7",
     "@types/node-fetch": "^2.5.4",
     "@types/oauth": "^0.9.1",
+    "@types/traverse": "^0.6.32",
     "aws-sdk": "^2.614.0",
     "body-parser": "^1.19.0",
     "deepmerge": "^3.2.0",

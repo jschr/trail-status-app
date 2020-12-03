@@ -1,7 +1,7 @@
 import React from 'react';
 import Container from '../components/Container';
 
-const TermsOfService: React.FunctionComponent = () => {
+const TermsOfService = () => {
   return (
     <Container maxWidth="md">
       <h2>

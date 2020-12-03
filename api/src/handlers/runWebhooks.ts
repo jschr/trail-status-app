@@ -1,7 +1,7 @@
-import fetch from 'node-fetch';
 import withSQSHandler from '../withSQSHandler';
 import WebhookModel from '../models/WebhookModel';
-import TrailStatusModel from '../models/TrailStatusModel';
+import buildRegionStatus, { RegionStatus } from '../buildRegionStatus';
+import runWebhook from '../runWebhook';
 
 export default withSQSHandler(async event => {
   if (!Array.isArray(event?.Records) || !event.Records.length) {
@@ -9,9 +9,9 @@ export default withSQSHandler(async event => {
     return;
   }
 
-  // Messages should be grouped by trail id so cache the trail status to
-  // avoid unecessary db lookups while processing the webhooks for a trail.
-  const getTrailStatus = createTrailStatusCache();
+  // Messages should be grouped by region id so cache the region status to
+  // avoid unecessary lookups while processing the webhooks for a region.
+  const getRegionStatus = createRegionStatusCache();
 
   for (const message of event.Records) {
     let webhookId: string | null = null;
@@ -32,51 +32,58 @@ export default withSQSHandler(async event => {
       continue;
     }
 
-    const trailStatus = await getTrailStatus(webhook.trailId);
-    if (!trailStatus) {
-      console.error(`Failed to find trail for '${webhook.trailId}'`);
+    if (!webhook.enabled) {
+      console.info(
+        `Webhook '${webhookId}' region '${webhook.regionId}' is not enabled, skipping.`,
+      );
       continue;
     }
 
-    const res = await fetch(`${webhook.url}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(trailStatus),
-    });
-
-    // If the webhook fails throw an error. This triggers the message batch to be retried.
-    // There should only be one message per batch but this handles multiple. If multiple
-    // messages are sent in the batch and one fails, the entire batch is re-tried. Webhooks
-    // should not expect to messages to be delivered only once.
-    if (!res.ok) {
-      const errorMessage = `Failed to process webhook '${webhookId}', invalid response '${res.status}' from '${webhook.url}'`;
-      await webhook.save({
-        lastRanAt: new Date().toISOString(),
-        error: errorMessage,
-      });
-
-      throw new Error(errorMessage);
+    const regionStatus = await getRegionStatus(webhook.regionId);
+    if (!regionStatus) {
+      console.warn(
+        `Failed to find region status for '${webhook.regionId}' region '${webhook.regionId}'`,
+      );
+      continue;
     }
 
-    await webhook.save({
-      lastRanAt: new Date().toISOString(),
-      error: '',
-    });
+    try {
+      const [status, url] = await runWebhook(webhook, regionStatus);
 
-    console.info(
-      `Successfully ran webhook '${webhookId}', received status '${res.status}' from '${webhook.url}'`,
-    );
+      await webhook.save({
+        lastRanAt: new Date().toISOString(),
+        error: '',
+      });
+
+      console.info(
+        `Successfully ran webhook '${webhookId}' region '${webhook.regionId}', received status '${status}' from '${url}'`,
+      );
+    } catch (err) {
+      await webhook.save({
+        lastRanAt: new Date().toISOString(),
+        error: err.message,
+      });
+
+      // If the webhook fails throw an error. This triggers the message batch to be retried.
+      // There should only be one message per batch but this handles multiple. If multiple
+      // messages are sent in the batch and one fails, the entire batch is re-tried. Webhooks
+      // should not expect to messages to be delivered only once.
+      throw new Error(
+        `Failed to process webhook '${webhook.id}' region '${webhook.regionId}', ${err.message}`,
+      );
+    }
   }
 });
 
-const createTrailStatusCache = () => {
-  const cache: Record<string, TrailStatusModel | null> = {};
-  return async (trailId: string) => {
-    if (trailId in cache) {
-      return cache[trailId];
+const createRegionStatusCache = () => {
+  const cache: Record<string, RegionStatus | null> = {};
+
+  return async (regionId: string) => {
+    if (regionId in cache) {
+      return cache[regionId];
     }
-    const result = await TrailStatusModel.get(trailId);
-    cache[trailId] = result;
+    const result = await buildRegionStatus(regionId);
+    cache[regionId] = result;
     return result;
   };
 };

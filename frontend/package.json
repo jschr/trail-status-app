@@ -9,17 +9,20 @@
     "eject": "react-scripts eject"
   },
   "dependencies": {
-    "@trail-status-app/embed": "",
     "@material-ui/core": "^4.9.4",
     "@material-ui/icons": "^4.9.1",
     "@material-ui/lab": "^4.0.0-alpha.44",
     "@material-ui/styles": "^4.9.0",
+    "@trail-status-app/embed": "",
     "@trail-status-app/utilities": "",
     "jwt-decode": "^2.2.0",
     "nprogress": "^0.2.0",
     "react": "^16.12.0",
     "react-dom": "^16.12.0",
-    "react-router-dom": "^5.1.2"
+    "react-hook-form": "^6.11.5",
+    "react-query": "^2.26.3",
+    "react-router-dom": "^5.2.0",
+    "timeago.js": "^4.0.2"
   },
   "devDependencies": {
     "@types/react": "^16.9.0",

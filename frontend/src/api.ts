@@ -3,6 +3,8 @@ import nprogress from 'nprogress';
 import ApiClient from './clients/ApiClient';
 import history from './history';
 
+export * from './clients/ApiClient';
+
 let accessToken: string | null = null;
 
 nprogress.configure({ showSpinner: false });
@@ -20,7 +22,7 @@ if (typeof querystring.sessionToken === 'string') {
 }
 
 let requests = 0;
-
+let doneTimeout: ReturnType<typeof setTimeout>;
 export default new ApiClient({
   accessToken,
   onUnauthorized: () => history.push('/login'),
@@ -30,6 +32,13 @@ export default new ApiClient({
   },
   onRequestEnd: () => {
     requests -= 1;
-    if (!requests) nprogress.done();
+
+    if (doneTimeout) {
+      clearTimeout(doneTimeout);
+    }
+
+    setTimeout(() => {
+      if (!requests) nprogress.done();
+    }, 50);
   },
 });

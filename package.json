@@ -20,6 +20,8 @@
     "deploy:dev": "dotenv -e .env -e .env.dev yarn infrastructure deploy",
     "build:production": "dotenv -e .env -e .env.production -- wsrun --exclude-missing --stages build",
     "deploy:production": "dotenv -e .env -e .env.production yarn infrastructure deploy",
+    "seed:dev": "dotenv -e .env -e .env.dev yarn api seed",
+    "seed:production": "dotenv -e .env -e .env.production yarn api seed",
     "--- workspaces ---": "",
     "api": "yarn workspace @trail-status-app/api",
     "embed": "yarn workspace @trail-status-app/embed",

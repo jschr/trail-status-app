@@ -3,21 +3,27 @@ import tables from '@trail-status-app/infrastructure/build/src/tables';
 import dynamodb from './dynamodb';
 
 export interface Webhook {
-  webhookId: string;
-  trailId: string;
+  id: string;
+  regionId: string;
+  trailId?: string;
   runPriority: number;
   name: string;
+  description?: string;
+  method: string;
   url: string;
+  enabled: boolean;
   lastRanAt: string;
   error: string;
+  updatedAt: string;
+  createdAt: string;
 }
 
 export default class WebhookModel {
-  public static async get(webhookId: string): Promise<WebhookModel | null> {
+  public static async get(id: string): Promise<WebhookModel | null> {
     try {
       const params: AWS.DynamoDB.GetItemInput = {
         TableName: tables.webhooks.name,
-        Key: this.toAttributeMap({ webhookId }),
+        Key: this.toAttributeMap({ id }),
       };
       const res = await dynamodb.getItem(params).promise();
       if (!res.Item) return null;
@@ -25,17 +31,17 @@ export default class WebhookModel {
       return new WebhookModel(this.fromAttributeMap(res.Item));
     } catch (err) {
       throw new Error(
-        `WebhookModel.get for webhookId '${webhookId}' failed with '${err.message}'`,
+        `WebhookModel.get for id '${id}' failed with '${err.message}'`,
       );
     }
   }
 
   public static async batchGet(
     items: Array<{
-      webhookId: string;
+      id: string;
     }>,
   ): Promise<Array<WebhookModel | null>> {
-    const requestKeys = items.filter(i => i.webhookId).map(this.toAttributeMap);
+    const requestKeys = items.filter(i => i.id).map(this.toAttributeMap);
     if (requestKeys.length === 0) return [];
 
     const params: AWS.DynamoDB.BatchGetItemInput = {
@@ -62,8 +68,7 @@ export default class WebhookModel {
       );
 
       return items.map(
-        item =>
-          WebhookModels.find(wm => wm.webhookId === item.webhookId) ?? null,
+        item => WebhookModels.find(wm => wm.id === item.id) ?? null,
       );
     } catch (err) {
       throw new Error(
@@ -74,41 +79,68 @@ export default class WebhookModel {
     }
   }
 
-  public static async getTrailWebhooks(trailId: string) {
+  public static async queryByRegion(
+    regionId: string,
+    exclusiveStartKey?: AWS.DynamoDB.Key | undefined,
+  ): Promise<[WebhookModel[], AWS.DynamoDB.Key | undefined]> {
     try {
-      const attrMap = this.toAttributeMap({ trailId });
+      const attrMap = this.toAttributeMap({ regionId });
 
       const params: AWS.DynamoDB.QueryInput = {
         TableName: tables.webhooks.name,
-        IndexName: tables.webhooks.indexes.trailWebhooks.name,
-        KeyConditionExpression: '#trailId = :trailId',
+        IndexName: tables.webhooks.indexes.webhooksByRegion.name,
+        KeyConditionExpression: '#regionId = :regionId',
         ExpressionAttributeNames: {
-          '#trailId': 'trailId',
+          '#regionId': 'regionId',
         },
         ExpressionAttributeValues: {
-          ':trailId': attrMap.trailId,
+          ':regionId': attrMap.regionId,
         },
-        ScanIndexForward: true,
-        Limit: 100,
+        ScanIndexForward: false,
+        ExclusiveStartKey: exclusiveStartKey,
       };
 
       const res = await dynamodb.query(params).promise();
 
-      return res.Items
+      const trails = res.Items
         ? res.Items.map(item => new WebhookModel(this.fromAttributeMap(item)))
         : [];
+
+      return [trails, res.LastEvaluatedKey];
     } catch (err) {
       throw new Error(
-        `WebhookModel.getTrailWebhooks failed with '${err.message}'`,
+        `WebhookModel.queryByRegion failed with '${err.message}'`,
       );
     }
+  }
+
+  public static async allByRegion(regionId: string): Promise<WebhookModel[]> {
+    const allWebhooksByRegion: WebhookModel[] = [];
+
+    let [regions, lastEvaluatedKey] = await WebhookModel.queryByRegion(
+      regionId,
+    );
+    allWebhooksByRegion.push(...regions);
+
+    while (lastEvaluatedKey) {
+      [regions, lastEvaluatedKey] = await WebhookModel.queryByRegion(
+        regionId,
+        lastEvaluatedKey,
+      );
+      allWebhooksByRegion.push(...regions);
+    }
+
+    return allWebhooksByRegion;
   }
 
   private static toAttributeMap(webhook: Partial<Webhook>) {
     const attrMap: AWS.DynamoDB.AttributeMap = {};
 
-    if (webhook.webhookId !== undefined) {
-      attrMap.webhookId = { S: webhook.webhookId };
+    if (webhook.id !== undefined) {
+      attrMap.id = { S: webhook.id };
+    }
+    if (webhook.regionId !== undefined) {
+      attrMap.regionId = { S: webhook.regionId };
     }
     if (webhook.trailId !== undefined) {
       attrMap.trailId = { S: webhook.trailId };
@@ -119,14 +151,29 @@ export default class WebhookModel {
     if (webhook.name !== undefined) {
       attrMap.name = { S: webhook.name };
     }
+    if (webhook.description !== undefined) {
+      attrMap.description = { S: webhook.description };
+    }
+    if (webhook.method !== undefined) {
+      attrMap.method = { S: webhook.method };
+    }
     if (webhook.url !== undefined) {
       attrMap.url = { S: webhook.url };
+    }
+    if (webhook.enabled !== undefined) {
+      attrMap.enabled = { BOOL: webhook.enabled };
     }
     if (webhook.lastRanAt !== undefined) {
       attrMap.lastRanAt = { S: webhook.lastRanAt };
     }
     if (webhook.error !== undefined) {
       attrMap.error = { S: webhook.error };
+    }
+    if (webhook.updatedAt !== undefined) {
+      attrMap.updatedAt = { S: webhook.updatedAt };
+    }
+    if (webhook.createdAt !== undefined) {
+      attrMap.createdAt = { S: webhook.createdAt };
     }
 
     return attrMap;
@@ -135,17 +182,23 @@ export default class WebhookModel {
   private static fromAttributeMap(
     attrMap: AWS.DynamoDB.AttributeMap,
   ): Partial<Webhook> {
-    if (!attrMap.webhookId || !attrMap.trailId.S)
-      throw new Error('Missing webhookId parsing attribute map');
+    if (!attrMap.id || !attrMap.id.S)
+      throw new Error('Missing id parsing attribute map');
 
     return {
-      webhookId: attrMap.webhookId?.S,
+      id: attrMap.id?.S,
+      regionId: attrMap.regionId?.S,
       trailId: attrMap.trailId?.S,
       runPriority: Number(attrMap.runPriority?.N),
+      method: attrMap.method?.S,
       url: attrMap.url?.S,
+      enabled: attrMap.enabled?.BOOL,
       name: attrMap.name?.S,
+      description: attrMap.description?.S,
       lastRanAt: attrMap.lastRanAt?.S,
       error: attrMap.error?.S,
+      updatedAt: attrMap.createdAt?.S,
+      createdAt: attrMap.createdAt?.S,
     };
   }
 
@@ -176,8 +229,27 @@ export default class WebhookModel {
     }
   }
 
-  get webhookId() {
-    return this.attrs.webhookId ?? '';
+  public async delete(): Promise<void> {
+    const params: AWS.DynamoDB.DeleteItemInput = {
+      TableName: tables.webhooks.name,
+      Key: WebhookModel.toAttributeMap({ id: this.attrs.id }),
+    };
+
+    try {
+      await dynamodb.deleteItem(params).promise();
+    } catch (err) {
+      throw new Error(
+        `WebhookModel.delete failed for id '${this.attrs.id}' with '${err.message}'`,
+      );
+    }
+  }
+
+  get id() {
+    return this.attrs.id ?? '';
+  }
+
+  get regionId() {
+    return this.attrs.regionId ?? '';
   }
 
   get trailId() {
@@ -192,8 +264,20 @@ export default class WebhookModel {
     return this.attrs.name ?? '';
   }
 
+  get description() {
+    return this.attrs.description ?? '';
+  }
+
+  get method() {
+    return this.attrs.method ?? '';
+  }
+
   get url() {
     return this.attrs.url ?? '';
+  }
+
+  get enabled() {
+    return this.attrs.enabled ?? false;
   }
 
   get lastRanAt() {
@@ -204,15 +288,29 @@ export default class WebhookModel {
     return this.attrs.error ?? '';
   }
 
+  get updatedAt() {
+    return this.attrs.updatedAt ?? '';
+  }
+
+  get createdAt() {
+    return this.attrs.createdAt ?? '';
+  }
+
   public toJSON() {
     return {
-      webhookId: this.webhookId,
+      id: this.id,
+      regionId: this.regionId,
       trailId: this.trailId,
       runPriority: this.runPriority,
       name: this.name,
+      description: this.description,
       url: this.url,
+      method: this.method,
+      enabled: this.enabled,
       lastRanAt: this.lastRanAt,
       error: this.error,
+      updatedAt: this.updatedAt,
+      createdAt: this.createdAt,
     };
   }
 }
