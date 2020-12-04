@@ -522,7 +522,7 @@ export default class extends cdk.Stack {
     webhooksApi.addCorsPreflight({ allowOrigins: ['*'] });
 
     // POST /webhooks
-    const postWebhook = new lambda.Function(
+    const postWebhookHandler = new lambda.Function(
       this,
       projectPrefix('postWebhook'),
       {
@@ -537,13 +537,13 @@ export default class extends cdk.Stack {
     );
 
     const postWebhookIntegration = new apigateway.LambdaIntegration(
-      postWebhook,
+      postWebhookHandler,
     );
 
     webhooksApi.addMethod('POST', postWebhookIntegration);
-    webhooksTable.grantReadWriteData(postWebhook);
-    regionsTable.grantReadData(postWebhook);
-    trailsTable.grantReadData(postWebhook);
+    webhooksTable.grantReadWriteData(postWebhookHandler);
+    regionsTable.grantReadData(postWebhookHandler);
+    trailsTable.grantReadData(postWebhookHandler);
 
     // PUT /webhooks
     const putWebhookHandler = new lambda.Function(
@@ -597,7 +597,7 @@ export default class extends cdk.Stack {
     const wehooksRunApi = webhooksApi.addResource('run');
     wehooksRunApi.addCorsPreflight({ allowOrigins: ['*'] });
 
-    // POST /webhooks
+    // POST /webhooks/run
     const postWebhookRunHandler = new lambda.Function(
       this,
       projectPrefix('postWebhookRun'),
@@ -622,6 +622,7 @@ export default class extends cdk.Stack {
     regionStatusTable.grantReadData(postWebhookRunHandler);
     trailStatusTable.grantReadData(postWebhookRunHandler);
     trailsTable.grantReadData(postWebhookRunHandler);
+    userTable.grantReadData(postWebhookRunHandler);
 
     // Test webhook
     const webhookTestApi = api.root.addResource('webhook-test');
@@ -745,5 +746,6 @@ export default class extends cdk.Stack {
     regionStatusTable.grantReadData(runWebhooksHandler);
     trailStatusTable.grantReadData(runWebhooksHandler);
     trailsTable.grantReadData(runWebhooksHandler);
+    userTable.grantReadData(runWebhooksHandler);
   }
 }
