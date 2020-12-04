@@ -1,13 +1,57 @@
 # Trail Status App
 
-I created this app to automatically update my local trail commitee's website when they post trail status updates to their Instagram. Once you connect your Instagram account you will be given an embed code that you can paste into your website. Tagging your next Instagram post with #trails-open or #trails-closed will automatically the embed.
+https://trailstatusapp.com
 
-**Built with**
-- React frontend, hosted on Netlify
-- Serverless backend with AWS Lambda and API Gateway
-- Infrastructure as code with AWS CDK
+## How does it work?
 
-You are welcome to fork this app and host it using your own AWS account. Feel free to open an issue if you get stuck or have any feedback.
+The trail status app periodically checks your Instagram account for specific hashtags to open or close the region. You can also create trails within the region that allow you to keep certain trails closed when opening the region.
+
+### Example Instagram posts
+
+**Closing the region**
+
+_Trails closed, please wait until the next update! #trailsclosed_
+
+**Opening the region**
+
+_Trails open, enjoy the nice weather! #trailsopen_
+
+**Opening the region, keeping a specific trail closed**
+
+_Trails open but stay off Glasglow side! #trailsopen #glasglowclosed_
+
+You can configure the trails and hashtags for your region after logging in at https://trailstatusapp.com. Note that the app is not yet approved by Facebook so you will need to be invited as a tester. Open an issue if you want an invite.
+
+## API
+
+The trail status app has a public API for retrieving the current region and trail status. You can find your region id and trail ids in the URL of trailstatusapp.com, click on the trail to find it’s id.
+
+### Fetching the region status
+
+GET /regions/status?id=REGION_ID
+
+### Fetching the status of a specific trail
+
+GET /trails/status?id=TRAIL_ID
+
+## Webhooks
+
+You can create webhooks to notify other services when the status of the region or a specific trail changes. You can configure your webhook to be triggered via GET or POST. Webhooks using POST will also receive the status as JSON in the request body.
+
+Webhook URLs support variables to receive the current status. Variables are denoted by curly braces in the URL.
+
+**Example Webhook URL**
+
+https://my-webhook.com/status={status}&message={message}
+
+### Variables
+
+| Variable name | Description                                                                                               |
+| ------------- | --------------------------------------------------------------------------------------------------------- |
+| {status}      | The status of the region or that status of the specific trail.                                            |
+| {updatedAt}   | When the status of the region or trail was updated.                                                       |
+| {message}     | The caption of the Instagram post used to open or close the region. Only available for regional webhooks. |
+| {imageUrl}    | The image of the Instagram post used to open or close the region. Only available for regional webhooks.   |
 
 ## Development
 
@@ -22,7 +66,7 @@ mkcert localhost
 
 ```
 
-Create `.env`, `env.dev` and `env.production` at the root of this project with the contents of the provided `.sample` files in this repo. Modify the env vars if you're own. 
+Create `.env`, `env.dev` and `env.production` at the root of this project with the contents of the provided `.sample` files in this repo. Modify the env vars if you're own.
 
 Run the app in development:
 
