@@ -10,6 +10,8 @@ export interface RegionStatus {
   name: string;
   status: string;
   message: string;
+  openHashtag: string;
+  closeHashtag: string;
   imageUrl: string;
   instagramPostId: string;
   instagramPermalink: string;
@@ -24,6 +26,7 @@ export interface RegionStatus {
 export interface TrailStatus {
   id: string;
   name: string;
+  closeHashtag: string;
   status: string;
   updatedAt: string;
 }
@@ -62,6 +65,8 @@ export default async (regionId: string): Promise<RegionStatus | null> => {
     name: region.name,
     status: regionStatus.status,
     message: regionStatus.message,
+    openHashtag: region.openHashtag,
+    closeHashtag: region.closeHashtag,
     imageUrl: regionStatus.imageUrl,
     instagramPostId: regionStatus.instagramPostId,
     instagramPermalink: regionStatus.instagramPermalink,
@@ -75,6 +80,7 @@ export default async (regionId: string): Promise<RegionStatus | null> => {
         return {
           id: trail.id,
           name: trail.name,
+          closeHashtag: trail.closeHashtag,
           status: trailStatus.status,
           updatedAt: trailStatus.updatedAt,
         };
