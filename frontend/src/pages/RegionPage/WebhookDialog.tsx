@@ -214,8 +214,14 @@ const WebhookDialog = ({
                 <Box>
                   <Typography variant="caption">
                     Webhooks URLs can contain the current status using{' '}
-                    <Link>variables</Link>. Webhooks using POST will also
-                    receive the status as JSON in the request body.
+                    <Link
+                      target="blank"
+                      href="https://docs.google.com/document/d/1mF9Cs-LALChkrr1YX00MbjHUz8gPgn_LqncPda47JQo/edit#heading=h.57inixugnteo"
+                    >
+                      variables
+                    </Link>
+                    . Webhooks using POST will also receive the status as JSON
+                    in the request body.
                   </Typography>
                 </Box>
               </Box>
