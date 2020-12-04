@@ -48,7 +48,7 @@ https://my-webhook.com/status={status}&message={message}
 
 | Variable    | Description                                                                                               |
 | ----------- | --------------------------------------------------------------------------------------------------------- |
-| {status}    | The status of the region or that status of the specific trail.                                            |
+| {status}    | The status of the region or the specified trail.                                                          |
 | {updatedAt} | When the status of the region or trail was updated.                                                       |
 | {message}   | The caption of the Instagram post used to open or close the region. Only available for regional webhooks. |
 | {imageUrl}  | The image of the Instagram post used to open or close the region. Only available for regional webhooks.   |
