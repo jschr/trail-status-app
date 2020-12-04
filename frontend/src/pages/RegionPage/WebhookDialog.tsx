@@ -216,7 +216,7 @@ const WebhookDialog = ({
                     Webhooks URLs can contain the current status using{' '}
                     <Link
                       target="blank"
-                      href="https://docs.google.com/document/d/1mF9Cs-LALChkrr1YX00MbjHUz8gPgn_LqncPda47JQo/edit#heading=h.57inixugnteo"
+                      href="https://github.com/jschr/trail-status-app#variables"
                     >
                       variables
                     </Link>
