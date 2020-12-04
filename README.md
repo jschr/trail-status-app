@@ -26,6 +26,8 @@ You can configure the trails and hashtags for your region after logging in at ht
 
 The trail status app has a public API for retrieving the current region and trail status. You can find your region id and trail ids in the URL of trailstatusapp.com, click on the trail to find it’s id.
 
+API Base URL: https://api.trailstatusapp.com
+
 ### Fetching the region status
 
 GET /regions/status?id=REGION_ID
