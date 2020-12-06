@@ -1,6 +1,5 @@
 import Box from '@material-ui/core/Box';
 import Grid from '@material-ui/core/Grid';
-import CardHeader from '@material-ui/core/CardHeader';
 import Divider from '@material-ui/core/Divider';
 import Button from '@material-ui/core/Button';
 import Link from '@material-ui/core/Link';
@@ -118,87 +117,87 @@ const RegionPage = ({ match }: RegionPageProps) => {
   return (
     <Container maxWidth="md">
       <Box>
-        <CardHeader
-          title={
-            <Box
-              display="flex"
-              justifyContent="space-between"
-              alignItems="flex-end"
-            >
-              <Box display="flex" flexDirection="column">
-                <Box display="flex" alignItems="center">
-                  <Box component="span" mr={1}>
-                    {region?.name ?? ''}
-                  </Box>
-                  {userRegions.length > 1 && (
-                    <IconButton
-                      onClick={event => setAnchorEl(event.currentTarget)}
-                    >
-                      <ExpandMoreRoundedIcon />
-                    </IconButton>
-                  )}
-                  <Menu
-                    anchorEl={anchorEl}
-                    open={Boolean(anchorEl)}
-                    onClose={() => setAnchorEl(null)}
-                  >
-                    {userRegions.map(region => (
-                      <MenuItem
-                        selected={region.id === regionId}
-                        key={region.id}
-                        onClick={() => {
-                          setAnchorEl(null);
-                          history.push(`/regions/${region.id}`);
-                        }}
-                      >
-                        {region.name}
-                      </MenuItem>
-                    ))}
-                  </Menu>
-                </Box>
-                <Box position="relative">
-                  <Typography variant="body2">
-                    <Box component="span" mr={1} color="text.secondary">
-                      Status:
-                    </Box>
-                    <Box component="span" mr={3}>
-                      <StatusText status={regionStatus?.status} />
-                    </Box>
-
-                    <Box component="span" mr={1} color="text.secondary">
-                      Updated:
-                    </Box>
-                    <Box component="span" mr={2}>
-                      <Link
-                        href={regionStatus?.instagramPermalink}
-                        target="_blank"
-                        color="inherit"
-                      >
-                        <TimeAgo datetime={regionStatus?.updatedAt} />
-                      </Link>
-                    </Box>
+        <Box
+          display="flex"
+          justifyContent="space-between"
+          alignItems="flex-end"
+        >
+          <Box display="flex" flexDirection="column" p={2}>
+            <Box display="flex" alignItems="center">
+              <Box component="span" mr={1}>
+                <Typography variant="h5">{region?.name ?? ''}</Typography>
+              </Box>
+              <IconButton onClick={event => setAnchorEl(event.currentTarget)}>
+                <ExpandMoreRoundedIcon />
+              </IconButton>
+              <Menu
+                anchorEl={anchorEl}
+                open={Boolean(anchorEl)}
+                onClose={() => setAnchorEl(null)}
+              >
+                <Box pl={2}>
+                  <Typography color="textSecondary" variant="overline">
+                    Regions
                   </Typography>
                 </Box>
-              </Box>
-
-              <Button
-                size="small"
-                style={{ opacity: 0.5 }}
-                onClick={() => {
-                  localStorage.clear();
-                  history.push('/login');
-                }}
-              >
-                Logout
-              </Button>
+                {userRegions.map(region => (
+                  <MenuItem
+                    selected={region.id === regionId}
+                    key={region.id}
+                    onClick={() => {
+                      setAnchorEl(null);
+                      history.push(`/regions/${region.id}`);
+                    }}
+                  >
+                    {region.name}
+                  </MenuItem>
+                ))}
+                <Box mt={1}>
+                  <Divider />
+                </Box>
+                <MenuItem
+                  onClick={() => {
+                    localStorage.clear();
+                    history.push('/login');
+                  }}
+                >
+                  Logout
+                </MenuItem>
+              </Menu>
             </Box>
-          }
-        />
+
+            <Grid container>
+              <Grid item>
+                <Box component="span" mr={1} color="text.secondary">
+                  Status:
+                </Box>
+                <Box component="span" mr={3}>
+                  <StatusText status={regionStatus?.status} />
+                </Box>
+              </Grid>
+
+              <Grid item>
+                <Box component="span" mr={1} color="text.secondary">
+                  Updated:
+                </Box>
+                <Box component="span" mr={2}>
+                  <Link
+                    href={regionStatus?.instagramPermalink}
+                    target="_blank"
+                    color="inherit"
+                  >
+                    <TimeAgo datetime={regionStatus?.updatedAt} />
+                  </Link>
+                </Box>
+              </Grid>
+            </Grid>
+          </Box>
+        </Box>
       </Box>
 
       <Divider style={{ opacity: 0.5 }} />
 
-      <Grid container spacing={8}>
+      <Grid container>
         <Grid item xs={12} sm={5}>
           <form onSubmit={handleSubmit(onSubmit)}>
             <Box mt={6}>
@@ -269,7 +268,9 @@ const RegionPage = ({ match }: RegionPageProps) => {
           </form>
         </Grid>
 
-        <Grid item xs={12} sm={7}>
+        <Box flex={1} />
+
+        <Grid item xs={12} sm={6}>
           <Box
             mt={4}
             pr={0.5}
