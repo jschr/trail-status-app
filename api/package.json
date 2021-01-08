@@ -13,6 +13,7 @@
     "@trail-status-app/utilities": "",
     "@types/uuid": "^3.4.7",
     "cors": "^2.8.5",
+    "firebase-admin": "^9.4.2",
     "jsonwebtoken": "^8.5.1",
     "node-fetch": "^2.6.0",
     "oauth": "^0.9.15",
