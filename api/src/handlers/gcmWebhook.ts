@@ -2,15 +2,12 @@ import * as admin from 'firebase-admin';
 import { assert, env } from '@trail-status-app/utilities';
 import { json } from '../responses';
 import withApiHandler from '../withApiHandler';
-import { BadRequestError } from '../HttpError';
-import { parseQuery, parseBody } from '../requests';
-import { Permissions as P } from '../jwt';
-
-interface GCMWebhookQuery {
-  topic: string;
-}
+import { BadRequestError, UnauthorizedError } from '../HttpError';
+import { parseBody } from '../requests';
+import { Permissions as P, canAccessRegion } from '../jwt';
 
 interface GCMWebhookBody {
+  id: string;
   status: 'open' | 'closed';
   message: string;
   imageUrl: string;
@@ -24,23 +21,20 @@ admin.initializeApp({
   }),
 });
 
-// TODO: Add a was to set Authorization header for webhooks.
-
-// Generate a token for env:
-// yarn dotenv -e .env -e .env.local ts-node
-// const jwt = require('./api/src/jwt');
-// jwt.createGCMWebhookToken('instagram|17841430372261684', 'hydrocut_status')
-
-// export default withApiHandler([P.GCMWebhookRun], async event => {
-export default withApiHandler([], async event => {
-  console.info(
-    'event.queryStringParameters',
-    JSON.stringify(event.queryStringParameters),
-  );
+export default withApiHandler([P.GCMWebhookRun], async event => {
+  console.info('event.queryStringParameters', event.queryStringParameters);
   console.info('event.body', event.body);
 
-  const { topic } = assertGCMWebhookQuery(parseQuery(event));
-  const { status, message, imageUrl } = assertGCMWebhookBody(parseBody(event));
+  const { id: regionId, status, message, imageUrl } = assertGCMWebhookBody(
+    parseBody(event),
+  );
+
+  // Ensure user has access to region.
+  if (!canAccessRegion(event.decodedToken, regionId)) {
+    throw new UnauthorizedError(
+      `User does not have access to region '${regionId}'`,
+    );
+  }
 
   try {
     await admin.messaging().send({
@@ -49,7 +43,7 @@ export default withApiHandler([], async event => {
         body: message,
         imageUrl,
       },
-      topic,
+      topic: `${regionId}_status`,
     });
 
     return json('OK');
@@ -60,24 +54,15 @@ export default withApiHandler([], async event => {
   }
 });
 
-const assertGCMWebhookQuery = (query: any): GCMWebhookQuery => {
-  assert(
-    !query || typeof query !== 'object',
-    new BadRequestError('Invalid query.'),
-  );
-
-  assert(
-    typeof query.topic !== 'string',
-    new BadRequestError('Missing topic query parameter.'),
-  );
-
-  return query;
-};
-
 const assertGCMWebhookBody = (body: any): GCMWebhookBody => {
   assert(
     !body || typeof body !== 'object',
     new BadRequestError('Invalid body.'),
+  );
+
+  assert(
+    typeof body.id !== 'string',
+    new BadRequestError(`Invalid id provided in body.`),
   );
 
   assert(

@@ -21,7 +21,11 @@ export default (
 ) => {
   if (scopes.length > 0) {
     const authHeader = event.headers.Authorization || '';
-    const [, token] = authHeader.split(' ');
+    let [, token] = authHeader.split(' ');
+
+    if (!token) {
+      token = event.queryStringParameters?.token || '';
+    }
 
     try {
       const decodedToken = jwt.verify(token);

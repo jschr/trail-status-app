@@ -73,18 +73,25 @@ export const createUserSession = (
   );
 };
 
-export const createGCMWebhookToken = (userId: string, topic: string) => {
+export const createGCMWebhookToken = (
+  userId: string,
+  username: string,
+  regions: Array<{ id: string; name: string }>,
+) => {
   return jwt.sign(
     {
-      topic,
-      permissions: [Permissions.WebhookRun],
+      username,
+      regions: regions.map(r => ({
+        id: r.id,
+        name: r.name,
+      })),
+      permissions: [Permissions.GCMWebhookRun],
     },
     jwtSecret,
     {
       audience: apiDomain,
       issuer: apiDomain,
       subject: userId,
-      expiresIn: jwtExpiresIn,
     },
   );
 };
