@@ -53,7 +53,7 @@ export default async (
       res = await fetch(`${url}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
+        body,
       });
     } catch (err) {
       throw new Error(`Failed to POST '${url}' with '${err.message}'`);

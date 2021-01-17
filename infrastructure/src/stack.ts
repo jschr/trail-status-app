@@ -222,6 +222,9 @@ export default class extends cdk.Stack {
       FRONTEND_ENDPOINT: env('FRONTEND_ENDPOINT'),
       RUN_SYNC_REGIONS_QUEUE_URL: runSyncRegionsQueue.queueUrl,
       RUN_WEBHOOKS_QUEUE_URL: runWebhooksQueue.queueUrl,
+      FIREBASE_PROJECT_ID: env('FIREBASE_PROJECT_ID'),
+      FIREBASE_PRIVATE_KEY: env('FIREBASE_PRIVATE_KEY'),
+      FIREBASE_CLIENT_EMAIL: env('FIREBASE_CLIENT_EMAIL'),
     };
 
     // /regions
@@ -624,8 +627,8 @@ export default class extends cdk.Stack {
     trailsTable.grantReadData(postWebhookRunHandler);
     userTable.grantReadData(postWebhookRunHandler);
 
-    // Test webhook
-    const webhookTestApi = api.root.addResource('webhook-test');
+    // webhook-test
+    const testWebhookApi = api.root.addResource('webhook-test');
 
     // POST and GET /webhook-test
     const testWebhookHandler = new lambda.Function(
@@ -646,8 +649,32 @@ export default class extends cdk.Stack {
       testWebhookHandler,
     );
 
-    webhookTestApi.addMethod('POST', testWebhookIntegration);
-    webhookTestApi.addMethod('GET', testWebhookIntegration);
+    testWebhookApi.addMethod('POST', testWebhookIntegration);
+    testWebhookApi.addMethod('GET', testWebhookIntegration);
+
+    // webhook-gcm
+    const gcmWebhookApi = api.root.addResource('webhook-gcm');
+
+    // POST /webhook-gcm
+    const gcmWebhookHandler = new lambda.Function(
+      this,
+      projectPrefix('gcmWebhook'),
+      {
+        functionName: projectPrefix('gcmWebhook'),
+        runtime: lambda.Runtime.NODEJS_12_X,
+        code: lambda.Code.fromAsset(packagePath),
+        handler: 'api/build/src/handlers/gcmWebhook.default',
+        environment: envVars,
+        timeout: cdk.Duration.seconds(20),
+        memorySize: 512,
+      },
+    );
+
+    const gcmWebhookIntegration = new apigateway.LambdaIntegration(
+      gcmWebhookHandler,
+    );
+
+    gcmWebhookApi.addMethod('POST', gcmWebhookIntegration);
 
     // Schedules
 
