@@ -91,8 +91,6 @@ export default class ApiClient {
     this.onUnauthorized = options.onUnauthorized;
     this.onRequestStart = options.onRequestStart;
     this.onRequestEnd = options.onRequestEnd;
-
-    if (!this.accessToken) this.onUnauthorized();
   }
 
   getAuthorizeUrl() {
