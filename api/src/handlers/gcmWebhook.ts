@@ -38,12 +38,24 @@ export default withApiHandler([P.GCMWebhookRun], async event => {
 
   try {
     await admin.messaging().send({
+      topic: `${regionId}_status`,
       notification: {
         title: status === 'open' ? 'Trails are open' : 'Trails are closed',
         body: message,
         imageUrl,
       },
-      topic: `${regionId}_status`,
+      apns: {
+        payload: {
+          aps: {
+            sound: 'default',
+          },
+        },
+      },
+      android: {
+        notification: {
+          sound: 'default',
+        },
+      },
     });
 
     return json('OK');
