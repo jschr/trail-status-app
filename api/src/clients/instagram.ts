@@ -90,7 +90,7 @@ export const getUser = async (accessToken: string): Promise<User> => {
 
 export interface UserMedia {
   id: string;
-  caption: string;
+  caption?: string;
   mediaUrl: string;
   timestamp: string;
 }

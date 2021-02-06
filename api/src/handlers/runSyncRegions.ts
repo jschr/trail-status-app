@@ -63,28 +63,42 @@ const syncRegion = async (regionId: string) => {
   ]);
 
   console.info(
-    `Region ${region.id} has ${trails.length} trails and ${webhooks.length} webhooks`,
+    `Region '${region.id}' has ${trails.length} trails and ${webhooks.length} webhooks`,
   );
 
   let userMedia = await instagram.getUserMedia(accessToken);
+
+  console.info(
+    `Found user media for region '${region.id}':`,
+    userMedia.map(media => ({
+      id: media.id,
+      caption: media.caption?.slice(0, 20),
+      timestamp: media.timestamp,
+    })),
+  );
 
   // Ensure media is sorted by most recent.
   userMedia = userMedia.sort(
     (a, b) => +new Date(b.timestamp) - +new Date(a.timestamp),
   );
 
+  console.info(
+    `User media after sort '${region.id}':`,
+    userMedia.map(media => media.id),
+  );
+
   let mediaWithOpenStatus: instagram.UserMedia | null = null;
   let mediaWithClosedStatus: instagram.UserMedia | null = null;
   let permalink = '';
   for (const media of userMedia) {
-    if (media.caption.includes(region.openHashtag)) {
+    if (media.caption?.includes(region.openHashtag)) {
       console.info(
         `Found open hashtag '${region.openHashtag}' for region '${region.id}'.`,
       );
       ({ permalink } = await instagram.getMedia(media.id, accessToken));
       mediaWithOpenStatus = media;
       break;
-    } else if (media.caption.includes(region.closeHashtag)) {
+    } else if (media.caption?.includes(region.closeHashtag)) {
       console.info(
         `Found close hashtag '${region.closeHashtag}' for region '${region.id}'.`,
       );
@@ -122,7 +136,7 @@ const syncRegion = async (regionId: string) => {
     for (const trail of trails) {
       if (
         trail.closeHashtag &&
-        mediaWithOpenStatus.caption.includes(trail.closeHashtag)
+        mediaWithOpenStatus.caption?.includes(trail.closeHashtag)
       ) {
         console.info(
           `Found close hashtag '${trail.closeHashtag}' for trail '${trail.id}' and region '${region.id}'.`,
@@ -176,7 +190,7 @@ const setRegionStatus = async (
     });
   }
 
-  const message = stripHashtags(userMedia.caption);
+  const message = stripHashtags(userMedia.caption || '');
   const didStatusChange = status !== regionStatus.status;
   const didMessageChange = message !== regionStatus.message;
 
