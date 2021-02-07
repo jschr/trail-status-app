@@ -652,29 +652,29 @@ export default class extends cdk.Stack {
     testWebhookApi.addMethod('POST', testWebhookIntegration);
     testWebhookApi.addMethod('GET', testWebhookIntegration);
 
-    // webhook-gcm
-    const gcmWebhookApi = api.root.addResource('webhook-gcm');
+    // webhook-fcm
+    const fcmWebhookApi = api.root.addResource('webhook-fcm');
 
-    // POST /webhook-gcm
-    const gcmWebhookHandler = new lambda.Function(
+    // POST /webhook-fcm
+    const fcmWebhookHandler = new lambda.Function(
       this,
-      projectPrefix('gcmWebhook'),
+      projectPrefix('fcmWebhook'),
       {
-        functionName: projectPrefix('gcmWebhook'),
+        functionName: projectPrefix('fcmWebhook'),
         runtime: lambda.Runtime.NODEJS_12_X,
         code: lambda.Code.fromAsset(packagePath),
-        handler: 'api/build/src/handlers/gcmWebhook.default',
+        handler: 'api/build/src/handlers/fcmWebhook.default',
         environment: envVars,
         timeout: cdk.Duration.seconds(20),
         memorySize: 512,
       },
     );
 
-    const gcmWebhookIntegration = new apigateway.LambdaIntegration(
-      gcmWebhookHandler,
+    const fcmWebhookIntegration = new apigateway.LambdaIntegration(
+      fcmWebhookHandler,
     );
 
-    gcmWebhookApi.addMethod('POST', gcmWebhookIntegration);
+    fcmWebhookApi.addMethod('POST', fcmWebhookIntegration);
 
     // Schedules
 

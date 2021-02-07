@@ -22,7 +22,7 @@ import deleteWebhook from '../handlers/deleteWebhook';
 import runSyncRegions from '../handlers/runSyncRegions';
 import runWebhooks from '../handlers/runWebhooks';
 import testWebhook from '../handlers/testWebhook';
-import gcmWebhook from '../handlers/gcmWebhook';
+import fcmWebhook from '../handlers/fcmWebhook';
 import scheduleSyncRegions from '../handlers/scheduleSyncRegions';
 import toExpressApiHandler from './toExpressApiHandler';
 import toExpressScheduledHandler from './toExpressScheduledHandler';
@@ -95,7 +95,7 @@ app.post('/run-webhooks', toExpressSQSHandler(runWebhooks));
 app.get('/webhook-test', toExpressApiHandler(testWebhook));
 app.post('/webhook-test', toExpressApiHandler(testWebhook));
 
-app.post('/webhook-gcm', toExpressApiHandler(gcmWebhook));
+app.post('/webhook-fcm', toExpressApiHandler(fcmWebhook));
 
 const port = env('API_PORT');
 server.listen(port, () => {

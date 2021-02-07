@@ -6,7 +6,7 @@ import { BadRequestError, UnauthorizedError } from '../HttpError';
 import { parseBody } from '../requests';
 import { Permissions as P, canAccessRegion } from '../jwt';
 
-interface GCMWebhookBody {
+interface FCMWebhookBody {
   id: string;
   status: 'open' | 'closed';
   message: string;
@@ -21,11 +21,11 @@ admin.initializeApp({
   }),
 });
 
-export default withApiHandler([P.GCMWebhookRun], async event => {
+export default withApiHandler([P.FCMWebhookRun], async event => {
   console.info('event.queryStringParameters', event.queryStringParameters);
   console.info('event.body', event.body);
 
-  const { id: regionId, status, message, imageUrl } = assertGCMWebhookBody(
+  const { id: regionId, status, message, imageUrl } = assertFCMWebhookBody(
     parseBody(event),
   );
 
@@ -56,17 +56,23 @@ export default withApiHandler([P.GCMWebhookRun], async event => {
           sound: 'default',
         },
       },
+      webpush: {
+        fcmOptions: {
+          // TODO: Make a query parameter
+          link: 'https://thehydrocut.trailstatusapp.com',
+        },
+      },
     });
 
     return json('OK');
   } catch (err) {
     throw new BadRequestError(
-      `Failed to send message to GCM with '${err.message}'`,
+      `Failed to send message to FCM with '${err.message}'`,
     );
   }
 });
 
-const assertGCMWebhookBody = (body: any): GCMWebhookBody => {
+const assertFCMWebhookBody = (body: any): FCMWebhookBody => {
   assert(
     !body || typeof body !== 'object',
     new BadRequestError('Invalid body.'),

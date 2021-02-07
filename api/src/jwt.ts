@@ -13,7 +13,7 @@ export enum Permissions {
   WebhookRun = 'webook:run',
   StatusRead = 'status:read',
   StatusUpdate = 'status:update',
-  GCMWebhookRun = 'gcm-webhook:run',
+  FCMWebhookRun = 'fcm-webhook:run',
 }
 
 export interface DecodedToken {
@@ -73,7 +73,7 @@ export const createUserSession = (
   );
 };
 
-export const createGCMWebhookToken = (
+export const createFCMWebhookToken = (
   userId: string,
   username: string,
   regions: Array<{ id: string; name: string }>,
@@ -85,7 +85,7 @@ export const createGCMWebhookToken = (
         id: r.id,
         name: r.name,
       })),
-      permissions: [Permissions.GCMWebhookRun],
+      permissions: [Permissions.FCMWebhookRun],
     },
     jwtSecret,
     {
