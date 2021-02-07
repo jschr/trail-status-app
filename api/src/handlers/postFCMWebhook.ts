@@ -1,33 +1,28 @@
-import * as admin from 'firebase-admin';
-import { assert, env } from '@trail-status-app/utilities';
+import { assert } from '@trail-status-app/utilities';
 import { json } from '../responses';
 import withApiHandler from '../withApiHandler';
 import { BadRequestError, UnauthorizedError } from '../HttpError';
-import { parseBody } from '../requests';
+import firebase from '../clients/firebase';
+import { parseBody, parseQuery } from '../requests';
 import { Permissions as P, canAccessRegion } from '../jwt';
 
-interface FCMWebhookBody {
+interface PostFCMWebhookQuery {
+  link: string;
+}
+
+interface PostFCMWebhookBody {
   id: string;
   status: 'open' | 'closed';
   message: string;
   imageUrl: string;
 }
 
-admin.initializeApp({
-  credential: admin.credential.cert({
-    projectId: env('FIREBASE_PROJECT_ID'),
-    clientEmail: env('FIREBASE_CLIENT_EMAIL'),
-    privateKey: env('FIREBASE_PRIVATE_KEY'),
-  }),
-});
-
 export default withApiHandler([P.FCMWebhookRun], async event => {
-  console.info('event.queryStringParameters', event.queryStringParameters);
-  console.info('event.body', event.body);
-
-  const { id: regionId, status, message, imageUrl } = assertFCMWebhookBody(
+  const { id: regionId, status, message, imageUrl } = assertPostFCMWebhookBody(
     parseBody(event),
   );
+
+  const { link } = assertPostFCMWebhookQuery(parseQuery(event));
 
   // Ensure user has access to region.
   if (!canAccessRegion(event.decodedToken, regionId)) {
@@ -37,7 +32,7 @@ export default withApiHandler([P.FCMWebhookRun], async event => {
   }
 
   try {
-    await admin.messaging().send({
+    await firebase.messaging().send({
       topic: `${regionId}_status`,
       notification: {
         title: status === 'open' ? 'Trails are open' : 'Trails are closed',
@@ -58,8 +53,7 @@ export default withApiHandler([P.FCMWebhookRun], async event => {
       },
       webpush: {
         fcmOptions: {
-          // TODO: Make a query parameter
-          link: 'https://thehydrocut.trailstatusapp.com',
+          link,
         },
       },
     });
@@ -72,7 +66,7 @@ export default withApiHandler([P.FCMWebhookRun], async event => {
   }
 });
 
-const assertFCMWebhookBody = (body: any): FCMWebhookBody => {
+const assertPostFCMWebhookBody = (body: any): PostFCMWebhookBody => {
   assert(
     !body || typeof body !== 'object',
     new BadRequestError('Invalid body.'),
@@ -100,4 +94,18 @@ const assertFCMWebhookBody = (body: any): FCMWebhookBody => {
   );
 
   return body;
+};
+
+const assertPostFCMWebhookQuery = (query: any): PostFCMWebhookQuery => {
+  assert(
+    !query || typeof query !== 'object',
+    new BadRequestError('Invalid query.'),
+  );
+
+  assert(
+    typeof query.link !== 'string',
+    new BadRequestError('Invalid link provided in query.'),
+  );
+
+  return query as PostFCMWebhookQuery;
 };

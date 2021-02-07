@@ -656,25 +656,79 @@ export default class extends cdk.Stack {
     const fcmWebhookApi = api.root.addResource('webhook-fcm');
 
     // POST /webhook-fcm
-    const fcmWebhookHandler = new lambda.Function(
+    const postFCMWebhookHandler = new lambda.Function(
       this,
-      projectPrefix('fcmWebhook'),
+      projectPrefix('postFCMWebhook'),
       {
-        functionName: projectPrefix('fcmWebhook'),
+        functionName: projectPrefix('postFCMWebhook'),
         runtime: lambda.Runtime.NODEJS_12_X,
         code: lambda.Code.fromAsset(packagePath),
-        handler: 'api/build/src/handlers/fcmWebhook.default',
+        handler: 'api/build/src/handlers/postFCMWebhook.default',
         environment: envVars,
         timeout: cdk.Duration.seconds(20),
         memorySize: 512,
       },
     );
 
-    const fcmWebhookIntegration = new apigateway.LambdaIntegration(
-      fcmWebhookHandler,
+    const postFCMWebhookIntegration = new apigateway.LambdaIntegration(
+      postFCMWebhookHandler,
     );
 
-    fcmWebhookApi.addMethod('POST', fcmWebhookIntegration);
+    fcmWebhookApi.addMethod('POST', postFCMWebhookIntegration);
+
+    // fcm-subscribe
+    const fcmSubscribeApi = api.root.addResource('fcm-subscribe');
+    fcmSubscribeApi.addCorsPreflight({ allowOrigins: ['*'] });
+
+    // POST /fcm-subscribe
+    const postFCMSubscribeHandler = new lambda.Function(
+      this,
+      projectPrefix('postFCMSubscribe'),
+      {
+        functionName: projectPrefix('postFCMSubscribe'),
+        runtime: lambda.Runtime.NODEJS_12_X,
+        code: lambda.Code.fromAsset(packagePath),
+        handler: 'api/build/src/handlers/postFCMSubscribe.default',
+        environment: envVars,
+        timeout: cdk.Duration.seconds(20),
+        memorySize: 512,
+      },
+    );
+
+    regionsTable.grantReadData(postFCMSubscribeHandler);
+
+    const postFCMSubscribeIntegration = new apigateway.LambdaIntegration(
+      postFCMSubscribeHandler,
+    );
+
+    fcmSubscribeApi.addMethod('POST', postFCMSubscribeIntegration);
+
+    // fcm-unsubscribe
+    const fcmUnsubscribeApi = api.root.addResource('fcm-unsubscribe');
+    fcmUnsubscribeApi.addCorsPreflight({ allowOrigins: ['*'] });
+
+    // POST /fcm-unsubscribe
+    const postFCMUnsubscribeHandler = new lambda.Function(
+      this,
+      projectPrefix('postFCMUnsubscribe'),
+      {
+        functionName: projectPrefix('postFCMUnsubscribe'),
+        runtime: lambda.Runtime.NODEJS_12_X,
+        code: lambda.Code.fromAsset(packagePath),
+        handler: 'api/build/src/handlers/postFCMUnsubscribe.default',
+        environment: envVars,
+        timeout: cdk.Duration.seconds(20),
+        memorySize: 512,
+      },
+    );
+
+    regionsTable.grantReadData(postFCMUnsubscribeHandler);
+
+    const postFCMUnsubscribeIntegration = new apigateway.LambdaIntegration(
+      postFCMUnsubscribeHandler,
+    );
+
+    fcmUnsubscribeApi.addMethod('POST', postFCMUnsubscribeIntegration);
 
     // Schedules
 

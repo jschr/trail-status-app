@@ -22,7 +22,7 @@ export default withApiHandler([P.RegionRead], async event => {
 
   const region = await RegionModel.get(id);
   if (!region) {
-    throw new NotFoundError(`Could not find region for '${region}'`);
+    throw new NotFoundError(`Could not find region for '${id}'`);
   }
 
   // Ensure user has access to region.

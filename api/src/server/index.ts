@@ -22,7 +22,9 @@ import deleteWebhook from '../handlers/deleteWebhook';
 import runSyncRegions from '../handlers/runSyncRegions';
 import runWebhooks from '../handlers/runWebhooks';
 import testWebhook from '../handlers/testWebhook';
-import fcmWebhook from '../handlers/fcmWebhook';
+import postFCMWebhook from '../handlers/postFCMWebhook';
+import postFCMSubscribe from '../handlers/postFCMSubscribe';
+import postFCMUnsubscribe from '../handlers/postFCMUnsubscribe';
 import scheduleSyncRegions from '../handlers/scheduleSyncRegions';
 import toExpressApiHandler from './toExpressApiHandler';
 import toExpressScheduledHandler from './toExpressScheduledHandler';
@@ -95,7 +97,9 @@ app.post('/run-webhooks', toExpressSQSHandler(runWebhooks));
 app.get('/webhook-test', toExpressApiHandler(testWebhook));
 app.post('/webhook-test', toExpressApiHandler(testWebhook));
 
-app.post('/webhook-fcm', toExpressApiHandler(fcmWebhook));
+app.post('/webhook-fcm', toExpressApiHandler(postFCMWebhook));
+app.post('/fcm-subscribe', toExpressApiHandler(postFCMSubscribe));
+app.post('/fcm-unsubscribe', toExpressApiHandler(postFCMUnsubscribe));
 
 const port = env('API_PORT');
 server.listen(port, () => {
