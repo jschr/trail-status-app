@@ -9,6 +9,8 @@ export interface Region {
   name: string;
   openHashtag: string;
   closeHashtag: string;
+  airTempChannelId?: string;
+  groundTempChannelId?: string;
   updatedAt: string;
   createdAt: string;
 }
@@ -176,6 +178,10 @@ export default class RegionModel {
       attrMap.openHashtag = { S: region.openHashtag };
     if (region.closeHashtag !== undefined)
       attrMap.closeHashtag = { S: region.closeHashtag };
+    if (region.airTempChannelId !== undefined)
+      attrMap.airTempChannelId = { S: region.airTempChannelId };
+    if (region.groundTempChannelId !== undefined)
+      attrMap.groundTempChannelId = { S: region.groundTempChannelId };
     if (region.updatedAt !== undefined)
       attrMap.updatedAt = { S: region.updatedAt };
     if (region.createdAt !== undefined)
@@ -196,6 +202,8 @@ export default class RegionModel {
       name: attrMap.name?.S,
       openHashtag: attrMap.openHashtag?.S,
       closeHashtag: attrMap.closeHashtag?.S,
+      airTempChannelId: attrMap.airTempChannelId?.S,
+      groundTempChannelId: attrMap.groundTempChannelId?.S,
       updatedAt: attrMap.updatedAt?.S,
       createdAt: attrMap.createdAt?.S,
     };
@@ -252,6 +260,14 @@ export default class RegionModel {
       : '';
   }
 
+  get airTempChannelId() {
+    return this.attrs.airTempChannelId ?? '';
+  }
+
+  get groundTempChannelId() {
+    return this.attrs.groundTempChannelId ?? '';
+  }
+
   get updatedAt() {
     return this.attrs.updatedAt ?? '';
   }
@@ -267,6 +283,8 @@ export default class RegionModel {
       name: this.name,
       openHashtag: this.openHashtag,
       closeHashtag: this.closeHashtag,
+      airTempChannelId: this.airTempChannelId,
+      groundTempChannelId: this.groundTempChannelId,
       updatedAt: this.updatedAt,
       createdAt: this.createdAt,
     };
