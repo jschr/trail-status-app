@@ -111,6 +111,37 @@ export default class extends cdk.Stack {
       sortKey: webhooksByRegionIndex.sortKey,
     });
 
+    // Region status history table
+    const regionStatusHistoryTable = new dynamodb.Table(
+      this,
+      tables.regionStatusHistory.name,
+      {
+        tableName: tables.regionStatusHistory.name,
+        partitionKey: tables.regionStatusHistory.partitionKey,
+        billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+        removalPolicy:
+          env('USER_RESOURCE_REMOVAL_POLICY') === 'destroy'
+            ? cdk.RemovalPolicy.DESTROY
+            : cdk.RemovalPolicy.RETAIN,
+      },
+    );
+
+    const regionStatusHistoryByRegionIndex =
+      tables.regionStatusHistory.indexes.regionStatusHistoryByRegion;
+    regionStatusHistoryTable.addGlobalSecondaryIndex({
+      indexName: regionStatusHistoryByRegionIndex.name,
+      partitionKey: regionStatusHistoryByRegionIndex.partitionKey,
+      sortKey: regionStatusHistoryByRegionIndex.sortKey,
+    });
+
+    const regionStatusHistoryByInstagramPostIndex =
+      tables.regionStatusHistory.indexes.regionStatusHistoryByInstagramPost;
+    regionStatusHistoryTable.addGlobalSecondaryIndex({
+      indexName: regionStatusHistoryByInstagramPostIndex.name,
+      partitionKey: regionStatusHistoryByInstagramPostIndex.partitionKey,
+      sortKey: regionStatusHistoryByInstagramPostIndex.sortKey,
+    });
+
     // Queues
 
     // Sync regions
@@ -307,6 +338,33 @@ export default class extends cdk.Stack {
     trailsTable.grantReadData(getRegionStatusHandler);
     trailStatusTable.grantReadData(getRegionStatusHandler);
     userTable.grantReadData(getRegionStatusHandler);
+
+    // /regions/history
+    const regionHistoryApi = regionsApi.addResource('history');
+    regionHistoryApi.addCorsPreflight({ allowOrigins: ['*'] });
+
+    // GET /regions/status
+    const getRegionHistoryHandler = new lambda.Function(
+      this,
+      projectPrefix('getRegionHistory'),
+      {
+        functionName: projectPrefix('getRegionHistory'),
+        runtime: lambda.Runtime.NODEJS_12_X,
+        code: lambda.Code.fromAsset(packagePath),
+        handler: 'api/build/src/handlers/getRegionHistory.default',
+        environment: envVars,
+        timeout: cdk.Duration.seconds(10),
+        memorySize: 512,
+      },
+    );
+
+    const getRegionHistoryIntegration = new apigateway.LambdaIntegration(
+      getRegionHistoryHandler,
+    );
+
+    regionHistoryApi.addMethod('GET', getRegionHistoryIntegration);
+    regionStatusHistoryTable.grantReadData(getRegionHistoryHandler);
+    userTable.grantReadData(getRegionHistoryHandler);
 
     // /trails
     const trailsApi = api.root.addResource('trails');
@@ -794,6 +852,7 @@ export default class extends cdk.Stack {
     regionsTable.grantReadData(runSyncRegionsHandler);
     trailsTable.grantReadData(runSyncRegionsHandler);
     regionStatusTable.grantReadWriteData(runSyncRegionsHandler);
+    regionStatusHistoryTable.grantReadWriteData(runSyncRegionsHandler);
     trailStatusTable.grantReadWriteData(runSyncRegionsHandler);
     webhooksTable.grantReadData(runSyncRegionsHandler);
     userTable.grantReadWriteData(runSyncRegionsHandler);

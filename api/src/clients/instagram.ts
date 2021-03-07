@@ -127,6 +127,7 @@ export interface Media {
   timestamp: string;
   username: string;
 }
+
 export const getMedia = async (
   mediaId: string,
   accessToken: string,

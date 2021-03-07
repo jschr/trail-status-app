@@ -65,4 +65,32 @@ export default {
       },
     },
   },
+  regionStatusHistory: {
+    name: projectPrefix('regionStatusHistory'),
+    partitionKey: { name: 'id', type: dynamodb.AttributeType.STRING },
+    indexes: {
+      regionStatusHistoryByRegion: {
+        name: 'regionStatusHistoryByRegion',
+        partitionKey: {
+          name: 'regionId',
+          type: dynamodb.AttributeType.STRING,
+        },
+        sortKey: {
+          name: 'createdAt',
+          type: dynamodb.AttributeType.STRING,
+        },
+      },
+      regionStatusHistoryByInstagramPost: {
+        name: 'regionStatusHistoryByInstagramPost',
+        partitionKey: {
+          name: 'instagramPostId',
+          type: dynamodb.AttributeType.STRING,
+        },
+        sortKey: {
+          name: 'createdAt',
+          type: dynamodb.AttributeType.STRING,
+        },
+      },
+    },
+  },
 };

@@ -6,6 +6,7 @@ import fs from 'fs';
 import path from 'path';
 import https from 'https';
 import getRegionStatus from '../handlers/getRegionStatus';
+import getRegionHistory from '../handlers/getRegionHistory';
 import getTrailStatus from '../handlers/getTrailStatus';
 import getLegacyTrailStatus from '../handlers/getLegacyTrailStatus';
 import authorizeInstagram from '../handlers/authorizeInstagram';
@@ -51,6 +52,7 @@ app.get(
 app.get('/regions', toExpressApiHandler(getRegion));
 app.put('/regions', toExpressApiHandler(putRegion));
 app.get('/regions/status', toExpressApiHandler(getRegionStatus));
+app.get('/regions/history', toExpressApiHandler(getRegionHistory));
 
 app.post('/trails', toExpressApiHandler(postTrail));
 app.put('/trails', toExpressApiHandler(putTrail));
@@ -74,7 +76,7 @@ app.post(
 // {
 //   "Records": [
 //       {
-//           "groupId": "[userId]>",
+//           "groupId": "[userId]",
 //           "messageId": "[regionId]",
 //           "body": "{\"regionId\": \"[regionId]\"}"
 //       }
