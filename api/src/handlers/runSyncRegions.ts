@@ -1,12 +1,15 @@
 import * as AWS from 'aws-sdk';
+import uuid from 'uuid/v4';
 import withSQSHandler from '../withSQSHandler';
 import RegionModel from '../models/RegionModel';
 import RegionStatusModel from '../models/RegionStatusModel';
+import RegionStatusHistoryModel from '../models/RegionStatusHistoryModel';
 import UserModel from '../models/UserModel';
 import TrailModel from '../models/TrailModel';
 import TrailStatusModel from '../models/TrailStatusModel';
 import WebhookModel from '../models/WebhookModel';
 import * as instagram from '../clients/instagram';
+import { stripHashtags } from '../utilities';
 
 const sqs = new AWS.SQS();
 const runWebhooksQueueUrl = process.env.RUN_WEBHOOKS_QUEUE_URL;
@@ -75,16 +78,6 @@ const syncRegion = async (regionId: string) => {
       caption: media.caption?.slice(0, 20),
       timestamp: media.timestamp,
     })),
-  );
-
-  // Ensure media is sorted by most recent.
-  userMedia = userMedia.sort(
-    (a, b) => +new Date(b.timestamp) - +new Date(a.timestamp),
-  );
-
-  console.info(
-    `User media after sort '${region.id}':`,
-    userMedia.map(media => media.id),
   );
 
   let mediaWithOpenStatus: instagram.UserMedia | null = null;
@@ -195,17 +188,47 @@ const setRegionStatus = async (
   const didMessageChange = message !== regionStatus.message;
 
   if (didStatusChange || didMessageChange) {
-    console.info(
-      `Setting region '${region.id}' status to '${status}' with message '${message}`,
-    );
+    // The Instagram API once in a while doesn't return the most recent posts, causing the region to
+    // incorrectly update the status. Check to make sure there isn't already an region status created
+    // for the same instagram post id.
+    const [
+      existingRegionHistory,
+    ] = await RegionStatusHistoryModel.queryByInstagramPost(userMedia.id);
 
-    await regionStatus.save({
+    if (existingRegionHistory.length > 0) {
+      console.log(existingRegionHistory);
+      console.warn(
+        `Region '${region.id}' already has a status for instagram post '${userMedia.id}', skipping setting status.`,
+      );
+      return;
+    }
+
+    const regionHistory = new RegionStatusHistoryModel({
+      id: uuid(),
+      regionId: region.id,
       status,
       message,
       instagramPostId: userMedia.id,
       imageUrl: userMedia.mediaUrl,
       instagramPermalink: permalink,
+      createdAt: new Date().toISOString(),
     });
+
+    console.info(
+      `Setting region '${region.id}' status to '${status}' with message '${message}`,
+    );
+
+    await Promise.all([
+      regionHistory.save(),
+
+      regionStatus.save({
+        status,
+        message,
+        instagramPostId: userMedia.id,
+        imageUrl: userMedia.mediaUrl,
+        instagramPermalink: permalink,
+      }),
+    ]);
 
     if (didStatusChange) {
       const regionWebhooks = webhooks.filter(w => !w.trailId);
@@ -284,6 +307,3 @@ const createWebhookJob = async (webhook: WebhookModel) => {
     );
   }
 };
-
-const stripHashtags = (value: string) =>
-  value.replace(/\#[a-zA-Z0-9-]+(\s|\.|$)/g, '').trim();
