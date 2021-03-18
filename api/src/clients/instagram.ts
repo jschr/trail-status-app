@@ -98,7 +98,7 @@ export interface UserMedia {
 export const getUserMedia = async (
   accessToken: string,
 ): Promise<UserMedia[]> => {
-  const userUrl = `${igGraphUrl}/me?fields=media,media.caption,media.media_url,media.timestamp&access_token=${accessToken}`;
+  const userUrl = `${igGraphUrl}/me?fields=media{media_url,caption,timestamp}&access_token=${accessToken}`;
   const userResp = await fetch(userUrl);
 
   if (!userResp.ok) {
