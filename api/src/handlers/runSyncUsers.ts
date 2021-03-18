@@ -1,15 +1,12 @@
 import * as AWS from 'aws-sdk';
-import uuid from 'uuid/v4';
 import withSQSHandler from '../withSQSHandler';
 import RegionModel from '../models/RegionModel';
 import RegionStatusModel from '../models/RegionStatusModel';
-import RegionStatusHistoryModel from '../models/RegionStatusHistoryModel';
 import UserModel from '../models/UserModel';
 import TrailModel from '../models/TrailModel';
 import TrailStatusModel from '../models/TrailStatusModel';
 import WebhookModel from '../models/WebhookModel';
 import * as instagram from '../clients/instagram';
-import { stripHashtags } from '../utilities';
 
 const sqs = new AWS.SQS();
 const runWebhooksQueueUrl = process.env.RUN_WEBHOOKS_QUEUE_URL;
@@ -25,73 +22,84 @@ export default withSQSHandler(async event => {
   }
 
   for (const message of event.Records) {
-    let regionId: string | null = null;
+    let userId: string | null = null;
     try {
-      ({ regionId } = JSON.parse(message.body));
+      ({ userId } = JSON.parse(message.body));
     } catch (err) {
       console.error(`Failed to parse message body '${message.body}'`);
     }
 
-    if (!regionId) {
-      console.error(`Missing regionId in message body '${message.body}'`);
+    if (!userId) {
+      console.error(`Missing userId in message body '${message.body}'`);
       continue;
     }
 
     try {
-      await syncRegion(regionId);
+      await syncUser(userId);
     } catch (err) {
       // Throw the error to retry.
-      throw new Error(
-        `Failed to sync region '${regionId}' with '${err.message}'`,
-      );
+      throw new Error(`Failed to sync user '${userId}' with '${err.message}'`);
     }
   }
 });
 
-const syncRegion = async (regionId: string) => {
-  const region = await RegionModel.get(regionId);
-  if (!region) {
-    throw new Error(`Failed to find region for '${regionId}'`);
-  }
-
-  const user = await UserModel.get(region.userId);
+const syncUser = async (userId: string) => {
+  const user = await UserModel.get(userId);
   if (!user) {
-    throw new Error(`Failed to find user for '${region.userId}'`);
+    throw new Error(`Failed to find user for '${userId}'`);
   }
 
-  const [trails, webhooks, accessToken] = await Promise.all([
+  const accessToken = await getAccessToken(user);
+  let userMedia = await instagram.getUserMedia(accessToken);
+
+  // Ensure media is sorted by most recent.
+  userMedia = userMedia.sort(
+    (a, b) => +new Date(b.timestamp) - +new Date(a.timestamp),
+  );
+
+  console.info(
+    `Found user media for user '${user.id}':`,
+    userMedia.map(media => ({
+      id: media.id,
+      caption: media.caption?.slice(0, 40),
+      timestamp: media.timestamp,
+    })),
+  );
+
+  const regions = await RegionModel.allByUser(userId);
+  await Promise.all(
+    regions.map(region => syncRegion(region, userMedia, accessToken)),
+  );
+};
+
+const syncRegion = async (
+  region: RegionModel,
+  userMedia: instagram.UserMedia[],
+  accessToken: string,
+) => {
+  console.info(`Syncing region '${region.id}' for user '${region.userId}'`);
+
+  const [trails, webhooks] = await Promise.all([
     TrailModel.allByRegion(region.id),
     WebhookModel.allByRegion(region.id),
-    getAccessToken(user),
   ]);
 
   console.info(
     `Region '${region.id}' has ${trails.length} trails and ${webhooks.length} webhooks`,
   );
 
-  let userMedia = await instagram.getUserMedia(accessToken);
-
-  console.info(
-    `Found user media for region '${region.id}':`,
-    userMedia.map(media => ({
-      id: media.id,
-      caption: media.caption?.slice(0, 20),
-      timestamp: media.timestamp,
-    })),
-  );
-
   let mediaWithOpenStatus: instagram.UserMedia | null = null;
   let mediaWithClosedStatus: instagram.UserMedia | null = null;
   let permalink = '';
   for (const media of userMedia) {
-    if (media.caption?.includes(region.openHashtag)) {
+    if (hasHashtag(media, region.openHashtag)) {
       console.info(
         `Found open hashtag '${region.openHashtag}' for region '${region.id}'.`,
       );
       ({ permalink } = await instagram.getMedia(media.id, accessToken));
       mediaWithOpenStatus = media;
       break;
-    } else if (media.caption?.includes(region.closeHashtag)) {
+    } else if (hasHashtag(media, region.closeHashtag)) {
       console.info(
         `Found close hashtag '${region.closeHashtag}' for region '${region.id}'.`,
       );
@@ -129,7 +137,7 @@ const syncRegion = async (regionId: string) => {
     for (const trail of trails) {
       if (
         trail.closeHashtag &&
-        mediaWithOpenStatus.caption?.includes(trail.closeHashtag)
+        hasHashtag(mediaWithOpenStatus, trail.closeHashtag)
       ) {
         console.info(
           `Found close hashtag '${trail.closeHashtag}' for trail '${trail.id}' and region '${region.id}'.`,
@@ -188,47 +196,17 @@ const setRegionStatus = async (
   const didMessageChange = message !== regionStatus.message;
 
   if (didStatusChange || didMessageChange) {
-    // The Instagram API once in a while doesn't return the most recent posts, causing the region to
-    // incorrectly update the status. Check to make sure there isn't already an region status created
-    // for the same instagram post id.
-    const [
-      existingRegionHistory,
-    ] = await RegionStatusHistoryModel.queryByInstagramPost(userMedia.id);
+    console.info(
+      `Setting region '${region.id}' status to '${status}' with message '${message}`,
+    );
 
-    if (existingRegionHistory.length > 0) {
-      console.log(existingRegionHistory);
-      console.warn(
-        `Region '${region.id}' already has a status for instagram post '${userMedia.id}', skipping setting status.`,
-      );
-      return;
-    }
-
-    const regionHistory = new RegionStatusHistoryModel({
-      id: uuid(),
-      regionId: region.id,
+    await regionStatus.save({
       status,
       message,
       instagramPostId: userMedia.id,
       imageUrl: userMedia.mediaUrl,
       instagramPermalink: permalink,
-      createdAt: new Date().toISOString(),
     });
-
-    console.info(
-      `Setting region '${region.id}' status to '${status}' with message '${message}`,
-    );
-
-    await Promise.all([
-      regionHistory.save(),
-
-      regionStatus.save({
-        status,
-        message,
-        instagramPostId: userMedia.id,
-        imageUrl: userMedia.mediaUrl,
-        instagramPermalink: permalink,
-      }),
-    ]);
 
     if (didStatusChange) {
       const regionWebhooks = webhooks.filter(w => !w.trailId);
@@ -307,3 +285,9 @@ const createWebhookJob = async (webhook: WebhookModel) => {
     );
   }
 };
+
+const hasHashtag = (media: instagram.UserMedia, hashtag: string) =>
+  (media.caption || '').match(/#\w+/g)?.includes(hashtag) ?? false;
+
+const stripHashtags = (value: string) =>
+  value.replace(/\#[a-zA-Z0-9-]+(\s|\.|$)/g, '').trim();

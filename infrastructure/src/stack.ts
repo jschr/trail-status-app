@@ -146,33 +146,31 @@ export default class extends cdk.Stack {
 
     // Sync regions
 
-    const runSyncRegionsDeadletter = new sqs.Queue(
+    const runSyncUsersDeadletter = new sqs.Queue(
       this,
-      projectPrefix('runSyncRegionsJobDeadletter'),
+      projectPrefix('runSyncUsersJobDeadletter'),
       {
         fifo: true,
-        queueName: projectPrefix('runSyncRegionsJobDeadletter.fifo'),
+        queueName: projectPrefix('runSyncUsersJobDeadletter.fifo'),
       },
     );
 
     // Set to vibility timeout to 6 times the runWebhooks lambda timeout
     // https://docs.aws.amazon.com/lambda/latest/dg/with-sqs.html#events-sqs-queueconfig
-    const runSyncRegionsHandlerTimeout = 15;
-    const runSyncRegionsQueue = new sqs.Queue(
+    const runSyncUsersHandlerTimeout = 15;
+    const runSyncUsersQueue = new sqs.Queue(
       this,
-      projectPrefix('runSyncRegionsJob'),
+      projectPrefix('runSyncUsersJob'),
       {
         fifo: true,
-        queueName: projectPrefix('runSyncRegionsJob.fifo'),
+        queueName: projectPrefix('runSyncUsersJob.fifo'),
         contentBasedDeduplication: true,
         deliveryDelay: cdk.Duration.seconds(30),
         // Set to vibility timeout to 6 times the runWebhooks lambda timeout
         // https://docs.aws.amazon.com/lambda/latest/dg/with-sqs.html#events-sqs-queueconfig
-        visibilityTimeout: cdk.Duration.seconds(
-          6 * runSyncRegionsHandlerTimeout,
-        ),
+        visibilityTimeout: cdk.Duration.seconds(6 * runSyncUsersHandlerTimeout),
         deadLetterQueue: {
-          queue: runSyncRegionsDeadletter,
+          queue: runSyncUsersDeadletter,
           maxReceiveCount: 10,
         },
       },
@@ -251,7 +249,7 @@ export default class extends cdk.Stack {
       JWT_SECRET: env('JWT_SECRET'),
       JWT_EXPIRES_IN: env('JWT_EXPIRES_IN'),
       FRONTEND_ENDPOINT: env('FRONTEND_ENDPOINT'),
-      RUN_SYNC_REGIONS_QUEUE_URL: runSyncRegionsQueue.queueUrl,
+      RUN_SYNC_USERS_QUEUE_URL: runSyncUsersQueue.queueUrl,
       RUN_WEBHOOKS_QUEUE_URL: runWebhooksQueue.queueUrl,
       FIREBASE_PROJECT_ID: env('FIREBASE_PROJECT_ID'),
       FIREBASE_PRIVATE_KEY: env('FIREBASE_PRIVATE_KEY'),
@@ -792,9 +790,9 @@ export default class extends cdk.Stack {
 
     // Sync regions
 
-    const scheduleSyncRegionsRule = new events.Rule(
+    const scheduleSyncUsersRule = new events.Rule(
       this,
-      projectPrefix('scheduleSyncRegionsRule'),
+      projectPrefix('scheduleSyncUsersRule'),
       {
         schedule: events.Schedule.rate(
           cdk.Duration.minutes(parseInt(env('SYNC_FREQUENCY_MINUTES'), 10)),
@@ -802,63 +800,60 @@ export default class extends cdk.Stack {
       },
     );
 
-    const scheduleSyncRegionsHandler = new lambda.Function(
+    const scheduleSyncUsersHandler = new lambda.Function(
       this,
-      projectPrefix('scheduleSyncRegions'),
+      projectPrefix('scheduleSyncUsers'),
       {
-        functionName: projectPrefix('scheduleSyncRegions'),
+        functionName: projectPrefix('scheduleSyncUsers'),
         runtime: lambda.Runtime.NODEJS_12_X,
         code: lambda.Code.fromAsset(packagePath),
-        handler: 'api/build/src/handlers/scheduleSyncRegions.default',
+        handler: 'api/build/src/handlers/scheduleSyncUsers.default',
         environment: envVars,
         timeout: cdk.Duration.seconds(10),
         memorySize: 512,
       },
     );
 
-    regionsTable.grantReadData(scheduleSyncRegionsHandler);
-    runSyncRegionsQueue.grantSendMessages(scheduleSyncRegionsHandler);
+    userTable.grantReadData(scheduleSyncUsersHandler);
+    runSyncUsersQueue.grantSendMessages(scheduleSyncUsersHandler);
 
-    scheduleSyncRegionsRule.addTarget(
-      new eventTargets.LambdaFunction(scheduleSyncRegionsHandler),
+    scheduleSyncUsersRule.addTarget(
+      new eventTargets.LambdaFunction(scheduleSyncUsersHandler),
     );
 
     // Jobs
 
     // Sync regions
 
-    const runSyncRegionsQueueEventSource = new SqsEventSource(
-      runSyncRegionsQueue,
-      {
-        // Set batch size to one. The runSyncRegions handler will be called for each region
-        // to allow re-trying each individual one if one fails rather than the entire batch.
-        batchSize: 1,
-      },
-    );
+    const runSyncUsersQueueEventSource = new SqsEventSource(runSyncUsersQueue, {
+      // Set batch size to one. The runSyncUsers handler will be called for each region
+      // to allow re-trying each individual one if one fails rather than the entire batch.
+      batchSize: 1,
+    });
 
-    const runSyncRegionsHandler = new lambda.Function(
+    const runSyncUsersHandler = new lambda.Function(
       this,
-      projectPrefix('runSyncRegions'),
+      projectPrefix('runSyncUsers'),
       {
-        functionName: projectPrefix('runSyncRegions'),
+        functionName: projectPrefix('runSyncUsers'),
         runtime: lambda.Runtime.NODEJS_12_X,
         code: lambda.Code.fromAsset(packagePath),
-        handler: 'api/build/src/handlers/runSyncRegions.default',
+        handler: 'api/build/src/handlers/runSyncUsers.default',
         environment: envVars,
-        timeout: cdk.Duration.seconds(runSyncRegionsHandlerTimeout),
+        timeout: cdk.Duration.seconds(runSyncUsersHandlerTimeout),
         memorySize: 1024,
       },
     );
 
-    runSyncRegionsHandler.addEventSource(runSyncRegionsQueueEventSource);
-    regionsTable.grantReadData(runSyncRegionsHandler);
-    trailsTable.grantReadData(runSyncRegionsHandler);
-    regionStatusTable.grantReadWriteData(runSyncRegionsHandler);
-    regionStatusHistoryTable.grantReadWriteData(runSyncRegionsHandler);
-    trailStatusTable.grantReadWriteData(runSyncRegionsHandler);
-    webhooksTable.grantReadData(runSyncRegionsHandler);
-    userTable.grantReadWriteData(runSyncRegionsHandler);
-    runWebhooksQueue.grantSendMessages(runSyncRegionsHandler);
+    runSyncUsersHandler.addEventSource(runSyncUsersQueueEventSource);
+    regionsTable.grantReadData(runSyncUsersHandler);
+    trailsTable.grantReadData(runSyncUsersHandler);
+    regionStatusTable.grantReadWriteData(runSyncUsersHandler);
+    regionStatusHistoryTable.grantReadWriteData(runSyncUsersHandler);
+    trailStatusTable.grantReadWriteData(runSyncUsersHandler);
+    webhooksTable.grantReadData(runSyncUsersHandler);
+    userTable.grantReadWriteData(runSyncUsersHandler);
+    runWebhooksQueue.grantSendMessages(runSyncUsersHandler);
 
     // Run webhooks
 
@@ -877,7 +872,7 @@ export default class extends cdk.Stack {
         code: lambda.Code.fromAsset(packagePath),
         handler: 'api/build/src/handlers/runWebhooks.default',
         environment: envVars,
-        timeout: cdk.Duration.seconds(runSyncRegionsHandlerTimeout),
+        timeout: cdk.Duration.seconds(runSyncUsersHandlerTimeout),
         memorySize: 1024,
       },
     );

@@ -20,13 +20,13 @@ import postWebhook from '../handlers/postWebhook';
 import postWebhookRun from '../handlers/postWebhookRun';
 import putWebhook from '../handlers/putWebhook';
 import deleteWebhook from '../handlers/deleteWebhook';
-import runSyncRegions from '../handlers/runSyncRegions';
+import runSyncUsers from '../handlers/runSyncUsers';
 import runWebhooks from '../handlers/runWebhooks';
 import testWebhook from '../handlers/testWebhook';
 import postFCMWebhook from '../handlers/postFCMWebhook';
 import postFCMSubscribe from '../handlers/postFCMSubscribe';
 import postFCMUnsubscribe from '../handlers/postFCMUnsubscribe';
-import scheduleSyncRegions from '../handlers/scheduleSyncRegions';
+import scheduleSyncUsers from '../handlers/scheduleSyncUsers';
 import toExpressApiHandler from './toExpressApiHandler';
 import toExpressScheduledHandler from './toExpressScheduledHandler';
 import toExpressSQSHandler from './toExpressSQSHandler';
@@ -67,22 +67,19 @@ app.post('/webhooks/run', toExpressApiHandler(postWebhookRun));
 // TODO: Deprecate
 app.get('/status', toExpressApiHandler(getLegacyTrailStatus));
 
-app.post(
-  '/schedule-sync-regions',
-  toExpressScheduledHandler(scheduleSyncRegions),
-);
+app.post('/schedule-sync-user', toExpressScheduledHandler(scheduleSyncUsers));
 
 // Example body:
 // {
 //   "Records": [
 //       {
 //           "groupId": "[userId]",
-//           "messageId": "[regionId]",
-//           "body": "{\"regionId\": \"[regionId]\"}"
+//           "messageId": "[userId]",
+//           "body": "{\"userId\": \"[userId]\"}"
 //       }
 //   ]
 // }
-app.post('/run-sync-regions', toExpressSQSHandler(runSyncRegions));
+app.post('/run-sync-users', toExpressSQSHandler(runSyncUsers));
 
 // Example body:
 // {
