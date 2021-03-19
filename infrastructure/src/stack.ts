@@ -796,7 +796,9 @@ export default class extends cdk.Stack {
       this,
       projectPrefix('scheduleSyncRegionsRule'),
       {
-        schedule: events.Schedule.rate(cdk.Duration.minutes(2)),
+        schedule: events.Schedule.rate(
+          cdk.Duration.minutes(parseInt(env('SYNC_FREQUENCY_MINUTES'), 10)),
+        ),
       },
     );
 
