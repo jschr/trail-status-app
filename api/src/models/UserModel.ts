@@ -78,6 +78,48 @@ export default class UserModel {
     }
   }
 
+  public static async scan(
+    exclusiveStartKey?: AWS.DynamoDB.Key | undefined,
+  ): Promise<[UserModel[], AWS.DynamoDB.Key | undefined]> {
+    const params: AWS.DynamoDB.ScanInput = {
+      TableName: tables.users.name,
+      ExclusiveStartKey: exclusiveStartKey,
+    };
+
+    try {
+      const res = await dynamodb.scan(params).promise();
+      if (!res.Items) {
+        return [[], undefined];
+      }
+
+      const users = res.Items.map(
+        attrMap => new UserModel(this.fromAttributeMap(attrMap)),
+      );
+
+      return [users, res.LastEvaluatedKey];
+    } catch (err) {
+      throw new Error(
+        `UserModel.scan with params '${JSON.stringify(params)}' failed with '${
+          err.message
+        }'`,
+      );
+    }
+  }
+
+  public static async all(): Promise<UserModel[]> {
+    const allUsers: UserModel[] = [];
+
+    let [useres, lastEvaluatedKey] = await UserModel.scan();
+    allUsers.push(...useres);
+
+    while (lastEvaluatedKey) {
+      [useres, lastEvaluatedKey] = await UserModel.scan(lastEvaluatedKey);
+      allUsers.push(...useres);
+    }
+
+    return allUsers;
+  }
+
   private static toAttributeMap(user: Partial<User>) {
     const attrMap: AWS.DynamoDB.AttributeMap = {};
 

@@ -103,7 +103,7 @@ export const getUserMedia = async (
 
   if (!userResp.ok) {
     const payload = await userResp.text();
-    throw new Error(`InstagramClient error getting user: ${payload}`);
+    throw new Error(`InstagramClient error getting media: ${payload}`);
   }
 
   const userPayload = await userResp.json();
