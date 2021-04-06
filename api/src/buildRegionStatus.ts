@@ -1,4 +1,5 @@
-import fetch from 'node-fetch';
+import * as AWS from 'aws-sdk';
+import { env } from '@trail-status-app/utilities';
 import RegionModel from './models/RegionModel';
 import RegionStatusModel from './models/RegionStatusModel';
 import TrailModel from './models/TrailModel';
@@ -54,12 +55,10 @@ export default async (regionId: string): Promise<RegionStatus | null> => {
     return null;
   }
 
-  const [user, trailStatuses, airTemp, groundTemp] = await Promise.all([
+  const [user, trailStatuses, weatherData] = await Promise.all([
     UserModel.get(region.userId),
     Promise.all((trails || []).map(t => TrailStatusModel.get(t.id))),
-    // Make sure we never throw when fetching temps.
-    getAirTemp(region).catch(() => null),
-    getGroundTemp(region).catch(() => null),
+    getWeatherData(region.timestreamLocation),
   ]);
 
   if (!user) {
@@ -77,8 +76,8 @@ export default async (regionId: string): Promise<RegionStatus | null> => {
     instagramPostId: regionStatus.instagramPostId,
     instagramPermalink: regionStatus.instagramPermalink,
     updatedAt: regionStatus.updatedAt,
-    airTemp,
-    groundTemp,
+    airTemp: weatherData?.airTemp || null,
+    groundTemp: weatherData?.groundTemp || null,
     trails: (trailStatuses || [])
       .map(trailStatus => {
         if (!trailStatus) return null;
@@ -101,119 +100,93 @@ export default async (regionId: string): Promise<RegionStatus | null> => {
   };
 };
 
-const getAirTemp = async (region: RegionModel): Promise<number | null> => {
-  if (!region.airTempChannelId) return null;
-
-  const data = await getThinkSpeakChannelData(region.airTempChannelId);
-  if (!data) return null;
-
-  const latest = data.feeds[0];
-  if (!latest) return null;
-
-  if (isStaleMetric(latest.created_at)) return null;
-
-  const temp = Math.round(parseFloat(latest.field3));
-  if (isNaN(temp)) return null;
-
-  return temp;
-};
-
-const getGroundTemp = async (region: RegionModel): Promise<number | null> => {
-  if (!region.groundTempChannelId) return null;
-
-  const data = await getThinkSpeakChannelData(region.groundTempChannelId);
-  if (!data) return null;
-
-  const latest = data.feeds[0];
-  if (!latest) return null;
-
-  if (isStaleMetric(latest.created_at)) return null;
-
-  const temp = Math.round(parseFloat(latest.field2));
-  if (isNaN(temp)) return null;
-
-  return temp;
-};
-
-const isStaleMetric = (metricDate: string) => {
-  const now = new Date();
-  const createdAt = new Date(metricDate);
-  // Metric is stale if created at is > 4 hours ago.
-  return +now - +createdAt > 1000 * 60 * 60 * 4;
-};
-
-export interface DeviceChannel {
-  channel: {
-    id: string;
-    name: string;
-    description: string;
-    last_entry_id: number;
-    created_at: string;
-    updated_at: string;
-  } & Fields;
-  feeds: Array<{ entry_id: string; created_at: string } & Fields>;
+interface WeatherData {
+  airTemp: number | null;
+  groundTemp: number | null;
 }
 
-interface Fields {
-  field1: string;
-  field2: string;
-  field3: string;
-  field4: string;
-  field5: string;
-  field6: string;
-  field7: string;
-  field8: string;
-}
-
-const channelCache: {
-  [channelId: string]: { data: DeviceChannel; lastFetched: Date };
+const weatherCache: {
+  [location: string]: { data: WeatherData; lastFetched: Date };
 } = {};
 
-const getThinkSpeakChannelData = async (
-  channelId: string,
-): Promise<DeviceChannel | null> => {
-  const cachedData = channelCache[channelId];
-
-  if (cachedData) {
-    const ttl = 1000 * 60 * 5; // 5 minutes;
-    if (+new Date() - +cachedData.lastFetched < ttl) {
-      console.info(`Using cached data for channel id '${channelId}'`);
-      return cachedData.data;
-    }
-  }
-
-  console.info(`Fetching data for channel id '${channelId}'`);
-
-  const url = `https://api.thingspeak.com/channels/${channelId}/feeds.json?results=1&timezone=America%2FNew_York`;
-  const resp = await fetch(url);
-
-  if (!resp.ok) {
-    console.error(
-      `Failed to fetch channel from ${url} with status ${resp.status}`,
-    );
-    return null;
-  }
-
+export const getWeatherData = async (
+  location: string,
+): Promise<WeatherData> => {
   try {
-    const data = await resp.json();
-    if (!data) {
-      throw new Error('Missing channel data');
-    }
-    if (!Array.isArray(data.feeds)) {
-      throw new Error('Missing channel feed data');
-    }
-    if (!data.feeds[0]) {
-      throw new Error('Missing latest channel feed data');
-    }
-    if (!data.feeds[0].created_at) {
-      throw new Error('Missing created_at in latest channel feed data');
+    if (!location) return { airTemp: null, groundTemp: null };
+
+    const locationCache = weatherCache[location];
+
+    if (locationCache) {
+      const ttl = 1000 * 60 * 15; // 15 minutes;
+      if (+new Date() - +locationCache.lastFetched < ttl) {
+        console.info(`Using cached data for location '${location}'`);
+        return locationCache.data;
+      }
     }
 
-    channelCache[channelId] = { data, lastFetched: new Date() };
+    const timestreamQuery = new AWS.TimestreamQuery({
+      region: env('TIMESTREAM_REGION'),
+      credentials: {
+        accessKeyId: env('TIMESTREAM_ACCESS_KEY_ID'),
+        secretAccessKey: env('TIMESTREAM_SECRET_ACCESS_KEY'),
+      },
+    });
+
+    const params = {
+      QueryString: `
+    WITH latest_recorded_time AS (
+      SELECT
+          measure_name,
+          max(time) as latest_time
+      FROM "TMS"."WeatherData"
+      WHERE time >= ago(4h) AND location = '${location}'
+      GROUP BY measure_name
+    )
+    SELECT
+      b.measure_name,
+      b.measure_value::double as last_reported_double,
+      b.measure_value::bigint as last_reported_bigint,
+      b.type,
+      b.location,
+      b.time
+    FROM
+    latest_recorded_time a INNER JOIN "TMS"."WeatherData" b
+    ON a.measure_name = b.measure_name AND b.time = a.latest_time
+    WHERE b.time > ago(4h) AND location = '${location}'
+    ORDER BY b.measure_name`,
+    };
+
+    const results = await timestreamQuery.query(params).promise();
+
+    const airTempRow = results.Rows.find(
+      r => r.Data[0]?.ScalarValue === 'temperature',
+    );
+    const airTempValue = parseInt(airTempRow?.Data[1]?.ScalarValue || '', 10);
+
+    const groundTempRow = results.Rows.find(
+      r => r.Data[0]?.ScalarValue === 'groundtemperature',
+    );
+    const groundTempValue = parseInt(
+      groundTempRow?.Data[1]?.ScalarValue || '',
+      10,
+    );
+
+    const data = {
+      airTemp: isNaN(airTempValue) ? null : airTempValue,
+      groundTemp: isNaN(groundTempValue) ? null : groundTempValue,
+    };
+
+    weatherCache[location] = { data, lastFetched: new Date() };
+
+    console.info(`Fetched timestream data for location '${location}'`);
 
     return data;
   } catch (err) {
-    console.error(`Failed to parse channel from ${url} with '${err.message}'`);
-    return null;
+    console.error(`Failed to fetch timestream data with '${err.message}'`);
+    return {
+      airTemp: null,
+      groundTemp: null,
+    };
   }
 };
