@@ -9,7 +9,7 @@ export interface Region {
   name: string;
   openHashtag: string;
   closeHashtag: string;
-  timestreamLocation?: string;
+  timestreamId?: string;
   updatedAt: string;
   createdAt: string;
 }
@@ -177,8 +177,8 @@ export default class RegionModel {
       attrMap.openHashtag = { S: region.openHashtag };
     if (region.closeHashtag !== undefined)
       attrMap.closeHashtag = { S: region.closeHashtag };
-    if (region.timestreamLocation !== undefined)
-      attrMap.timestreamLocation = { S: region.timestreamLocation };
+    if (region.timestreamId !== undefined)
+      attrMap.timestreamId = { S: region.timestreamId };
     if (region.updatedAt !== undefined)
       attrMap.updatedAt = { S: region.updatedAt };
     if (region.createdAt !== undefined)
@@ -199,7 +199,7 @@ export default class RegionModel {
       name: attrMap.name?.S,
       openHashtag: attrMap.openHashtag?.S,
       closeHashtag: attrMap.closeHashtag?.S,
-      timestreamLocation: attrMap.timestreamLocation?.S,
+      timestreamId: attrMap.timestreamId?.S,
       updatedAt: attrMap.updatedAt?.S,
       createdAt: attrMap.createdAt?.S,
     };
@@ -256,8 +256,8 @@ export default class RegionModel {
       : '';
   }
 
-  get timestreamLocation() {
-    return this.attrs.timestreamLocation ?? '';
+  get timestreamId() {
+    return this.attrs.timestreamId ?? '';
   }
 
   get updatedAt() {
@@ -275,7 +275,7 @@ export default class RegionModel {
       name: this.name,
       openHashtag: this.openHashtag,
       closeHashtag: this.closeHashtag,
-      timestreamLocation: this.timestreamLocation,
+      timestreamId: this.timestreamId,
       updatedAt: this.updatedAt,
       createdAt: this.createdAt,
     };

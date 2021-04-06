@@ -58,7 +58,7 @@ export default async (regionId: string): Promise<RegionStatus | null> => {
   const [user, trailStatuses, weatherData] = await Promise.all([
     UserModel.get(region.userId),
     Promise.all((trails || []).map(t => TrailStatusModel.get(t.id))),
-    getWeatherData(region.timestreamLocation),
+    getWeatherData(region.timestreamId),
   ]);
 
   if (!user) {
@@ -106,22 +106,20 @@ interface WeatherData {
 }
 
 const weatherCache: {
-  [location: string]: { data: WeatherData; lastFetched: Date };
+  [id: string]: { data: WeatherData; lastFetched: Date };
 } = {};
 
-export const getWeatherData = async (
-  location: string,
-): Promise<WeatherData> => {
+export const getWeatherData = async (id: string): Promise<WeatherData> => {
   try {
-    if (!location) return { airTemp: null, groundTemp: null };
+    if (!id) return { airTemp: null, groundTemp: null };
 
-    const locationCache = weatherCache[location];
+    const cache = weatherCache[id];
 
-    if (locationCache) {
+    if (cache) {
       const ttl = 1000 * 60 * 15; // 15 minutes;
-      if (+new Date() - +locationCache.lastFetched < ttl) {
-        console.info(`Using cached data for location '${location}'`);
-        return locationCache.data;
+      if (+new Date() - +cache.lastFetched < ttl) {
+        console.info(`Using cached data for id '${id}'`);
+        return cache.data;
       }
     }
 
@@ -140,20 +138,21 @@ export const getWeatherData = async (
           measure_name,
           max(time) as latest_time
       FROM "TMS"."WeatherData"
-      WHERE time >= ago(4h) AND location = '${location}'
+      WHERE time >= ago(4h) AND id = '${id}'
       GROUP BY measure_name
     )
     SELECT
       b.measure_name,
       b.measure_value::double as last_reported_double,
       b.measure_value::bigint as last_reported_bigint,
+      b.time,
+      b.id,
       b.type,
-      b.location,
-      b.time
+      b.location
     FROM
     latest_recorded_time a INNER JOIN "TMS"."WeatherData" b
     ON a.measure_name = b.measure_name AND b.time = a.latest_time
-    WHERE b.time > ago(4h) AND location = '${location}'
+    WHERE b.time > ago(4h) AND id = '${id}'
     ORDER BY b.measure_name`,
     };
 
@@ -177,9 +176,9 @@ export const getWeatherData = async (
       groundTemp: isNaN(groundTempValue) ? null : groundTempValue,
     };
 
-    weatherCache[location] = { data, lastFetched: new Date() };
+    weatherCache[id] = { data, lastFetched: new Date() };
 
-    console.info(`Fetched timestream data for location '${location}'`);
+    console.info(`Fetched timestream data for id '${id}'`);
 
     return data;
   } catch (err) {
