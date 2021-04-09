@@ -1,7 +1,9 @@
 import * as AWS from 'aws-sdk';
+import uuid from 'uuid/v4';
 import withSQSHandler from '../withSQSHandler';
 import RegionModel from '../models/RegionModel';
 import RegionStatusModel from '../models/RegionStatusModel';
+import RegionStatusHistoryModel from '../models/RegionStatusHistoryModel';
 import UserModel from '../models/UserModel';
 import TrailModel from '../models/TrailModel';
 import TrailStatusModel from '../models/TrailStatusModel';
@@ -200,15 +202,26 @@ const setRegionStatus = async (
       `Setting region '${region.id}' status to '${status}' with message '${message}`,
     );
 
-    await regionStatus.save({
+    const statusParams = {
       status,
       message,
       instagramPostId: userMedia.id,
       imageUrl: userMedia.mediaUrl,
       instagramPermalink: permalink,
-    });
+    };
+
+    await regionStatus.save(statusParams);
 
     if (didStatusChange) {
+      const statusHistory = new RegionStatusHistoryModel({
+        ...statusParams,
+        id: uuid(),
+        regionId: region.id,
+        createdAt: new Date().toISOString(),
+      });
+      await statusHistory.save();
+      console.info(`Created region status history for '${region.id}'`);
+
       const regionWebhooks = webhooks.filter(w => !w.trailId);
       console.info(
         `Found '${regionWebhooks.length}' webhooks for region '${region.id}'`,
