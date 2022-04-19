@@ -18,7 +18,7 @@ _Trails open, enjoy the nice weather! #trailsopen_
 
 **Opening the region, keeping a specific trail closed**
 
-_Trails open but stay off Glasglow side! #trailsopen #glasgowclosed_
+_Trails open but stay off Glasgow side! #trailsopen #glasgowclosed_
 
 You can configure the trails and hashtags for your region after logging in at https://trailstatusapp.com. Note that the app is not yet approved by Facebook so you will need to be invited as a tester. Open an issue if you want an invite.
 
