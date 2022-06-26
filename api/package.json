@@ -15,7 +15,7 @@
     "cors": "^2.8.5",
     "firebase-admin": "^9.4.2",
     "jsonwebtoken": "^8.5.1",
-    "node-fetch": "^2.6.0",
+    "node-fetch": "^2.6.7",
     "oauth": "^0.9.15",
     "pupa": "^2.1.1",
     "query-string": "^6.11.0",
