@@ -31,7 +31,7 @@
     "@types/oauth": "^0.9.1",
     "@types/traverse": "^0.6.32",
     "aws-sdk": "^2.879.0",
-    "body-parser": "^1.19.0",
+    "body-parser": "^1.20.3",
     "deepmerge": "^3.2.0",
     "express": "^4.17.1"
   }
