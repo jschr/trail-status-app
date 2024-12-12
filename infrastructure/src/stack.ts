@@ -367,6 +367,36 @@ export default class extends cdk.Stack {
     regionStatusHistoryTable.grantReadData(getRegionHistoryHandler);
     userTable.grantReadData(getRegionHistoryHandler);
 
+    // POST /regions/status
+
+    const postRegionStatusHandler = new lambda.Function(
+      this,
+      projectPrefix('postRegionStatus'),
+      {
+        functionName: projectPrefix('postRegionStatus'),
+        runtime: lambda.Runtime.NODEJS_12_X,
+        code: lambda.Code.fromAsset(packagePath),
+        handler: 'api/build/src/handlers/postRegionStatus.default',
+        environment: envVars,
+        timeout: cdk.Duration.seconds(10),
+        memorySize: 512,
+      },
+    );
+
+    const postRegionStatusIntegration = new apigateway.LambdaIntegration(
+      putRegionHandler,
+    );
+
+    regionStatusApi.addMethod('POST', postRegionStatusIntegration);
+    regionsTable.grantReadData(postRegionStatusHandler);
+    trailsTable.grantReadData(postRegionStatusHandler);
+    regionStatusTable.grantReadWriteData(postRegionStatusHandler);
+    regionStatusHistoryTable.grantReadWriteData(postRegionStatusHandler);
+    trailStatusTable.grantReadWriteData(postRegionStatusHandler);
+    webhooksTable.grantReadData(postRegionStatusHandler);
+    userTable.grantReadWriteData(postRegionStatusHandler);
+    runWebhooksQueue.grantSendMessages(postRegionStatusHandler);
+
     // /trails
     const trailsApi = api.root.addResource('trails');
     trailsApi.addCorsPreflight({ allowOrigins: ['*'] });

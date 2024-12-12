@@ -1,14 +1,22 @@
 import * as AWS from 'aws-sdk';
 import uuid from 'uuid/v4';
-import withSQSHandler from '../withSQSHandler';
+import { assert } from '@trail-status-app/utilities';
+import withApiHandler from '../withApiHandler';
 import RegionModel from '../models/RegionModel';
 import RegionStatusModel from '../models/RegionStatusModel';
 import RegionStatusHistoryModel from '../models/RegionStatusHistoryModel';
-import UserModel from '../models/UserModel';
 import TrailModel from '../models/TrailModel';
 import TrailStatusModel from '../models/TrailStatusModel';
 import WebhookModel from '../models/WebhookModel';
 import * as instagram from '../clients/instagram';
+import { Permissions as P, canAccessRegion } from '../jwt';
+import {
+  BadRequestError,
+  NotFoundError,
+  UnauthorizedError,
+} from '../HttpError';
+import { parseBody, parseQuery } from '../requests';
+import { json } from '../responses';
 
 const sqs = new AWS.SQS();
 const runWebhooksQueueUrl = process.env.RUN_WEBHOOKS_QUEUE_URL;
@@ -17,68 +25,77 @@ if (!runWebhooksQueueUrl) {
   throw new Error(`Missing environment variable 'RUN_WEBHOOKS_QUEUE_URL'`);
 }
 
-export default withSQSHandler(async event => {
-  if (!Array.isArray(event?.Records) || !event.Records.length) {
-    console.info(`Received empty messages, do nothing.`);
-    return;
+interface PostRegionStatusQuery {
+  id: string;
+}
+
+interface PostRegionStatusBody {
+  instagramPost: {
+    caption: string;
+  };
+}
+
+export default withApiHandler([P.RegionUpdate], async event => {
+  const { id } = assertPutRegionQuery(parseQuery(event));
+  const { instagramPost } = assertPutRegionBody(parseBody(event));
+
+  const region = await RegionModel.get(id);
+
+  if (!region) {
+    throw new NotFoundError(`Could not find region for '${id}'`);
   }
 
-  for (const message of event.Records) {
-    let userId: string | null = null;
-    try {
-      ({ userId } = JSON.parse(message.body));
-    } catch (err) {
-      console.error(`Failed to parse message body '${message.body}'`);
-    }
-
-    if (!userId) {
-      console.error(`Missing userId in message body '${message.body}'`);
-      continue;
-    }
-
-    try {
-      await syncUser(userId);
-    } catch (err) {
-      // Throw the error to retry.
-      const message = err instanceof Error ? err.message : JSON.stringify(err);
-      throw new Error(`Failed to sync user '${userId}' with '${message}'`);
-    }
+  // Ensure user has access to region.
+  if (!canAccessRegion(event.decodedToken, region.id)) {
+    throw new UnauthorizedError(
+      `User does not have access to region '${region.id}'`,
+    );
   }
+
+  await syncRegion(region, [
+    {
+      id: '',
+      mediaUrl: '',
+      caption: instagramPost.caption,
+      timestamp: new Date().toISOString(),
+    },
+  ]);
+
+  return json({});
 });
 
-const syncUser = async (userId: string) => {
-  const user = await UserModel.get(userId);
-  if (!user) {
-    throw new Error(`Failed to find user for '${userId}'`);
-  }
-
-  const accessToken = await getAccessToken(user);
-  let userMedia = await instagram.getUserMedia(accessToken);
-
-  // Ensure media is sorted by most recent.
-  userMedia = userMedia.sort(
-    (a, b) => +new Date(b.timestamp) - +new Date(a.timestamp),
+const assertPutRegionQuery = (query: any): PostRegionStatusQuery => {
+  assert(
+    !query || typeof query !== 'object',
+    new BadRequestError('Invalid query.'),
   );
 
-  console.info(
-    `Found user media for user '${user.id}':`,
-    userMedia.map(media => ({
-      id: media.id,
-      caption: media.caption?.slice(0, 40),
-      timestamp: media.timestamp,
-    })),
+  assert(
+    typeof query.id !== 'string',
+    new BadRequestError('Missing id query parameter.'),
   );
 
-  const regions = await RegionModel.allByUser(userId);
-  await Promise.all(
-    regions.map(region => syncRegion(region, userMedia, accessToken)),
+  return query;
+};
+
+const assertPutRegionBody = (body: any): PostRegionStatusBody => {
+  assert(
+    !body || typeof body !== 'object',
+    new BadRequestError('Invalid body.'),
   );
+
+  assert(
+    typeof body.instagramPost.caption !== 'string',
+    new BadRequestError('Missing instagramPost.caption in body.'),
+  );
+
+  return body;
 };
 
 const syncRegion = async (
   region: RegionModel,
   userMedia: instagram.UserMedia[],
-  accessToken: string,
+  // accessToken: string,
 ) => {
   console.info(`Syncing region '${region.id}' for user '${region.userId}'`);
 
@@ -99,14 +116,14 @@ const syncRegion = async (
       console.info(
         `Found open hashtag '${region.openHashtag}' for region '${region.id}'.`,
       );
-      ({ permalink } = await instagram.getMedia(media.id, accessToken));
+      // ({ permalink } = await instagram.getMedia(media.id, accessToken));
       mediaWithOpenStatus = media;
       break;
     } else if (hasHashtag(media, region.closeHashtag)) {
       console.info(
         `Found close hashtag '${region.closeHashtag}' for region '${region.id}'.`,
       );
-      ({ permalink } = await instagram.getMedia(media.id, accessToken));
+      // ({ permalink } = await instagram.getMedia(media.id, accessToken));
       mediaWithClosedStatus = media;
       break;
     }
@@ -158,24 +175,6 @@ const syncRegion = async (
   } else {
     console.info(`No status found for region '${region.id}'.`);
   }
-};
-
-const getAccessToken = async (user: UserModel): Promise<string> => {
-  // Instagram long lived tokens expire after 60 days.
-  const accessTokenExpiresAt = +new Date(user.expiresAt);
-  const twoWeeks = 1000 * 60 * 60 * 24 * 14;
-  const now = +new Date();
-
-  // Refresh access token if it expires in two weeks or less.
-  if (accessTokenExpiresAt - now <= twoWeeks) {
-    const { accessToken, expiresIn } = await instagram.refreshAccessToken(
-      user.accessToken,
-    );
-    const expiresAt = new Date(+now + expiresIn * 1000);
-    await user.save({ accessToken, expiresAt: expiresAt.toISOString() });
-  }
-
-  return user.accessToken;
 };
 
 const setRegionStatus = async (
