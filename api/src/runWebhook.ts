@@ -3,6 +3,7 @@ import pupa from 'pupa';
 import traverse from 'traverse';
 import WebhookModel from './models/WebhookModel';
 import { RegionStatus } from './buildRegionStatus';
+import { unwrapError } from './utilities';
 
 const urlSafeObject = (obj: any) => {
   return traverse(obj).map(function(x) {
@@ -56,13 +57,13 @@ export default async (
         body,
       });
     } catch (err) {
-      throw new Error(`Failed to POST '${url}' with '${err.message}'`);
+      throw new Error(`Failed to POST '${url}' with '${unwrapError(err)}'`);
     }
   } else if (method.toLowerCase() === 'get') {
     try {
       res = await fetch(`${url}`, { method: 'GET' });
     } catch (err) {
-      throw new Error(`Failed to GET '${url}' with '${err.message}'`);
+      throw new Error(`Failed to GET '${url}' with '${unwrapError(err)}'`);
     }
   } else {
     throw new Error(`Invalid webhook method '${webhook.method}'`);

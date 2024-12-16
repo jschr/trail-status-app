@@ -5,6 +5,7 @@ import RegionModel from '../models/RegionModel';
 import { BadRequestError, NotFoundError } from '../HttpError';
 import firebase from '../clients/firebase';
 import { parseBody } from '../requests';
+import { unwrapError } from '../utilities';
 
 interface PostSubscribeFCMBody {
   token: string;
@@ -28,7 +29,7 @@ export default withApiHandler([], async event => {
   } catch (err) {
     console.error(`Failed to subscribe from FCM topic '${topic}'`);
     throw new BadRequestError(
-      `Failed to subscribe to FCM with '${err.message}'`,
+      `Failed to subscribe to FCM with '${unwrapError(err)}'`,
     );
   }
 });

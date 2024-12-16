@@ -1,6 +1,7 @@
-import * as AWS from 'aws-sdk';
+import * as DynamoDB from '@aws-sdk/client-dynamodb';
 import tables from '@trail-status-app/infrastructure/build/src/tables';
 import dynamodb from './dynamodb';
+import { unwrapError } from '../utilities';
 
 export interface User {
   id: string;
@@ -20,17 +21,17 @@ const isNotNullOrUndefined = <T>(value: T | null | undefined): value is T => {
 export default class UserModel {
   public static async get(id: string): Promise<UserModel | null> {
     try {
-      const params: AWS.DynamoDB.GetItemInput = {
+      const params: DynamoDB.GetItemInput = {
         TableName: tables.users.name,
         Key: this.toAttributeMap({ id }),
       };
-      const res = await dynamodb.getItem(params).promise();
+      const res = await dynamodb.getItem(params);
       if (!res.Item) return null;
 
       return new UserModel(this.fromAttributeMap(res.Item));
     } catch (err) {
       throw new Error(
-        `UserModel.get for id '${id}' failed with '${err.message}'`,
+        `UserModel.get for id '${id}' failed with '${unwrapError(err)}'`,
       );
     }
   }
@@ -43,7 +44,7 @@ export default class UserModel {
     const requestKeys = items.filter(i => i.id).map(this.toAttributeMap);
     if (requestKeys.length === 0) return [];
 
-    const params: AWS.DynamoDB.BatchGetItemInput = {
+    const params: DynamoDB.BatchGetItemInput = {
       RequestItems: {
         [tables.users.name]: {
           Keys: requestKeys,
@@ -52,7 +53,7 @@ export default class UserModel {
     };
 
     try {
-      const res = await dynamodb.batchGetItem(params).promise();
+      const res = await dynamodb.batchGetItem(params);
       if (!res.Responses) {
         return [];
       }
@@ -73,21 +74,23 @@ export default class UserModel {
       throw new Error(
         `UserModel.batchGet with params '${JSON.stringify(
           params,
-        )}' failed with '${err.message}'`,
+        )}' failed with '${unwrapError(err)}'`,
       );
     }
   }
 
   public static async scan(
-    exclusiveStartKey?: AWS.DynamoDB.Key | undefined,
-  ): Promise<[UserModel[], AWS.DynamoDB.Key | undefined]> {
-    const params: AWS.DynamoDB.ScanInput = {
+    exclusiveStartKey?: Record<string, DynamoDB.AttributeValue> | undefined,
+  ): Promise<
+    [UserModel[], Record<string, DynamoDB.AttributeValue> | undefined]
+  > {
+    const params: DynamoDB.ScanInput = {
       TableName: tables.users.name,
       ExclusiveStartKey: exclusiveStartKey,
     };
 
     try {
-      const res = await dynamodb.scan(params).promise();
+      const res = await dynamodb.scan(params);
       if (!res.Items) {
         return [[], undefined];
       }
@@ -99,9 +102,9 @@ export default class UserModel {
       return [users, res.LastEvaluatedKey];
     } catch (err) {
       throw new Error(
-        `UserModel.scan with params '${JSON.stringify(params)}' failed with '${
-          err.message
-        }'`,
+        `UserModel.scan with params '${JSON.stringify(
+          params,
+        )}' failed with '${unwrapError(err)}'`,
       );
     }
   }
@@ -121,7 +124,7 @@ export default class UserModel {
   }
 
   private static toAttributeMap(user: Partial<User>) {
-    const attrMap: AWS.DynamoDB.AttributeMap = {};
+    const attrMap: Record<string, DynamoDB.AttributeValue> = {};
 
     if (user.id !== undefined) attrMap.id = { S: user.id };
     if (user.username !== undefined) attrMap.username = { S: user.username };
@@ -143,9 +146,9 @@ export default class UserModel {
   }
 
   private static fromAttributeMap(
-    attrMap: AWS.DynamoDB.AttributeMap,
+    attrMap: Record<string, DynamoDB.AttributeValue>,
   ): Partial<User> {
-    if (!attrMap.id ?? !attrMap.id.S)
+    if (!attrMap.id || !attrMap.id.S)
       throw new Error('Missing id parsing attribute map');
 
     return {
@@ -170,20 +173,20 @@ export default class UserModel {
       ...updatedAttrs,
       updatedAt: new Date().toISOString(),
     };
-    const params: AWS.DynamoDB.PutItemInput = {
+    const params: DynamoDB.PutItemInput = {
       TableName: tables.users.name,
       Item: UserModel.toAttributeMap(newAttrs),
     };
 
     try {
-      await dynamodb.putItem(params).promise();
+      await dynamodb.putItem(params);
 
       this.attrs = newAttrs;
     } catch (err) {
       throw new Error(
         `UserModel.save failed for Item '${JSON.stringify(
           params.Item,
-        )}' with '${err.message}'`,
+        )}' with '${unwrapError(err)}'`,
       );
     }
   }

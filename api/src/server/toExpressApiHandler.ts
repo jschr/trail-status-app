@@ -1,6 +1,7 @@
 import express from 'express';
 import mockApiGatewayEvent from './mockApiGatewayEvent';
 import mockLambdaContext from './mockLambdaContext';
+import { unwrapError } from '../utilities';
 
 export default (
   fn: AWSLambda.APIGatewayProxyHandler,
@@ -20,7 +21,7 @@ export default (
 
       const result = await fn(
         mockApiGatewayEvent({
-          queryStringParameters: req.query,
+          queryStringParameters: req.query as { [key: string]: string },
           body: req.body && String(req.body),
           headers: requestHeaders,
         }),
@@ -40,7 +41,7 @@ export default (
     } catch (err) {
       console.error(err);
       res.status(500);
-      res.send(err.message);
+      res.send(unwrapError(err));
     }
   };
 };

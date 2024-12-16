@@ -1,4 +1,4 @@
-import * as AWS from 'aws-sdk';
+import * as SQS from '@aws-sdk/client-sqs';
 import uuid from 'uuid/v4';
 import withSQSHandler from '../withSQSHandler';
 import RegionModel from '../models/RegionModel';
@@ -9,8 +9,9 @@ import TrailModel from '../models/TrailModel';
 import TrailStatusModel from '../models/TrailStatusModel';
 import WebhookModel from '../models/WebhookModel';
 import * as instagram from '../clients/instagram';
+import { unwrapError } from '../utilities';
 
-const sqs = new AWS.SQS();
+const sqs = new SQS.SQS();
 const runWebhooksQueueUrl = process.env.RUN_WEBHOOKS_QUEUE_URL;
 
 if (!runWebhooksQueueUrl) {
@@ -40,8 +41,9 @@ export default withSQSHandler(async event => {
       await syncUser(userId);
     } catch (err) {
       // Throw the error to retry.
-      const message = err instanceof Error ? err.message : JSON.stringify(err);
-      throw new Error(`Failed to sync user '${userId}' with '${message}'`);
+      throw new Error(
+        `Failed to sync user '${userId}' with '${unwrapError(err)}'`,
+      );
     }
   }
 });
@@ -280,7 +282,7 @@ const createWebhookJob = async (webhook: WebhookModel) => {
     return;
   }
 
-  const params: AWS.SQS.SendMessageRequest = {
+  const params: SQS.SendMessageRequest = {
     // Use webhook id as group id so each run webhook job can be retried individually.
     MessageGroupId: webhook.id,
     MessageDeduplicationId: webhook.id,
@@ -289,14 +291,15 @@ const createWebhookJob = async (webhook: WebhookModel) => {
   };
 
   try {
-    await sqs.sendMessage(params).promise();
+    await sqs.sendMessage(params);
     console.info(
       `Created webhook job for webhook '${webhook.id}' region '${webhook.regionId}'`,
     );
   } catch (err) {
-    const message = err instanceof Error ? err.message : JSON.stringify(err);
     throw new Error(
-      `Failed to create webhook job for '${webhook.id}' region '${webhook.regionId}' with '${message}'`,
+      `Failed to create webhook job for '${webhook.id}' region '${
+        webhook.regionId
+      }' with '${unwrapError(err)}'`,
     );
   }
 };

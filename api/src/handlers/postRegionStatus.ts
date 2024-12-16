@@ -1,4 +1,4 @@
-import * as AWS from 'aws-sdk';
+import * as SQS from '@aws-sdk/client-sqs';
 import uuid from 'uuid/v4';
 import { assert } from '@trail-status-app/utilities';
 import withApiHandler from '../withApiHandler';
@@ -17,8 +17,9 @@ import {
 } from '../HttpError';
 import { parseBody, parseQuery } from '../requests';
 import { json } from '../responses';
+import { unwrapError } from '../utilities';
 
-const sqs = new AWS.SQS();
+const sqs = new SQS.SQS();
 const runWebhooksQueueUrl = process.env.RUN_WEBHOOKS_QUEUE_URL;
 
 if (!runWebhooksQueueUrl) {
@@ -279,7 +280,7 @@ const createWebhookJob = async (webhook: WebhookModel) => {
     return;
   }
 
-  const params: AWS.SQS.SendMessageRequest = {
+  const params: SQS.SendMessageRequest = {
     // Use webhook id as group id so each run webhook job can be retried individually.
     MessageGroupId: webhook.id,
     MessageDeduplicationId: webhook.id,
@@ -288,14 +289,15 @@ const createWebhookJob = async (webhook: WebhookModel) => {
   };
 
   try {
-    await sqs.sendMessage(params).promise();
+    await sqs.sendMessage(params);
     console.info(
       `Created webhook job for webhook '${webhook.id}' region '${webhook.regionId}'`,
     );
   } catch (err) {
-    const message = err instanceof Error ? err.message : JSON.stringify(err);
     throw new Error(
-      `Failed to create webhook job for '${webhook.id}' region '${webhook.regionId}' with '${message}'`,
+      `Failed to create webhook job for '${webhook.id}' region '${
+        webhook.regionId
+      }' with '${unwrapError(err)}'`,
     );
   }
 };

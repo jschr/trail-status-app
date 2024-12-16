@@ -11,6 +11,7 @@ import {
 import { parseQuery } from '../requests';
 import buildRegionStatus from '../buildRegionStatus';
 import runWebhook from '../runWebhook';
+import { unwrapError } from '../utilities';
 
 interface PutWebhookRunQuery {
   id: string;
@@ -52,7 +53,7 @@ export default withApiHandler([P.WebhookRun], async event => {
   } catch (err) {
     await webhook.save({
       lastRanAt: new Date().toISOString(),
-      error: err.message,
+      error: unwrapError(err),
     });
   }
 

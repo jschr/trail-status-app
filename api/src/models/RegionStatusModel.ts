@@ -1,6 +1,7 @@
-import * as AWS from 'aws-sdk';
+import * as DynamoDB from '@aws-sdk/client-dynamodb';
 import tables from '@trail-status-app/infrastructure/build/src/tables';
 import dynamodb from './dynamodb';
+import { unwrapError } from '../utilities';
 
 export interface RegionStatus {
   id: string;
@@ -16,17 +17,19 @@ export interface RegionStatus {
 export default class RegionStatusModel {
   public static async get(id: string): Promise<RegionStatusModel | null> {
     try {
-      const params: AWS.DynamoDB.GetItemInput = {
+      const params: DynamoDB.GetItemInput = {
         TableName: tables.regionStatus.name,
         Key: this.toAttributeMap({ id }),
       };
-      const res = await dynamodb.getItem(params).promise();
+      const res = await dynamodb.getItem(params);
       if (!res.Item) return null;
 
       return new RegionStatusModel(this.fromAttributeMap(res.Item));
     } catch (err) {
       throw new Error(
-        `RegionStatusModel.get for id '${id}' failed with '${err.message}'`,
+        `RegionStatusModel.get for id '${id}' failed with '${unwrapError(
+          err,
+        )}'`,
       );
     }
   }
@@ -39,7 +42,7 @@ export default class RegionStatusModel {
     const requestKeys = items.filter(i => i.id).map(this.toAttributeMap);
     if (requestKeys.length === 0) return [];
 
-    const params: AWS.DynamoDB.BatchGetItemInput = {
+    const params: DynamoDB.BatchGetItemInput = {
       RequestItems: {
         [tables.regionStatus.name]: {
           Keys: requestKeys,
@@ -48,7 +51,7 @@ export default class RegionStatusModel {
     };
 
     try {
-      const res = await dynamodb.batchGetItem(params).promise();
+      const res = await dynamodb.batchGetItem(params);
       if (!res.Responses) {
         return [];
       }
@@ -69,13 +72,13 @@ export default class RegionStatusModel {
       throw new Error(
         `RegionStatusModel.batchGet with params '${JSON.stringify(
           params,
-        )}' failed with '${err.message}'`,
+        )}' failed with '${unwrapError(err)}'`,
       );
     }
   }
 
   private static toAttributeMap(regionStatus: Partial<RegionStatus>) {
-    const attrMap: AWS.DynamoDB.AttributeMap = {};
+    const attrMap: Record<string, DynamoDB.AttributeValue> = {};
 
     if (regionStatus.id !== undefined) attrMap.id = { S: regionStatus.id };
     if (regionStatus.status !== undefined)
@@ -97,9 +100,9 @@ export default class RegionStatusModel {
   }
 
   private static fromAttributeMap(
-    attrMap: AWS.DynamoDB.AttributeMap,
+    attrMap: Record<string, DynamoDB.AttributeValue>,
   ): Partial<RegionStatus> {
-    if (!attrMap.id ?? !attrMap.id.S)
+    if (!attrMap.id || !attrMap.id.S)
       throw new Error('Missing id parsing attribute map');
 
     return {
@@ -122,20 +125,20 @@ export default class RegionStatusModel {
       ...updatedAttrs,
       updatedAt: new Date().toISOString(),
     };
-    const params: AWS.DynamoDB.PutItemInput = {
+    const params: DynamoDB.PutItemInput = {
       TableName: tables.regionStatus.name,
       Item: RegionStatusModel.toAttributeMap(newAttrs),
     };
 
     try {
-      await dynamodb.putItem(params).promise();
+      await dynamodb.putItem(params);
 
       this.attrs = newAttrs;
     } catch (err) {
       throw new Error(
         `RegionStatusModel.save failed for Item '${JSON.stringify(
           params.Item,
-        )}' with '${err.message}'`,
+        )}' with '${unwrapError(err)}'`,
       );
     }
   }

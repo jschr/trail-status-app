@@ -10,20 +10,17 @@
     "deploy": "cdk deploy",
     "destroy": "cdk destroy",
     "build": "tsc -b",
-    "lint": "eslint -c ./.eslintrc src/**/*.ts"
+    "lint": "eslint -c ./.eslintrc src/**/*.ts",
+    "bootstrap:dev": "dotenv -e ../.env -e ../.env.dev cdk bootstrap",
+    "bootstrap:production": "dotenv -e ../.env -e ../.env.production cdk bootstrap"
   },
   "dependencies": {
-    "@aws-cdk/aws-apigateway": "1.27.0",
-    "@aws-cdk/aws-certificatemanager": "1.27.0",
-    "@aws-cdk/aws-dynamodb": "1.27.0",
-    "@aws-cdk/aws-events-targets": "1.27.0",
-    "@aws-cdk/aws-lambda": "1.27.0",
-    "@aws-cdk/aws-lambda-event-sources": "1.27.0",
-    "@aws-cdk/aws-route53": "1.27.0",
-    "@aws-cdk/aws-route53-targets": "1.27.0",
-    "@aws-cdk/aws-sqs": "1.27.0",
-    "@aws-cdk/core": "1.27.0",
+    "@aws-sdk/client-dynamodb": "^3.470.0",
+    "@aws-sdk/client-s3": "^3.470.0",
+    "@aws-sdk/client-sqs": "^3.470.0",
     "@trail-status-app/utilities": "",
-    "aws-cdk": "^1.27.0"
+    "aws-cdk": "2.114.1",
+    "aws-cdk-lib": "2.114.1",
+    "constructs": "^10.0.0"
   }
 }

@@ -1,8 +1,9 @@
-import * as AWS from 'aws-sdk';
+import * as SQS from '@aws-sdk/client-sqs';
 import UserModel from '../models/UserModel';
 import withScheduledHandler from '../withScheduledHandler';
+import { unwrapError } from '../utilities';
 
-const sqs = new AWS.SQS();
+const sqs = new SQS.SQS();
 const runSyncUsersQueueUrl = process.env.RUN_SYNC_USERS_QUEUE_URL;
 
 if (!runSyncUsersQueueUrl) {
@@ -16,18 +17,20 @@ export default withScheduledHandler(async () => {
 });
 
 const createSyncUserJob = async (user: UserModel) => {
-  const params: AWS.SQS.SendMessageRequest = {
+  const params: SQS.SendMessageRequest = {
     MessageGroupId: user.id,
     MessageDeduplicationId: user.id,
     MessageBody: JSON.stringify({ userId: user.id }),
     QueueUrl: runSyncUsersQueueUrl,
   };
   try {
-    await sqs.sendMessage(params).promise();
+    await sqs.sendMessage(params);
     console.info(`Created sync user job for user '${user.id}''`);
   } catch (err) {
     throw new Error(
-      `Failed to create sync user job for user '${user.id}' with '${err.message}'`,
+      `Failed to create sync user job for user '${user.id}' with '${unwrapError(
+        err,
+      )}'`,
     );
   }
 };

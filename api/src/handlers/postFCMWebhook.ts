@@ -5,6 +5,7 @@ import { BadRequestError, UnauthorizedError } from '../HttpError';
 import firebase from '../clients/firebase';
 import { parseBody, parseQuery } from '../requests';
 import { Permissions as P, canAccessRegion } from '../jwt';
+import { unwrapError } from '../utilities';
 
 interface PostFCMWebhookQuery {
   link: string;
@@ -61,7 +62,7 @@ export default withApiHandler([P.FCMWebhookRun], async event => {
     return json('OK');
   } catch (err) {
     throw new BadRequestError(
-      `Failed to send message to FCM with '${err.message}'`,
+      `Failed to send message to FCM with '${unwrapError(err)}'`,
     );
   }
 });

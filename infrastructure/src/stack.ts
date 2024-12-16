@@ -1,15 +1,16 @@
 import { env } from '@trail-status-app/utilities';
-import * as cdk from '@aws-cdk/core';
-import * as apigateway from '@aws-cdk/aws-apigateway';
-import * as acm from '@aws-cdk/aws-certificatemanager';
-import * as route53 from '@aws-cdk/aws-route53';
-import * as route53Targets from '@aws-cdk/aws-route53-targets';
-import * as dynamodb from '@aws-cdk/aws-dynamodb';
-import * as lambda from '@aws-cdk/aws-lambda';
-import * as events from '@aws-cdk/aws-events';
-import * as eventTargets from '@aws-cdk/aws-events-targets';
-import { SqsEventSource } from '@aws-cdk/aws-lambda-event-sources';
-import * as sqs from '@aws-cdk/aws-sqs';
+import * as cdk from 'aws-cdk-lib';
+import { Construct } from 'constructs';
+import * as apigateway from 'aws-cdk-lib/aws-apigateway';
+import * as acm from 'aws-cdk-lib/aws-certificatemanager';
+import * as route53 from 'aws-cdk-lib/aws-route53';
+import * as route53Targets from 'aws-cdk-lib/aws-route53-targets';
+import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
+import * as lambda from 'aws-cdk-lib/aws-lambda';
+import * as events from 'aws-cdk-lib/aws-events';
+import * as eventTargets from 'aws-cdk-lib/aws-events-targets';
+import { SqsEventSource } from 'aws-cdk-lib/aws-lambda-event-sources';
+import * as sqs from 'aws-cdk-lib/aws-sqs';
 import path from 'path';
 import tables from './tables';
 import projectPrefix from './projectPrefix';
@@ -17,7 +18,7 @@ import projectPrefix from './projectPrefix';
 const packagePath = path.join(__dirname, '../../tmp/package.zip');
 
 export default class extends cdk.Stack {
-  constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
+  constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
     // User table
@@ -216,6 +217,9 @@ export default class extends cdk.Stack {
       },
     );
 
+    console.log('SSL_ARN', env('SSL_ARN'));
+    console.log('TLD', env('TLD'));
+
     const sslCertificate = acm.Certificate.fromCertificateArn(
       this,
       projectPrefix('ssl'),
@@ -269,7 +273,7 @@ export default class extends cdk.Stack {
       projectPrefix('getRegion'),
       {
         functionName: projectPrefix('getRegion'),
-        runtime: lambda.Runtime.NODEJS_12_X,
+        runtime: lambda.Runtime.NODEJS_20_X,
         code: lambda.Code.fromAsset(packagePath),
         handler: 'api/build/src/handlers/getRegion.default',
         environment: envVars,
@@ -294,7 +298,7 @@ export default class extends cdk.Stack {
       projectPrefix('putRegion'),
       {
         functionName: projectPrefix('putRegion'),
-        runtime: lambda.Runtime.NODEJS_12_X,
+        runtime: lambda.Runtime.NODEJS_20_X,
         code: lambda.Code.fromAsset(packagePath),
         handler: 'api/build/src/handlers/putRegion.default',
         environment: envVars,
@@ -320,7 +324,7 @@ export default class extends cdk.Stack {
       projectPrefix('getRegionStatus'),
       {
         functionName: projectPrefix('getRegionStatus'),
-        runtime: lambda.Runtime.NODEJS_12_X,
+        runtime: lambda.Runtime.NODEJS_20_X,
         code: lambda.Code.fromAsset(packagePath),
         handler: 'api/build/src/handlers/getRegionStatus.default',
         environment: envVars,
@@ -350,7 +354,7 @@ export default class extends cdk.Stack {
       projectPrefix('getRegionHistory'),
       {
         functionName: projectPrefix('getRegionHistory'),
-        runtime: lambda.Runtime.NODEJS_12_X,
+        runtime: lambda.Runtime.NODEJS_20_X,
         code: lambda.Code.fromAsset(packagePath),
         handler: 'api/build/src/handlers/getRegionHistory.default',
         environment: envVars,
@@ -374,7 +378,7 @@ export default class extends cdk.Stack {
       projectPrefix('postRegionStatus'),
       {
         functionName: projectPrefix('postRegionStatus'),
-        runtime: lambda.Runtime.NODEJS_12_X,
+        runtime: lambda.Runtime.NODEJS_20_X,
         code: lambda.Code.fromAsset(packagePath),
         handler: 'api/build/src/handlers/postRegionStatus.default',
         environment: envVars,
@@ -384,7 +388,7 @@ export default class extends cdk.Stack {
     );
 
     const postRegionStatusIntegration = new apigateway.LambdaIntegration(
-      putRegionHandler,
+      postRegionStatusHandler,
     );
 
     regionStatusApi.addMethod('POST', postRegionStatusIntegration);
@@ -407,7 +411,7 @@ export default class extends cdk.Stack {
       projectPrefix('getTrails'),
       {
         functionName: projectPrefix('getTrails'),
-        runtime: lambda.Runtime.NODEJS_12_X,
+        runtime: lambda.Runtime.NODEJS_20_X,
         code: lambda.Code.fromAsset(packagePath),
         handler: 'api/build/src/handlers/getTrails.default',
         environment: envVars,
@@ -429,7 +433,7 @@ export default class extends cdk.Stack {
       projectPrefix('postTrail'),
       {
         functionName: projectPrefix('postTrail'),
-        runtime: lambda.Runtime.NODEJS_12_X,
+        runtime: lambda.Runtime.NODEJS_20_X,
         code: lambda.Code.fromAsset(packagePath),
         handler: 'api/build/src/handlers/postTrail.default',
         environment: envVars,
@@ -454,7 +458,7 @@ export default class extends cdk.Stack {
       projectPrefix('putTrail'),
       {
         functionName: projectPrefix('putTrail'),
-        runtime: lambda.Runtime.NODEJS_12_X,
+        runtime: lambda.Runtime.NODEJS_20_X,
         code: lambda.Code.fromAsset(packagePath),
         handler: 'api/build/src/handlers/putTrail.default',
         environment: envVars,
@@ -477,7 +481,7 @@ export default class extends cdk.Stack {
       projectPrefix('deleteTrail'),
       {
         functionName: projectPrefix('deleteTrail'),
-        runtime: lambda.Runtime.NODEJS_12_X,
+        runtime: lambda.Runtime.NODEJS_20_X,
         code: lambda.Code.fromAsset(packagePath),
         handler: 'api/build/src/handlers/deleteTrail.default',
         environment: envVars,
@@ -505,7 +509,7 @@ export default class extends cdk.Stack {
       projectPrefix('getTrailStatus'),
       {
         functionName: projectPrefix('getTrailStatus'),
-        runtime: lambda.Runtime.NODEJS_12_X,
+        runtime: lambda.Runtime.NODEJS_20_X,
         code: lambda.Code.fromAsset(packagePath),
         handler: 'api/build/src/handlers/getTrailStatus.default',
         environment: envVars,
@@ -534,7 +538,7 @@ export default class extends cdk.Stack {
       projectPrefix('getLegacyTrailStatus'),
       {
         functionName: projectPrefix('getLegacyTrailStatus'),
-        runtime: lambda.Runtime.NODEJS_12_X,
+        runtime: lambda.Runtime.NODEJS_20_X,
         code: lambda.Code.fromAsset(packagePath),
         handler: 'api/build/src/handlers/getLegacyTrailStatus.default',
         environment: envVars,
@@ -567,7 +571,7 @@ export default class extends cdk.Stack {
       projectPrefix('authorizeInstagram'),
       {
         functionName: projectPrefix('authorizeInstagram'),
-        runtime: lambda.Runtime.NODEJS_12_X,
+        runtime: lambda.Runtime.NODEJS_20_X,
         code: lambda.Code.fromAsset(packagePath),
         handler: 'api/build/src/handlers/authorizeInstagram.default',
         environment: envVars,
@@ -588,7 +592,7 @@ export default class extends cdk.Stack {
       projectPrefix('authorizeInstagramCallback'),
       {
         functionName: projectPrefix('authorizeInstagramCallback'),
-        runtime: lambda.Runtime.NODEJS_12_X,
+        runtime: lambda.Runtime.NODEJS_20_X,
         code: lambda.Code.fromAsset(packagePath),
         handler: 'api/build/src/handlers/authorizeInstagramCallback.default',
         environment: envVars,
@@ -619,7 +623,7 @@ export default class extends cdk.Stack {
       projectPrefix('postWebhook'),
       {
         functionName: projectPrefix('postWebhook'),
-        runtime: lambda.Runtime.NODEJS_12_X,
+        runtime: lambda.Runtime.NODEJS_20_X,
         code: lambda.Code.fromAsset(packagePath),
         handler: 'api/build/src/handlers/postWebhook.default',
         environment: envVars,
@@ -643,7 +647,7 @@ export default class extends cdk.Stack {
       projectPrefix('putWebhook'),
       {
         functionName: projectPrefix('putWebhook'),
-        runtime: lambda.Runtime.NODEJS_12_X,
+        runtime: lambda.Runtime.NODEJS_20_X,
         code: lambda.Code.fromAsset(packagePath),
         handler: 'api/build/src/handlers/putWebhook.default',
         environment: envVars,
@@ -667,7 +671,7 @@ export default class extends cdk.Stack {
       projectPrefix('deleteWebhook'),
       {
         functionName: projectPrefix('deleteWebhook'),
-        runtime: lambda.Runtime.NODEJS_12_X,
+        runtime: lambda.Runtime.NODEJS_20_X,
         code: lambda.Code.fromAsset(packagePath),
         handler: 'api/build/src/handlers/deleteWebhook.default',
         environment: envVars,
@@ -695,7 +699,7 @@ export default class extends cdk.Stack {
       projectPrefix('postWebhookRun'),
       {
         functionName: projectPrefix('postWebhookRun'),
-        runtime: lambda.Runtime.NODEJS_12_X,
+        runtime: lambda.Runtime.NODEJS_20_X,
         code: lambda.Code.fromAsset(packagePath),
         handler: 'api/build/src/handlers/postWebhookRun.default',
         environment: envVars,
@@ -725,7 +729,7 @@ export default class extends cdk.Stack {
       projectPrefix('testWebhook'),
       {
         functionName: projectPrefix('testWebhook'),
-        runtime: lambda.Runtime.NODEJS_12_X,
+        runtime: lambda.Runtime.NODEJS_20_X,
         code: lambda.Code.fromAsset(packagePath),
         handler: 'api/build/src/handlers/testWebhook.default',
         environment: envVars,
@@ -750,7 +754,7 @@ export default class extends cdk.Stack {
       projectPrefix('postFCMWebhook'),
       {
         functionName: projectPrefix('postFCMWebhook'),
-        runtime: lambda.Runtime.NODEJS_12_X,
+        runtime: lambda.Runtime.NODEJS_20_X,
         code: lambda.Code.fromAsset(packagePath),
         handler: 'api/build/src/handlers/postFCMWebhook.default',
         environment: envVars,
@@ -775,7 +779,7 @@ export default class extends cdk.Stack {
       projectPrefix('postFCMSubscribe'),
       {
         functionName: projectPrefix('postFCMSubscribe'),
-        runtime: lambda.Runtime.NODEJS_12_X,
+        runtime: lambda.Runtime.NODEJS_20_X,
         code: lambda.Code.fromAsset(packagePath),
         handler: 'api/build/src/handlers/postFCMSubscribe.default',
         environment: envVars,
@@ -802,7 +806,7 @@ export default class extends cdk.Stack {
       projectPrefix('postFCMUnsubscribe'),
       {
         functionName: projectPrefix('postFCMUnsubscribe'),
-        runtime: lambda.Runtime.NODEJS_12_X,
+        runtime: lambda.Runtime.NODEJS_20_X,
         code: lambda.Code.fromAsset(packagePath),
         handler: 'api/build/src/handlers/postFCMUnsubscribe.default',
         environment: envVars,
@@ -838,7 +842,7 @@ export default class extends cdk.Stack {
       projectPrefix('scheduleSyncUsers'),
       {
         functionName: projectPrefix('scheduleSyncUsers'),
-        runtime: lambda.Runtime.NODEJS_12_X,
+        runtime: lambda.Runtime.NODEJS_20_X,
         code: lambda.Code.fromAsset(packagePath),
         handler: 'api/build/src/handlers/scheduleSyncUsers.default',
         environment: envVars,
@@ -869,7 +873,7 @@ export default class extends cdk.Stack {
       projectPrefix('runSyncUsers'),
       {
         functionName: projectPrefix('runSyncUsers'),
-        runtime: lambda.Runtime.NODEJS_12_X,
+        runtime: lambda.Runtime.NODEJS_20_X,
         code: lambda.Code.fromAsset(packagePath),
         handler: 'api/build/src/handlers/runSyncUsers.default',
         environment: envVars,
@@ -901,7 +905,7 @@ export default class extends cdk.Stack {
       projectPrefix('runWebhooks'),
       {
         functionName: projectPrefix('runWebhooks'),
-        runtime: lambda.Runtime.NODEJS_12_X,
+        runtime: lambda.Runtime.NODEJS_20_X,
         code: lambda.Code.fromAsset(packagePath),
         handler: 'api/build/src/handlers/runWebhooks.default',
         environment: envVars,

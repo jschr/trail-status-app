@@ -1,6 +1,7 @@
-import * as AWS from 'aws-sdk';
+import * as DynamoDB from '@aws-sdk/client-dynamodb';
 import tables from '@trail-status-app/infrastructure/build/src/tables';
 import dynamodb from './dynamodb';
+import { unwrapError } from '../utilities';
 
 export interface RegionStatusHistory {
   id: string;
@@ -18,17 +19,19 @@ export default class RegionStatusHistoryModel {
     id: string,
   ): Promise<RegionStatusHistoryModel | null> {
     try {
-      const params: AWS.DynamoDB.GetItemInput = {
+      const params: DynamoDB.GetItemInput = {
         TableName: tables.regionStatus.name,
         Key: this.toAttributeMap({ id }),
       };
-      const res = await dynamodb.getItem(params).promise();
+      const res = await dynamodb.getItem(params);
       if (!res.Item) return null;
 
       return new RegionStatusHistoryModel(this.fromAttributeMap(res.Item));
     } catch (err) {
       throw new Error(
-        `RegionStatusHistoryModel.get for id '${id}' failed with '${err.message}'`,
+        `RegionStatusHistoryModel.get for id '${id}' failed with '${unwrapError(
+          err,
+        )}'`,
       );
     }
   }
@@ -41,7 +44,7 @@ export default class RegionStatusHistoryModel {
     const requestKeys = items.filter(i => i.id).map(this.toAttributeMap);
     if (requestKeys.length === 0) return [];
 
-    const params: AWS.DynamoDB.BatchGetItemInput = {
+    const params: DynamoDB.BatchGetItemInput = {
       RequestItems: {
         [tables.regionStatus.name]: {
           Keys: requestKeys,
@@ -50,7 +53,7 @@ export default class RegionStatusHistoryModel {
     };
 
     try {
-      const res = await dynamodb.batchGetItem(params).promise();
+      const res = await dynamodb.batchGetItem(params);
       if (!res.Responses) {
         return [];
       }
@@ -71,19 +74,24 @@ export default class RegionStatusHistoryModel {
       throw new Error(
         `RegionStatusHistoryModel.batchGet with params '${JSON.stringify(
           params,
-        )}' failed with '${err.message}'`,
+        )}' failed with '${unwrapError(err)}'`,
       );
     }
   }
 
   public static async queryByRegion(
     regionId: string,
-    exclusiveStartKey?: AWS.DynamoDB.Key | undefined,
-  ): Promise<[RegionStatusHistoryModel[], AWS.DynamoDB.Key | undefined]> {
+    exclusiveStartKey?: Record<string, DynamoDB.AttributeValue> | undefined,
+  ): Promise<
+    [
+      RegionStatusHistoryModel[],
+      Record<string, DynamoDB.AttributeValue> | undefined,
+    ]
+  > {
     try {
       const attrMap = this.toAttributeMap({ regionId });
 
-      const params: AWS.DynamoDB.QueryInput = {
+      const params: DynamoDB.QueryInput = {
         TableName: tables.regionStatusHistory.name,
         IndexName:
           tables.regionStatusHistory.indexes.regionStatusHistoryByRegion.name,
@@ -98,7 +106,7 @@ export default class RegionStatusHistoryModel {
         ExclusiveStartKey: exclusiveStartKey,
       };
 
-      const res = await dynamodb.query(params).promise();
+      const res = await dynamodb.query(params);
 
       const regionStatuses = res.Items
         ? res.Items.map(
@@ -109,7 +117,9 @@ export default class RegionStatusHistoryModel {
       return [regionStatuses, res.LastEvaluatedKey];
     } catch (err) {
       throw new Error(
-        `RegionStatusHistoryModel.queryByRegion failed with '${err.message}'`,
+        `RegionStatusHistoryModel.queryByRegion failed with '${unwrapError(
+          err,
+        )}'`,
       );
     }
   }
@@ -141,12 +151,17 @@ export default class RegionStatusHistoryModel {
 
   public static async queryByInstagramPost(
     instagramPostId: string,
-    exclusiveStartKey?: AWS.DynamoDB.Key | undefined,
-  ): Promise<[RegionStatusHistoryModel[], AWS.DynamoDB.Key | undefined]> {
+    exclusiveStartKey?: Record<string, DynamoDB.AttributeValue> | undefined,
+  ): Promise<
+    [
+      RegionStatusHistoryModel[],
+      Record<string, DynamoDB.AttributeValue> | undefined,
+    ]
+  > {
     try {
       const attrMap = this.toAttributeMap({ instagramPostId });
 
-      const params: AWS.DynamoDB.QueryInput = {
+      const params: DynamoDB.QueryInput = {
         TableName: tables.regionStatusHistory.name,
         IndexName:
           tables.regionStatusHistory.indexes.regionStatusHistoryByInstagramPost
@@ -162,7 +177,7 @@ export default class RegionStatusHistoryModel {
         ExclusiveStartKey: exclusiveStartKey,
       };
 
-      const res = await dynamodb.query(params).promise();
+      const res = await dynamodb.query(params);
 
       const regionStatuses = res.Items
         ? res.Items.map(
@@ -173,7 +188,9 @@ export default class RegionStatusHistoryModel {
       return [regionStatuses, res.LastEvaluatedKey];
     } catch (err) {
       throw new Error(
-        `RegionStatusHistoryModel.queryByInstagramPost failed with '${err.message}'`,
+        `RegionStatusHistoryModel.queryByInstagramPost failed with '${unwrapError(
+          err,
+        )}'`,
       );
     }
   }
@@ -204,7 +221,7 @@ export default class RegionStatusHistoryModel {
   }
 
   private static toAttributeMap(regionStatus: Partial<RegionStatusHistory>) {
-    const attrMap: AWS.DynamoDB.AttributeMap = {};
+    const attrMap: Record<string, DynamoDB.AttributeValue> = {};
 
     if (regionStatus.id !== undefined) attrMap.id = { S: regionStatus.id };
     if (regionStatus.regionId !== undefined)
@@ -226,9 +243,9 @@ export default class RegionStatusHistoryModel {
   }
 
   private static fromAttributeMap(
-    attrMap: AWS.DynamoDB.AttributeMap,
+    attrMap: Record<string, DynamoDB.AttributeValue>,
   ): Partial<RegionStatusHistory> {
-    if (!attrMap.id ?? !attrMap.id.S)
+    if (!attrMap.id || !attrMap.id.S)
       throw new Error('Missing id parsing attribute map');
 
     return {
@@ -253,20 +270,20 @@ export default class RegionStatusHistoryModel {
       ...updatedAttrs,
       updatedAt: new Date().toISOString(),
     };
-    const params: AWS.DynamoDB.PutItemInput = {
+    const params: DynamoDB.PutItemInput = {
       TableName: tables.regionStatusHistory.name,
       Item: RegionStatusHistoryModel.toAttributeMap(newAttrs),
     };
 
     try {
-      await dynamodb.putItem(params).promise();
+      await dynamodb.putItem(params);
 
       this.attrs = newAttrs;
     } catch (err) {
       throw new Error(
         `RegionStatusHistoryModel.save failed for Item '${JSON.stringify(
           params.Item,
-        )}' with '${err.message}'`,
+        )}' with '${unwrapError(err)}'`,
       );
     }
   }
