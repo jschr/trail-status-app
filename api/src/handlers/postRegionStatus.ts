@@ -203,13 +203,22 @@ const setRegionStatus = async (
       `Setting region '${region.id}' status to '${status}' with message '${message}`,
     );
 
-    const statusParams = {
+    const statusParams: Record<string, string> = {
       status,
       message,
-      instagramPostId: userMedia.id,
-      imageUrl: userMedia.mediaUrl,
-      instagramPermalink: permalink,
     };
+
+    if (userMedia.mediaUrl) {
+      statusParams.imageUrl = userMedia.mediaUrl;
+    }
+
+    if (permalink) {
+      statusParams.instagramPermalink = permalink;
+    }
+
+    if (userMedia.id) {
+      statusParams.instagramPostId = userMedia.id;
+    }
 
     await regionStatus.save(statusParams);
 
