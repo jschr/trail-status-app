@@ -8,14 +8,14 @@ const igGraphUrl = 'https://graph.instagram.com';
 const igAppId = env('INSTAGRAM_APP_ID');
 const igAppSecret = env('INSTAGRAM_APP_SECRET');
 const igRedirectUri = `${env('API_ENDPOINT')}/instagram/authorize/callback`;
-const igScopes = 'user_profile,user_media';
+const igScopes = 'instagram_business_basic,instagram_business_content_publish';
 
 export const getAuthorizeUrl = (): {
   authorizeUrl: string;
   state: string;
 } => {
   const state = uuid();
-  const authorizeUrl = `${igApiUrl}/oauth/authorize?client_id=${igAppId}&redirect_uri=${igRedirectUri}&state=${state}&scope=${igScopes}&auth_type=reauthenticate&response_type=code`;
+  const authorizeUrl = `https://www.instagram.com/oauth/authorize?enable_fb_login=0&force_authentication=1&client_id=${igAppId}&redirect_uri=${igRedirectUri}&response_type=code&scope=${igScopes}&state=${state}`;
   return { authorizeUrl, state };
 };
 

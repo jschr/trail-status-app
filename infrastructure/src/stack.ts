@@ -217,9 +217,6 @@ export default class extends cdk.Stack {
       },
     );
 
-    console.log('SSL_ARN', env('SSL_ARN'));
-    console.log('TLD', env('TLD'));
-
     const sslCertificate = acm.Certificate.fromCertificateArn(
       this,
       projectPrefix('ssl'),
