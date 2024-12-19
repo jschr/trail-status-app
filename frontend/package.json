@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "REACT_APP_API_ENDPOINT=$API_ENDPOINT HTTPS=true PORT=$FRONTEND_PORT react-scripts start",
+    "build": "echo \"REACT_APP_API_ENDPOINT=$API_ENDPOINT react-scripts build\"",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
@@ -16,6 +17,7 @@
     "@trail-status-app/utilities": "",
     "jwt-decode": "^2.2.0",
     "nprogress": "^0.2.0",
+    "querystring": "^0.2.1",
     "react": "^16.12.0",
     "react-dom": "^16.12.0",
     "react-hook-form": "^6.11.5",

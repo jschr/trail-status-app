@@ -127,7 +127,7 @@ const RegionPage = ({ match }: RegionPageProps) => {
               <Box component="span" mr={1}>
                 <Typography variant="h5">{region?.name ?? ''}</Typography>
               </Box>
-              <IconButton onClick={event => setAnchorEl(event.currentTarget)}>
+              <IconButton onClick={(event) => setAnchorEl(event.currentTarget)}>
                 <ExpandMoreRoundedIcon />
               </IconButton>
               <Menu
@@ -140,7 +140,7 @@ const RegionPage = ({ match }: RegionPageProps) => {
                     Regions
                   </Typography>
                 </Box>
-                {userRegions.map(region => (
+                {userRegions.map((region) => (
                   <MenuItem
                     selected={region.id === regionId}
                     key={region.id}
@@ -237,8 +237,9 @@ const RegionPage = ({ match }: RegionPageProps) => {
                 name="openHashtag"
                 defaultValue={region?.openHashtag}
                 inputRef={register({ required: true })}
-                helperText={`Example: Trails are open! ${region?.openHashtag ??
-                  ''}`}
+                helperText={`Example: Trails are open! ${
+                  region?.openHashtag ?? ''
+                }`}
               />
             </Box>
 
@@ -249,8 +250,9 @@ const RegionPage = ({ match }: RegionPageProps) => {
                 name="closeHashtag"
                 defaultValue={region?.closeHashtag}
                 inputRef={register({ required: true })}
-                helperText={`Example: Trails are too wet to ride! ${region?.closeHashtag ??
-                  ''}`}
+                helperText={`Example: Trails are too wet to ride! ${
+                  region?.closeHashtag ?? ''
+                }`}
               />
             </Box>
 
@@ -286,7 +288,7 @@ const RegionPage = ({ match }: RegionPageProps) => {
             </IconButton>
           </Box>
           <List disablePadding>
-            {trailsSorted.map(trail => (
+            {trailsSorted.map((trail) => (
               <TrailItem
                 key={trail.id}
                 trail={trail}
@@ -318,7 +320,7 @@ const RegionPage = ({ match }: RegionPageProps) => {
             </IconButton>
           </Box>
           <List disablePadding>
-            {webhooksSorted.map(webhook => (
+            {webhooksSorted.map((webhook) => (
               <WebhookItem
                 key={webhook.id}
                 webhook={webhook}
@@ -352,7 +354,7 @@ const RegionPage = ({ match }: RegionPageProps) => {
             render={({ match }) => (
               <TrailDialog
                 region={region}
-                trail={region.trails.find(t => t.id === match.params.id)}
+                trail={region.trails.find((t) => t.id === match.params.id)}
                 handleClose={() => history.push(`/regions/${regionId}`)}
               />
             )}
@@ -361,7 +363,7 @@ const RegionPage = ({ match }: RegionPageProps) => {
           <Route
             path={`${match.url}/trails/:id/delete`}
             render={({ match }) => {
-              const trail = region.trails.find(t => t.id === match.params.id);
+              const trail = region.trails.find((t) => t.id === match.params.id);
               if (!trail) {
                 return <Redirect to="/" />;
               }
@@ -392,7 +394,7 @@ const RegionPage = ({ match }: RegionPageProps) => {
               <WebhookDialog
                 region={region}
                 regionStatus={regionStatus}
-                webhook={region.webhooks.find(w => w.id === match.params.id)}
+                webhook={region.webhooks.find((w) => w.id === match.params.id)}
                 handleClose={() => history.push(`/regions/${regionId}`)}
               />
             )}
@@ -402,7 +404,7 @@ const RegionPage = ({ match }: RegionPageProps) => {
             path={`${match.url}/webhooks/:id/delete`}
             render={({ match }) => {
               const webhook = region.webhooks.find(
-                t => t.id === match.params.id,
+                (t) => t.id === match.params.id,
               );
               if (!webhook) {
                 return <Redirect to="/" />;

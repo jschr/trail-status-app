@@ -23,14 +23,13 @@ interface TrailInputs {
 }
 
 const TrailDialog = ({ trail, region, handleClose }: TrailDialogProps) => {
-  const { register, handleSubmit, formState, watch, setValue } = useForm<
-    TrailInputs
-  >({
-    defaultValues: {
-      name: trail?.name,
-      closeHashtag: trail?.closeHashtag,
-    },
-  });
+  const { register, handleSubmit, formState, watch, setValue } =
+    useForm<TrailInputs>({
+      defaultValues: {
+        name: trail?.name,
+        closeHashtag: trail?.closeHashtag,
+      },
+    });
 
   const name = watch('name');
   const closeHashtag = watch('closeHashtag');
@@ -65,10 +64,7 @@ const TrailDialog = ({ trail, region, handleClose }: TrailDialogProps) => {
     if (!name) return;
     setValue(
       'closeHashtag',
-      `#${(name || '')
-        .toLowerCase()
-        .replace(/\s/, '')
-        .replace(`'`, '')}closed`,
+      `#${(name || '').toLowerCase().replace(/\s/, '').replace(`'`, '')}closed`,
     );
   }, [trail, name, setValue]);
 
@@ -107,8 +103,9 @@ const TrailDialog = ({ trail, region, handleClose }: TrailDialogProps) => {
               label="Trail closed"
               name="closeHashtag"
               inputRef={register({ required: true })}
-              helperText={`Example: The trails are open but please avoid ${name ||
-                ''}! ${region.openHashtag} ${closeHashtag || ''}`}
+              helperText={`Example: The trails are open but please avoid ${
+                name || ''
+              }! ${region.openHashtag} ${closeHashtag || ''}`}
             />
           </Box>
         </DialogContent>
