@@ -48,7 +48,6 @@ export function WebhookDialog({
   webhook,
   onOpenChange,
 }: WebhookDialogProps) {
-  console.log('webhook', webhook);
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
