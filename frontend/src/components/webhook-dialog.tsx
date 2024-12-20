@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import pupa from 'pupa';
 import { zodResolver } from '@hookform/resolvers/zod';

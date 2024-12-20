@@ -1,5 +1,4 @@
 import 'classlist-polyfill';
-import 'promise/polyfill';
 import 'whatwg-fetch';
 import './embed.css';
 import * as timeago from 'timeago.js';
@@ -10,7 +9,7 @@ const regionIds: { [key: string]: true } = {};
 const trailStatusAttribute = 'data-trail-status';
 
 const ensureImage = async (src: string) =>
-  new Promise(resolve => {
+  new Promise((resolve) => {
     const img = new Image();
     img.onload = () => resolve(true);
     img.onerror = () => resolve(false);

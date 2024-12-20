@@ -10,7 +10,8 @@
   },
   "dependencies": {
     "linkifyjs": "^2.1.9",
-    "timeago.js": "^4.0.2"
+    "timeago.js": "^4.0.2",
+    "whatwg-fetch": "^3.6.20"
   },
   "devDependencies": {
     "@trail-status-app/utilities": "",
