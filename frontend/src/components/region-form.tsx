@@ -7,9 +7,10 @@ import { Button } from '@/components/ui/button';
 import { TextField } from '@/components/text-field';
 import { Separator } from '@/components/ui/separator';
 import { Region } from '@/api';
+import { useSaveRegion } from '@/hooks/use-save-region';
 
 interface RegionFormProps {
-  defaultValue: Region;
+  region: Region;
 }
 
 const FormSchema = z.object({
@@ -24,7 +25,7 @@ const FormSchema = z.object({
   }),
 });
 
-export function RegionForm({ defaultValue }: RegionFormProps) {
+export function RegionForm({ region }: RegionFormProps) {
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
@@ -34,16 +35,19 @@ export function RegionForm({ defaultValue }: RegionFormProps) {
     },
   });
 
+  // TODO: Save region
+  const { mutateAsync: saveRegion } = useSaveRegion();
+
   function onSubmit(data: z.infer<typeof FormSchema>) {
-    console.log(data);
+    saveRegion({ regionId: region.id, ...data });
   }
 
-  // Sync form values with defaultValue.
+  // Sync form values with props.
   useEffect(() => {
-    form.setValue('regionName', defaultValue.name ?? '');
-    form.setValue('openHashtag', defaultValue.openHashtag ?? '');
-    form.setValue('closeHashtag', defaultValue.closeHashtag ?? '');
-  }, [defaultValue]);
+    form.setValue('regionName', region.name ?? '');
+    form.setValue('openHashtag', region.openHashtag ?? '');
+    form.setValue('closeHashtag', region.closeHashtag ?? '');
+  }, [region]);
 
   const isDirty = Object.values(form.formState.dirtyFields).length > 0;
 
@@ -65,10 +69,10 @@ export function RegionForm({ defaultValue }: RegionFormProps) {
             <p className="text-xs">
               Open or close the trails by posting to{' '}
               <a
-                href={`https://www.instagram.com/${defaultValue.user?.username}/`}
+                href={`https://www.instagram.com/${region.user?.username}/`}
                 target="_blank"
               >
-                <strong>@{defaultValue.user?.username}</strong>
+                <strong>@{region.user?.username}</strong>
               </a>{' '}
               with a specific hashtag.
             </p>

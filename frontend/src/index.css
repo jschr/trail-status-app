@@ -80,3 +80,8 @@
     @apply bg-background text-foreground;
   }
 }
+
+#nprogress .bar {
+  background: hsl(var(--primary));
+  height: 1.5px;
+}

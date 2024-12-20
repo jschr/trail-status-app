@@ -1,21 +1,26 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import api, { Region } from '@/api';
+import api from '@/api';
 
-export function useSaveRegion(region?: Region) {
+export interface SaveRegionInput {
+  regionId: string;
+  regionName: string;
+  openHashtag: string;
+  closeHashtag: string;
+}
+
+export function useSaveRegion() {
   const queryClient = useQueryClient();
 
   const result = useMutation({
-    mutationFn: async () => {
-      if (region) {
-        return await api.updateRegion(region.id, {
-          name: region.name,
-          openHashtag: region.openHashtag,
-          closeHashtag: region.closeHashtag,
-        });
-      }
+    mutationFn: async (input: SaveRegionInput) => {
+      return await api.updateRegion(input.regionId, {
+        name: input.regionName,
+        openHashtag: input.openHashtag,
+        closeHashtag: input.closeHashtag,
+      });
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['region', region?.id] });
+    onSuccess: (region) => {
+      queryClient.invalidateQueries({ queryKey: ['region', region.id] });
     },
   });
 

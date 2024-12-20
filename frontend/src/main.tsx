@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
+import 'nprogress/nprogress.css';
 import './index.css';
 import { ThemeProvider } from '@/components/theme-provider';
 import { App } from '@/app';
