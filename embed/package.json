@@ -5,7 +5,7 @@
   "main": "lib/embed.js",
   "scripts": {
     "dev": "webpack --watch --mode=production",
-    "build": "echo ''",
+    "build": "tsc -b && webpack --mode=production",
     "lint": "eslint -c ./.eslintrc src/**/*.ts"
   },
   "dependencies": {

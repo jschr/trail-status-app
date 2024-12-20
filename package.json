@@ -7,7 +7,7 @@
     "api",
     "utilities",
     "embed",
-    "frontend2",
+    "frontend",
     "infrastructure"
   ],
   "scripts": {

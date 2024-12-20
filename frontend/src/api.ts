@@ -1,9 +1,9 @@
 import qs from 'querystring';
 import nprogress from 'nprogress';
-import ApiClient from './clients/ApiClient';
-import history from './history';
+import ApiClient from '@/clients/ApiClient';
+import history from '@/history';
 
-export * from './clients/ApiClient';
+export * from '@/clients/ApiClient';
 
 let accessToken: string | null = null;
 
