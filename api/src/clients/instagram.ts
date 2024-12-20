@@ -10,6 +10,7 @@ const igAppSecret = env('INSTAGRAM_APP_SECRET');
 const igRedirectUri = `${env('API_ENDPOINT')}/instagram/authorize/callback`;
 const igScopes = 'instagram_business_basic,instagram_business_content_publish';
 
+// https://www.instagram.com/oauth/authorize?enable_fb_login=0&force_authentication=1&client_id=948627976597288&redirect_uri=https://api2.trailstatusapp.com/instagram/authorize/callback&response_type=code&scope=instagram_business_basic,instagram_business_content_publish&state=3fede25c-f854-4165-9939-4b2a956d79a2
 export const getAuthorizeUrl = (): {
   authorizeUrl: string;
   state: string;

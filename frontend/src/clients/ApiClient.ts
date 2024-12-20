@@ -1,7 +1,9 @@
-import jwtDecode from 'jwt-decode';
-import { env } from '@trail-status-app/utilities';
+import { jwtDecode } from 'jwt-decode';
 
-const apiEndpoint = env('REACT_APP_API_ENDPOINT');
+const apiEndpoint = import.meta.env.VITE_API_ENDPOINT;
+if (!apiEndpoint) {
+  throw new Error('Missing VITE_API_ENDPOINT');
+}
 
 interface RequestOptions {
   method: string;
@@ -98,7 +100,12 @@ export default class ApiClient {
   }
 
   getUser(): User {
-    const decodedToken = jwtDecode(this.accessToken);
+    if (!this.accessToken) {
+      throw new Error('No access token');
+    }
+
+    // TODO: Add type for decoded token
+    const decodedToken = jwtDecode<any>(this.accessToken);
 
     return {
       id: decodedToken.sub,
