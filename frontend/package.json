@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "VITE_API_ENDPOINT=https://api.dev.trailstatusapp.com vite",
-    "build": "tsc -b && vite build",
+    "build": "tsc -b && VITE_API_ENDPOINT=$API_ENDPOINT vite build",
     "lint": "eslint .",
     "preview": "vite preview"
   },
