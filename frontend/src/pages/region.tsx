@@ -50,7 +50,7 @@ export function Region() {
             <BreadcrumbItem>
               <BreadcrumbPage className="flex gap-6 items-center">
                 <span>{region?.name}</span>
-                <div className="hidden md:flex gap-2 items-center">
+                <div className="flex gap-2 items-center">
                   {regionStatus?.status === 'open' && (
                     <div className="text-xs bg-green-500 w-2 h-2 rounded-full" />
                   )}
@@ -58,7 +58,7 @@ export function Region() {
                     <div className="text-xs bg-red-500 w-2 h-2 rounded-full" />
                   )}
                   {regionStatus?.message && (
-                    <div className="text-xs text-muted-foreground w-full max-w-[500px] text-ellipsis overflow-hidden">
+                    <div className="hidden md:block text-xs text-muted-foreground w-full max-w-[500px] text-ellipsis overflow-hidden">
                       {regionStatus.message}
                     </div>
                   )}
@@ -70,7 +70,7 @@ export function Region() {
       </Header>
       <div className="flex-1 flex items-center justify-center p-6 md:p-10">
         {region && (
-          <div className="w-full max-w-[820px] flex flex-row gap-16">
+          <div className="w-full max-w-[820px] flex flex-col md:flex-row gap-16">
             <div className="flex-1 flex flex-col gap-6">
               <h2 className="text-xl">Region Settings</h2>
               <RegionForm key={region.id} defaultValue={region} />

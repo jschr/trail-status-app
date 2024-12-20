@@ -8,6 +8,7 @@ export function useRegionStatus(regionId?: string) {
     enabled: !!regionId,
     staleTime: 2 * 60 * 1000,
     refetchOnWindowFocus: true,
+    refetchInterval: 2.5 * 60 * 1000,
   });
 
   return result;
