@@ -1,7 +1,8 @@
-import * as AWS from 'aws-sdk';
+import * as DynamoDB from '@aws-sdk/client-dynamodb';
 import tables from '@trail-status-app/infrastructure/build/src/tables';
 import dynamodb from './dynamodb';
 import ensureHashtagPrefix from './ensureHashtagPrefix';
+import { unwrapError } from '../utilities';
 
 export interface Region {
   id: string;
@@ -17,17 +18,17 @@ export interface Region {
 export default class RegionModel {
   public static async get(id: string): Promise<RegionModel | null> {
     try {
-      const params: AWS.DynamoDB.GetItemInput = {
+      const params: DynamoDB.GetItemInput = {
         TableName: tables.regions.name,
         Key: this.toAttributeMap({ id }),
       };
-      const res = await dynamodb.getItem(params).promise();
+      const res = await dynamodb.getItem(params);
       if (!res.Item) return null;
 
       return new RegionModel(this.fromAttributeMap(res.Item));
     } catch (err) {
       throw new Error(
-        `RegionModel.get for id '${id}' failed with '${err.message}'`,
+        `RegionModel.get for id '${id}' failed with '${unwrapError(err)}'`,
       );
     }
   }
@@ -40,7 +41,7 @@ export default class RegionModel {
     const requestKeys = items.filter(i => i.id).map(this.toAttributeMap);
     if (requestKeys.length === 0) return [];
 
-    const params: AWS.DynamoDB.BatchGetItemInput = {
+    const params: DynamoDB.BatchGetItemInput = {
       RequestItems: {
         [tables.regions.name]: {
           Keys: requestKeys,
@@ -49,7 +50,7 @@ export default class RegionModel {
     };
 
     try {
-      const res = await dynamodb.batchGetItem(params).promise();
+      const res = await dynamodb.batchGetItem(params);
       if (!res.Responses) {
         return [];
       }
@@ -70,19 +71,21 @@ export default class RegionModel {
       throw new Error(
         `RegionModel.batchGet with params '${JSON.stringify(
           params,
-        )}' failed with '${err.message}'`,
+        )}' failed with '${unwrapError(err)}'`,
       );
     }
   }
 
   public static async queryByUser(
     userId: string,
-    exclusiveStartKey?: AWS.DynamoDB.Key | undefined,
-  ): Promise<[RegionModel[], AWS.DynamoDB.Key | undefined]> {
+    exclusiveStartKey?: Record<string, DynamoDB.AttributeValue> | undefined,
+  ): Promise<
+    [RegionModel[], Record<string, DynamoDB.AttributeValue> | undefined]
+  > {
     try {
       const attrMap = this.toAttributeMap({ userId });
 
-      const params: AWS.DynamoDB.QueryInput = {
+      const params: DynamoDB.QueryInput = {
         TableName: tables.regions.name,
         IndexName: tables.regions.indexes.regionsByUser.name,
         KeyConditionExpression: '#userId = :userId',
@@ -96,7 +99,7 @@ export default class RegionModel {
         ExclusiveStartKey: exclusiveStartKey,
       };
 
-      const res = await dynamodb.query(params).promise();
+      const res = await dynamodb.query(params);
 
       const trails = res.Items
         ? res.Items.map(item => new RegionModel(this.fromAttributeMap(item)))
@@ -104,7 +107,9 @@ export default class RegionModel {
 
       return [trails, res.LastEvaluatedKey];
     } catch (err) {
-      throw new Error(`RegionModel.queryByUser failed with '${err.message}'`);
+      throw new Error(
+        `RegionModel.queryByUser failed with '${unwrapError(err)}'`,
+      );
     }
   }
 
@@ -126,15 +131,17 @@ export default class RegionModel {
   }
 
   public static async scan(
-    exclusiveStartKey?: AWS.DynamoDB.Key | undefined,
-  ): Promise<[RegionModel[], AWS.DynamoDB.Key | undefined]> {
-    const params: AWS.DynamoDB.ScanInput = {
+    exclusiveStartKey?: Record<string, DynamoDB.AttributeValue> | undefined,
+  ): Promise<
+    [RegionModel[], Record<string, DynamoDB.AttributeValue> | undefined]
+  > {
+    const params: DynamoDB.ScanInput = {
       TableName: tables.regions.name,
       ExclusiveStartKey: exclusiveStartKey,
     };
 
     try {
-      const res = await dynamodb.scan(params).promise();
+      const res = await dynamodb.scan(params);
       if (!res.Items) {
         return [[], undefined];
       }
@@ -148,7 +155,7 @@ export default class RegionModel {
       throw new Error(
         `RegionModel.scan with params '${JSON.stringify(
           params,
-        )}' failed with '${err.message}'`,
+        )}' failed with '${unwrapError(err)}'`,
       );
     }
   }
@@ -168,7 +175,7 @@ export default class RegionModel {
   }
 
   private static toAttributeMap(region: Partial<Region>) {
-    const attrMap: AWS.DynamoDB.AttributeMap = {};
+    const attrMap: Record<string, DynamoDB.AttributeValue> = {};
 
     if (region.id !== undefined) attrMap.id = { S: region.id };
     if (region.userId !== undefined) attrMap.userId = { S: region.userId };
@@ -188,7 +195,7 @@ export default class RegionModel {
   }
 
   private static fromAttributeMap(
-    attrMap: AWS.DynamoDB.AttributeMap,
+    attrMap: Record<string, DynamoDB.AttributeValue>,
   ): Partial<Region> {
     if (!attrMap.id || !attrMap.id.S)
       throw new Error('Missing id parsing attribute map');
@@ -214,20 +221,20 @@ export default class RegionModel {
       updatedAt: new Date().toISOString(),
     };
 
-    const params: AWS.DynamoDB.PutItemInput = {
+    const params: DynamoDB.PutItemInput = {
       TableName: tables.regions.name,
       Item: RegionModel.toAttributeMap(newAttrs),
     };
 
     try {
-      await dynamodb.putItem(params).promise();
+      await dynamodb.putItem(params);
 
       this.attrs = newAttrs;
     } catch (err) {
       throw new Error(
         `RegionModel.save failed for Item '${JSON.stringify(
           params.Item,
-        )}' with '${err.message}'`,
+        )}' with '${unwrapError(err)}'`,
       );
     }
   }

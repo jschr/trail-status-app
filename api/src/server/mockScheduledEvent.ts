@@ -7,11 +7,12 @@ export default (
     account: '',
     region: '',
     detail: null,
-    'detail-type': '',
+    'detail-type': 'Scheduled Event',
     source: 'local',
     time: '',
     id: '',
     resources: [],
+    version: '0',
   };
 
   return merge(defaultEvent, overrides);

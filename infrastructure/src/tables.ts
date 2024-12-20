@@ -1,4 +1,4 @@
-import * as dynamodb from '@aws-cdk/aws-dynamodb';
+import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import projectPrefix from './projectPrefix';
 
 export default {

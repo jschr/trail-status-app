@@ -5,6 +5,7 @@ import withApiHandler from '../withApiHandler';
 import { BadRequestError, NotFoundError } from '../HttpError';
 import firebase from '../clients/firebase';
 import { parseBody } from '../requests';
+import { unwrapError } from '../utilities';
 
 interface PostUnsubscribeFCMBody {
   token: string;
@@ -28,7 +29,7 @@ export default withApiHandler([], async event => {
   } catch (err) {
     console.error(`Failed to unsubscribed from FCM topic '${topic}'`);
     throw new BadRequestError(
-      `Failed to unsubscribe to FCM with '${err.message}'`,
+      `Failed to unsubscribe to FCM with '${unwrapError(err)}'`,
     );
   }
 });

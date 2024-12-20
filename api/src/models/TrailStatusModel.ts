@@ -1,6 +1,7 @@
-import * as AWS from 'aws-sdk';
+import * as DynamoDB from '@aws-sdk/client-dynamodb';
 import tables from '@trail-status-app/infrastructure/build/src/tables';
 import dynamodb from './dynamodb';
+import { unwrapError } from '../utilities';
 
 export interface TrailStatus {
   id: string;
@@ -12,17 +13,17 @@ export interface TrailStatus {
 export default class TrailStatusModel {
   public static async get(id: string): Promise<TrailStatusModel | null> {
     try {
-      const params: AWS.DynamoDB.GetItemInput = {
+      const params: DynamoDB.GetItemInput = {
         TableName: tables.trailStatus.name,
         Key: this.toAttributeMap({ id }),
       };
-      const res = await dynamodb.getItem(params).promise();
+      const res = await dynamodb.getItem(params);
       if (!res.Item) return null;
 
       return new TrailStatusModel(this.fromAttributeMap(res.Item));
     } catch (err) {
       throw new Error(
-        `TrailStatusModel.get for id '${id}' failed with '${err.message}'`,
+        `TrailStatusModel.get for id '${id}' failed with '${unwrapError(err)}'`,
       );
     }
   }
@@ -35,7 +36,7 @@ export default class TrailStatusModel {
     const requestKeys = items.filter(i => i.id).map(this.toAttributeMap);
     if (requestKeys.length === 0) return [];
 
-    const params: AWS.DynamoDB.BatchGetItemInput = {
+    const params: DynamoDB.BatchGetItemInput = {
       RequestItems: {
         [tables.trailStatus.name]: {
           Keys: requestKeys,
@@ -44,7 +45,7 @@ export default class TrailStatusModel {
     };
 
     try {
-      const res = await dynamodb.batchGetItem(params).promise();
+      const res = await dynamodb.batchGetItem(params);
       if (!res.Responses) {
         return [];
       }
@@ -65,13 +66,13 @@ export default class TrailStatusModel {
       throw new Error(
         `TrailStatusModel.batchGet with params '${JSON.stringify(
           params,
-        )}' failed with '${err.message}'`,
+        )}' failed with '${unwrapError(err)}'`,
       );
     }
   }
 
   private static toAttributeMap(trailStatus: Partial<TrailStatus>) {
-    const attrMap: AWS.DynamoDB.AttributeMap = {};
+    const attrMap: Record<string, DynamoDB.AttributeValue> = {};
 
     if (trailStatus.id !== undefined) attrMap.id = { S: trailStatus.id };
     if (trailStatus.status !== undefined)
@@ -85,9 +86,9 @@ export default class TrailStatusModel {
   }
 
   private static fromAttributeMap(
-    attrMap: AWS.DynamoDB.AttributeMap,
+    attrMap: Record<string, DynamoDB.AttributeValue>,
   ): Partial<TrailStatus> {
-    if (!attrMap.id ?? !attrMap.id.S)
+    if (!attrMap.id || !attrMap.id.S)
       throw new Error('Missing id parsing attribute map');
 
     return {
@@ -106,35 +107,37 @@ export default class TrailStatusModel {
       ...updatedAttrs,
       updatedAt: new Date().toISOString(),
     };
-    const params: AWS.DynamoDB.PutItemInput = {
+    const params: DynamoDB.PutItemInput = {
       TableName: tables.trailStatus.name,
       Item: TrailStatusModel.toAttributeMap(newAttrs),
     };
 
     try {
-      await dynamodb.putItem(params).promise();
+      await dynamodb.putItem(params);
 
       this.attrs = newAttrs;
     } catch (err) {
       throw new Error(
         `TrailStatusModel.save failed for Item '${JSON.stringify(
           params.Item,
-        )}' with '${err.message}'`,
+        )}' with '${unwrapError(err)}'`,
       );
     }
   }
 
   public async delete(): Promise<void> {
-    const params: AWS.DynamoDB.DeleteItemInput = {
+    const params: DynamoDB.DeleteItemInput = {
       TableName: tables.trailStatus.name,
       Key: TrailStatusModel.toAttributeMap({ id: this.attrs.id }),
     };
 
     try {
-      await dynamodb.deleteItem(params).promise();
+      await dynamodb.deleteItem(params);
     } catch (err) {
       throw new Error(
-        `TrailStatusModel.delete failed for id '${this.attrs.id}' with '${err.message}'`,
+        `TrailStatusModel.delete failed for id '${
+          this.attrs.id
+        }' with '${unwrapError(err)}'`,
       );
     }
   }

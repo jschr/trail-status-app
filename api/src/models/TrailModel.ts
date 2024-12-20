@@ -1,7 +1,8 @@
-import * as AWS from 'aws-sdk';
+import * as DynamoDB from '@aws-sdk/client-dynamodb';
 import tables from '@trail-status-app/infrastructure/build/src/tables';
 import dynamodb from './dynamodb';
 import ensureHashtagPrefix from './ensureHashtagPrefix';
+import { unwrapError } from '../utilities';
 
 export interface Trail {
   id: string;
@@ -15,17 +16,17 @@ export interface Trail {
 export default class TrailModel {
   public static async get(id: string): Promise<TrailModel | null> {
     try {
-      const params: AWS.DynamoDB.GetItemInput = {
+      const params: DynamoDB.GetItemInput = {
         TableName: tables.trails.name,
         Key: this.toAttributeMap({ id }),
       };
-      const res = await dynamodb.getItem(params).promise();
+      const res = await dynamodb.getItem(params);
       if (!res.Item) return null;
 
       return new TrailModel(this.fromAttributeMap(res.Item));
     } catch (err) {
       throw new Error(
-        `TrailModel.get for id '${id}' failed with '${err.message}'`,
+        `TrailModel.get for id '${id}' failed with '${unwrapError(err)}'`,
       );
     }
   }
@@ -38,7 +39,7 @@ export default class TrailModel {
     const requestKeys = items.filter(i => i.id).map(this.toAttributeMap);
     if (requestKeys.length === 0) return [];
 
-    const params: AWS.DynamoDB.BatchGetItemInput = {
+    const params: DynamoDB.BatchGetItemInput = {
       RequestItems: {
         [tables.trails.name]: {
           Keys: requestKeys,
@@ -47,7 +48,7 @@ export default class TrailModel {
     };
 
     try {
-      const res = await dynamodb.batchGetItem(params).promise();
+      const res = await dynamodb.batchGetItem(params);
       if (!res.Responses) {
         return [];
       }
@@ -68,19 +69,21 @@ export default class TrailModel {
       throw new Error(
         `TrailModel.batchGet with params '${JSON.stringify(
           params,
-        )}' failed with '${err.message}'`,
+        )}' failed with '${unwrapError(err)}'`,
       );
     }
   }
 
   public static async queryByRegion(
     regionId: string,
-    exclusiveStartKey?: AWS.DynamoDB.Key | undefined,
-  ): Promise<[TrailModel[], AWS.DynamoDB.Key | undefined]> {
+    exclusiveStartKey?: Record<string, DynamoDB.AttributeValue> | undefined,
+  ): Promise<
+    [TrailModel[], Record<string, DynamoDB.AttributeValue> | undefined]
+  > {
     try {
       const attrMap = this.toAttributeMap({ regionId });
 
-      const params: AWS.DynamoDB.QueryInput = {
+      const params: DynamoDB.QueryInput = {
         TableName: tables.trails.name,
         IndexName: tables.trails.indexes.trailsByRegion.name,
         KeyConditionExpression: '#regionId = :regionId',
@@ -94,7 +97,7 @@ export default class TrailModel {
         ExclusiveStartKey: exclusiveStartKey,
       };
 
-      const res = await dynamodb.query(params).promise();
+      const res = await dynamodb.query(params);
 
       const trails = res.Items
         ? res.Items.map(item => new TrailModel(this.fromAttributeMap(item)))
@@ -102,7 +105,9 @@ export default class TrailModel {
 
       return [trails, res.LastEvaluatedKey];
     } catch (err) {
-      throw new Error(`TrailModel.queryByRegion failed with '${err.message}'`);
+      throw new Error(
+        `TrailModel.queryByRegion failed with '${unwrapError(err)}'`,
+      );
     }
   }
 
@@ -124,7 +129,7 @@ export default class TrailModel {
   }
 
   private static toAttributeMap(Trail: Partial<Trail>) {
-    const attrMap: AWS.DynamoDB.AttributeMap = {};
+    const attrMap: Record<string, DynamoDB.AttributeValue> = {};
 
     if (Trail.id !== undefined) attrMap.id = { S: Trail.id };
     if (Trail.regionId !== undefined) attrMap.regionId = { S: Trail.regionId };
@@ -140,7 +145,7 @@ export default class TrailModel {
   }
 
   private static fromAttributeMap(
-    attrMap: AWS.DynamoDB.AttributeMap,
+    attrMap: Record<string, DynamoDB.AttributeValue>,
   ): Partial<Trail> {
     if (!attrMap.id || !attrMap.id.S)
       throw new Error('Missing id parsing attribute map');
@@ -164,35 +169,37 @@ export default class TrailModel {
       updatedAt: new Date().toISOString(),
     };
 
-    const params: AWS.DynamoDB.PutItemInput = {
+    const params: DynamoDB.PutItemInput = {
       TableName: tables.trails.name,
       Item: TrailModel.toAttributeMap(newAttrs),
     };
 
     try {
-      await dynamodb.putItem(params).promise();
+      await dynamodb.putItem(params);
 
       this.attrs = newAttrs;
     } catch (err) {
       throw new Error(
         `TrailModel.save failed for Item '${JSON.stringify(
           params.Item,
-        )}' with '${err.message}'`,
+        )}' with '${unwrapError(err)}'`,
       );
     }
   }
 
   public async delete(): Promise<void> {
-    const params: AWS.DynamoDB.DeleteItemInput = {
+    const params: DynamoDB.DeleteItemInput = {
       TableName: tables.trails.name,
       Key: TrailModel.toAttributeMap({ id: this.attrs.id }),
     };
 
     try {
-      await dynamodb.deleteItem(params).promise();
+      await dynamodb.deleteItem(params);
     } catch (err) {
       throw new Error(
-        `TrailModel.delete failed for id '${this.attrs.id}' with '${err.message}'`,
+        `TrailModel.delete failed for id '${this.attrs.id}' with '${unwrapError(
+          err,
+        )}'`,
       );
     }
   }

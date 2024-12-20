@@ -1,4 +1,4 @@
-import * as AWS from 'aws-sdk';
+import { TimestreamQuery } from '@aws-sdk/client-timestream-query';
 import { env } from '@trail-status-app/utilities';
 import RegionModel from './models/RegionModel';
 import RegionStatusModel from './models/RegionStatusModel';
@@ -6,6 +6,7 @@ import TrailModel from './models/TrailModel';
 import UserModel from './models/UserModel';
 import TrailStatusModel from './models/TrailStatusModel';
 import { NotFoundError } from './HttpError';
+import { unwrapError } from './utilities';
 
 export interface RegionStatus {
   id: string;
@@ -123,7 +124,7 @@ export const getWeatherData = async (id: string): Promise<WeatherData> => {
       }
     }
 
-    const timestreamQuery = new AWS.TimestreamQuery({
+    const timestreamQuery = new TimestreamQuery({
       region: env('TIMESTREAM_REGION'),
       credentials: {
         accessKeyId: env('TIMESTREAM_ACCESS_KEY_ID'),
@@ -156,18 +157,18 @@ export const getWeatherData = async (id: string): Promise<WeatherData> => {
     ORDER BY b.measure_name`,
     };
 
-    const results = await timestreamQuery.query(params).promise();
+    const results = await timestreamQuery.query(params);
 
-    const airTempRow = results.Rows.find(
-      r => r.Data[0]?.ScalarValue === 'temperature',
+    const airTempRow = results.Rows?.find(
+      r => r.Data?.[0]?.ScalarValue === 'temperature',
     );
-    const airTempValue = parseInt(airTempRow?.Data[1]?.ScalarValue || '', 10);
+    const airTempValue = parseInt(airTempRow?.Data?.[1]?.ScalarValue || '', 10);
 
-    const groundTempRow = results.Rows.find(
-      r => r.Data[0]?.ScalarValue === 'groundtemperature',
+    const groundTempRow = results.Rows?.find(
+      r => r.Data?.[0]?.ScalarValue === 'groundtemperature',
     );
     const groundTempValue = parseInt(
-      groundTempRow?.Data[1]?.ScalarValue || '',
+      groundTempRow?.Data?.[1]?.ScalarValue || '',
       10,
     );
 
@@ -182,7 +183,7 @@ export const getWeatherData = async (id: string): Promise<WeatherData> => {
 
     return data;
   } catch (err) {
-    console.error(`Failed to fetch timestream data with '${err.message}'`);
+    console.error(`Failed to fetch timestream data with '${unwrapError(err)}'`);
     return {
       airTemp: null,
       groundTemp: null,

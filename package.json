@@ -5,9 +5,9 @@
   "author": "Jordan Schroter <github@jschr.io>",
   "workspaces": [
     "api",
+    "utilities",
     "embed",
     "frontend",
-    "utilities",
     "infrastructure"
   ],
   "scripts": {
@@ -22,6 +22,9 @@
     "deploy:production": "dotenv -e .env -e .env.production yarn infrastructure deploy",
     "seed:dev": "dotenv -e .env -e .env.dev yarn api seed",
     "seed:production": "dotenv -e .env -e .env.production yarn api seed",
+    "create-jwt:dev": "dotenv -e .env -e .env.dev ts-node tasks/create-jwt.ts",
+    "copy-tables:dev": "dotenv -e .env -e .env.dev ts-node tasks/copy-tables.ts",
+    "copy-tables:production": "dotenv -e .env -e .env.production ts-node tasks/copy-tables.ts",
     "--- workspaces ---": "",
     "api": "yarn workspace @trail-status-app/api",
     "embed": "yarn workspace @trail-status-app/embed",
@@ -41,7 +44,7 @@
     "source-map-support": "^0.5.16",
     "ts-node": "^8.6.2",
     "ts-node-dev": "^1.0.0-pre.44",
-    "typescript": "^3.7.5",
+    "typescript": "^5.3.3",
     "wsrun": "^5.2.0"
   }
 }

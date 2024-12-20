@@ -2,6 +2,7 @@ import withSQSHandler from '../withSQSHandler';
 import WebhookModel from '../models/WebhookModel';
 import buildRegionStatus, { RegionStatus } from '../buildRegionStatus';
 import runWebhook from '../runWebhook';
+import { unwrapError } from '../utilities';
 
 export default withSQSHandler(async event => {
   if (!Array.isArray(event?.Records) || !event.Records.length) {
@@ -61,7 +62,7 @@ export default withSQSHandler(async event => {
     } catch (err) {
       await webhook.save({
         lastRanAt: new Date().toISOString(),
-        error: err.message,
+        error: unwrapError(err),
       });
 
       // If the webhook fails throw an error. This triggers the message batch to be retried.
@@ -69,7 +70,9 @@ export default withSQSHandler(async event => {
       // messages are sent in the batch and one fails, the entire batch is re-tried. Webhooks
       // should not expect to messages to be delivered only once.
       throw new Error(
-        `Failed to process webhook '${webhook.id}' region '${webhook.regionId}', ${err.message}`,
+        `Failed to process webhook '${webhook.id}' region '${
+          webhook.regionId
+        }', ${unwrapError(err)}`,
       );
     }
   }

@@ -1,6 +1,7 @@
-import * as AWS from 'aws-sdk';
+import * as DynamoDB from '@aws-sdk/client-dynamodb';
 import tables from '@trail-status-app/infrastructure/build/src/tables';
 import dynamodb from './dynamodb';
+import { unwrapError } from '../utilities';
 
 export interface Webhook {
   id: string;
@@ -21,17 +22,17 @@ export interface Webhook {
 export default class WebhookModel {
   public static async get(id: string): Promise<WebhookModel | null> {
     try {
-      const params: AWS.DynamoDB.GetItemInput = {
+      const params: DynamoDB.GetItemInput = {
         TableName: tables.webhooks.name,
         Key: this.toAttributeMap({ id }),
       };
-      const res = await dynamodb.getItem(params).promise();
+      const res = await dynamodb.getItem(params);
       if (!res.Item) return null;
 
       return new WebhookModel(this.fromAttributeMap(res.Item));
     } catch (err) {
       throw new Error(
-        `WebhookModel.get for id '${id}' failed with '${err.message}'`,
+        `WebhookModel.get for id '${id}' failed with '${unwrapError(err)}'`,
       );
     }
   }
@@ -44,7 +45,7 @@ export default class WebhookModel {
     const requestKeys = items.filter(i => i.id).map(this.toAttributeMap);
     if (requestKeys.length === 0) return [];
 
-    const params: AWS.DynamoDB.BatchGetItemInput = {
+    const params: DynamoDB.BatchGetItemInput = {
       RequestItems: {
         [tables.webhooks.name]: {
           Keys: requestKeys,
@@ -53,7 +54,7 @@ export default class WebhookModel {
     };
 
     try {
-      const res = await dynamodb.batchGetItem(params).promise();
+      const res = await dynamodb.batchGetItem(params);
       if (!res.Responses) {
         return [];
       }
@@ -74,19 +75,21 @@ export default class WebhookModel {
       throw new Error(
         `WebhookModel.batchGet with params '${JSON.stringify(
           params,
-        )}' failed with '${err.message}'`,
+        )}' failed with '${unwrapError(err)}'`,
       );
     }
   }
 
   public static async queryByRegion(
     regionId: string,
-    exclusiveStartKey?: AWS.DynamoDB.Key | undefined,
-  ): Promise<[WebhookModel[], AWS.DynamoDB.Key | undefined]> {
+    exclusiveStartKey?: Record<string, DynamoDB.AttributeValue> | undefined,
+  ): Promise<
+    [WebhookModel[], Record<string, DynamoDB.AttributeValue> | undefined]
+  > {
     try {
       const attrMap = this.toAttributeMap({ regionId });
 
-      const params: AWS.DynamoDB.QueryInput = {
+      const params: DynamoDB.QueryInput = {
         TableName: tables.webhooks.name,
         IndexName: tables.webhooks.indexes.webhooksByRegion.name,
         KeyConditionExpression: '#regionId = :regionId',
@@ -100,7 +103,7 @@ export default class WebhookModel {
         ExclusiveStartKey: exclusiveStartKey,
       };
 
-      const res = await dynamodb.query(params).promise();
+      const res = await dynamodb.query(params);
 
       const trails = res.Items
         ? res.Items.map(item => new WebhookModel(this.fromAttributeMap(item)))
@@ -109,7 +112,7 @@ export default class WebhookModel {
       return [trails, res.LastEvaluatedKey];
     } catch (err) {
       throw new Error(
-        `WebhookModel.queryByRegion failed with '${err.message}'`,
+        `WebhookModel.queryByRegion failed with '${unwrapError(err)}'`,
       );
     }
   }
@@ -134,7 +137,7 @@ export default class WebhookModel {
   }
 
   private static toAttributeMap(webhook: Partial<Webhook>) {
-    const attrMap: AWS.DynamoDB.AttributeMap = {};
+    const attrMap: Record<string, DynamoDB.AttributeValue> = {};
 
     if (webhook.id !== undefined) {
       attrMap.id = { S: webhook.id };
@@ -180,7 +183,7 @@ export default class WebhookModel {
   }
 
   private static fromAttributeMap(
-    attrMap: AWS.DynamoDB.AttributeMap,
+    attrMap: Record<string, DynamoDB.AttributeValue>,
   ): Partial<Webhook> {
     if (!attrMap.id || !attrMap.id.S)
       throw new Error('Missing id parsing attribute map');
@@ -211,35 +214,37 @@ export default class WebhookModel {
       updatedAt: new Date().toISOString(),
     };
 
-    const params: AWS.DynamoDB.PutItemInput = {
+    const params: DynamoDB.PutItemInput = {
       TableName: tables.webhooks.name,
       Item: WebhookModel.toAttributeMap(newAttrs),
     };
 
     try {
-      await dynamodb.putItem(params).promise();
+      await dynamodb.putItem(params);
 
       this.attrs = newAttrs;
     } catch (err) {
       throw new Error(
         `WebhookModel.save failed for Item '${JSON.stringify(
           params.Item,
-        )}' with '${err.message}'`,
+        )}' with '${unwrapError(err)}'`,
       );
     }
   }
 
   public async delete(): Promise<void> {
-    const params: AWS.DynamoDB.DeleteItemInput = {
+    const params: DynamoDB.DeleteItemInput = {
       TableName: tables.webhooks.name,
       Key: WebhookModel.toAttributeMap({ id: this.attrs.id }),
     };
 
     try {
-      await dynamodb.deleteItem(params).promise();
+      await dynamodb.deleteItem(params);
     } catch (err) {
       throw new Error(
-        `WebhookModel.delete failed for id '${this.attrs.id}' with '${err.message}'`,
+        `WebhookModel.delete failed for id '${
+          this.attrs.id
+        }' with '${unwrapError(err)}'`,
       );
     }
   }
