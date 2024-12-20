@@ -99,9 +99,9 @@ export default class ApiClient {
     return `${apiEndpoint}/instagram/authorize`;
   }
 
-  getUser(): User {
+  getUser(): User | undefined {
     if (!this.accessToken) {
-      throw new Error('No access token');
+      return undefined;
     }
 
     // TODO: Add type for decoded token

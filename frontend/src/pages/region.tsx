@@ -48,22 +48,25 @@ export function Region() {
             </BreadcrumbItem>
             <BreadcrumbSeparator className="hidden md:block" />
             <BreadcrumbItem>
-              <BreadcrumbPage className="flex gap-6 items-center">
+              <BreadcrumbPage>
                 <span>{region?.name}</span>
-                <div className="flex gap-2 items-center">
-                  {regionStatus?.status === 'open' && (
-                    <div className="text-xs bg-green-500 w-2 h-2 rounded-full" />
-                  )}
-                  {regionStatus?.status === 'closed' && (
-                    <div className="text-xs bg-red-500 w-2 h-2 rounded-full" />
-                  )}
-                  {regionStatus?.message && (
-                    <div className="hidden md:block text-xs text-muted-foreground w-full max-w-[500px] text-ellipsis overflow-hidden">
-                      {regionStatus.message}
-                    </div>
-                  )}
-                </div>
+                {/* TODO: Multi region select */}
               </BreadcrumbPage>
+            </BreadcrumbItem>
+            <BreadcrumbItem>
+              <div className="ml-4 flex gap-2 items-center">
+                {regionStatus?.status === 'open' && (
+                  <div className="text-xs bg-green-500 w-2 h-2 rounded-full" />
+                )}
+                {regionStatus?.status === 'closed' && (
+                  <div className="text-xs bg-red-500 w-2 h-2 rounded-full" />
+                )}
+                {regionStatus?.message && (
+                  <div className="hidden md:block text-xs w-full max-w-[500px] text-ellipsis overflow-hidden">
+                    {regionStatus.message}
+                  </div>
+                )}
+              </div>
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
