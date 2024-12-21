@@ -22,7 +22,7 @@ if (typeof querystring.sessionToken === 'string') {
 }
 
 let requests = 0;
-let doneTimeout: ReturnType<typeof setTimeout>;
+let doneTimeout: ReturnType<typeof setTimeout> | null = null;
 export default new ApiClient({
   accessToken,
   onUnauthorized: () => history.push('/login'),
