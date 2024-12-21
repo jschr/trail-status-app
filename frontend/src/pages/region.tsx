@@ -39,6 +39,7 @@ export function Region() {
   const { data: regionStatus } = useRegionStatus(regionId);
   const { data: user } = useUser();
 
+  const [dialogKey, setDialogKey] = useState(0);
   const [trailDialogOpen, setTrailDialogOpen] = useState(false);
   const [selectedTrail, setSelectedTrail] = useState<Trail>();
   const [webhookDialogOpen, setWebhookDialogOpen] = useState(false);
@@ -65,10 +66,6 @@ export function Region() {
             </BreadcrumbItem>
             <BreadcrumbSeparator className="hidden md:block" />
             <BreadcrumbItem>
-              {/* <BreadcrumbPage>
-                <span>{region?.name}</span>
-              </BreadcrumbPage> */}
-
               <Popover>
                 <PopoverTrigger
                   className="flex gap-2 items-center hover:text-foreground"
@@ -137,6 +134,7 @@ export function Region() {
                     size="sm"
                     onClick={() => {
                       setSelectedTrail(undefined);
+                      setDialogKey((k) => k + 1);
                       setTrailDialogOpen(true);
                     }}
                   >
@@ -160,6 +158,7 @@ export function Region() {
                       size="sm"
                       onClick={() => {
                         setSelectedTrail(trail);
+                        setDialogKey((k) => k + 1);
                         setTrailDialogOpen(true);
                       }}
                     >
@@ -177,6 +176,7 @@ export function Region() {
                     size="sm"
                     onClick={() => {
                       setSelectedWebhook(undefined);
+                      setDialogKey((k) => k + 1);
                       setWebhookDialogOpen(true);
                     }}
                   >
@@ -200,6 +200,7 @@ export function Region() {
                       size="sm"
                       onClick={() => {
                         setSelectedWebhook(webhook);
+                        setDialogKey((k) => k + 1);
                         setWebhookDialogOpen(true);
                       }}
                     >
@@ -214,7 +215,7 @@ export function Region() {
       </div>
 
       <TrailDialog
-        key={selectedTrail?.id}
+        key={'t' + dialogKey}
         open={trailDialogOpen}
         onOpenChange={(open) => {
           setTrailDialogOpen(open);
@@ -225,7 +226,7 @@ export function Region() {
       />
 
       <WebhookDialog
-        key={selectedWebhook?.id}
+        key={'w' + dialogKey}
         open={webhookDialogOpen}
         onOpenChange={(open) => {
           setWebhookDialogOpen(open);
