@@ -7,7 +7,6 @@ export function useRegionStatus(regionId?: string) {
     queryFn: () => (regionId ? api.getRegionStatus(regionId) : undefined),
     enabled: !!regionId,
     staleTime: 2 * 60 * 1000,
-    refetchOnWindowFocus: true,
     refetchInterval: 2.5 * 60 * 1000,
   });
 

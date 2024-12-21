@@ -7,7 +7,6 @@ export function useTrailStatus(trailId?: string) {
     queryFn: () => (trailId ? api.getTrailStatus(trailId) : undefined),
     enabled: !!trailId,
     staleTime: 2 * 60 * 1000,
-    refetchOnWindowFocus: true,
   });
 
   return result;
