@@ -24,7 +24,7 @@ export default class extends cdk.Stack {
     // User table
     const userTable = new dynamodb.Table(this, tables.users.name, {
       tableName: tables.users.name,
-      partitionKey: tables.users.partitionKey,
+      partitionKey: tables.users.partitionKey as dynamodb.Attribute,
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
       removalPolicy:
         env('USER_RESOURCE_REMOVAL_POLICY') === 'destroy'
@@ -35,7 +35,7 @@ export default class extends cdk.Stack {
     // Region table
     const regionsTable = new dynamodb.Table(this, tables.regions.name, {
       tableName: tables.regions.name,
-      partitionKey: tables.regions.partitionKey,
+      partitionKey: tables.regions.partitionKey as dynamodb.Attribute,
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
       removalPolicy:
         env('USER_RESOURCE_REMOVAL_POLICY') === 'destroy'
@@ -46,8 +46,8 @@ export default class extends cdk.Stack {
     const regionsByUserIndex = tables.regions.indexes.regionsByUser;
     regionsTable.addGlobalSecondaryIndex({
       indexName: regionsByUserIndex.name,
-      partitionKey: regionsByUserIndex.partitionKey,
-      sortKey: regionsByUserIndex.sortKey,
+      partitionKey: regionsByUserIndex.partitionKey as dynamodb.Attribute,
+      sortKey: regionsByUserIndex.sortKey as dynamodb.Attribute,
     });
 
     // Region status table
@@ -56,7 +56,7 @@ export default class extends cdk.Stack {
       tables.regionStatus.name,
       {
         tableName: tables.regionStatus.name,
-        partitionKey: tables.regionStatus.partitionKey,
+        partitionKey: tables.regionStatus.partitionKey as dynamodb.Attribute,
         billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
         removalPolicy:
           env('USER_RESOURCE_REMOVAL_POLICY') === 'destroy'
@@ -68,7 +68,7 @@ export default class extends cdk.Stack {
     // Trails table
     const trailsTable = new dynamodb.Table(this, tables.trails.name, {
       tableName: tables.trails.name,
-      partitionKey: tables.trails.partitionKey,
+      partitionKey: tables.trails.partitionKey as dynamodb.Attribute,
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
       removalPolicy:
         env('USER_RESOURCE_REMOVAL_POLICY') === 'destroy'
@@ -79,14 +79,14 @@ export default class extends cdk.Stack {
     const trailsByRegionIndex = tables.trails.indexes.trailsByRegion;
     trailsTable.addGlobalSecondaryIndex({
       indexName: trailsByRegionIndex.name,
-      partitionKey: trailsByRegionIndex.partitionKey,
-      sortKey: trailsByRegionIndex.sortKey,
+      partitionKey: trailsByRegionIndex.partitionKey as dynamodb.Attribute,
+      sortKey: trailsByRegionIndex.sortKey as dynamodb.Attribute,
     });
 
     // Trail status table
     const trailStatusTable = new dynamodb.Table(this, tables.trailStatus.name, {
       tableName: tables.trailStatus.name,
-      partitionKey: tables.trailStatus.partitionKey,
+      partitionKey: tables.trailStatus.partitionKey as dynamodb.Attribute,
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
       removalPolicy:
         env('USER_RESOURCE_REMOVAL_POLICY') === 'destroy'
@@ -97,7 +97,7 @@ export default class extends cdk.Stack {
     // Webhooks table
     const webhooksTable = new dynamodb.Table(this, tables.webhooks.name, {
       tableName: tables.webhooks.name,
-      partitionKey: tables.webhooks.partitionKey,
+      partitionKey: tables.webhooks.partitionKey as dynamodb.Attribute,
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
       removalPolicy:
         env('USER_RESOURCE_REMOVAL_POLICY') === 'destroy'
@@ -108,8 +108,8 @@ export default class extends cdk.Stack {
     const webhooksByRegionIndex = tables.webhooks.indexes.webhooksByRegion;
     webhooksTable.addGlobalSecondaryIndex({
       indexName: webhooksByRegionIndex.name,
-      partitionKey: webhooksByRegionIndex.partitionKey,
-      sortKey: webhooksByRegionIndex.sortKey,
+      partitionKey: webhooksByRegionIndex.partitionKey as dynamodb.Attribute,
+      sortKey: webhooksByRegionIndex.sortKey as dynamodb.Attribute,
     });
 
     // Region status history table
@@ -118,7 +118,8 @@ export default class extends cdk.Stack {
       tables.regionStatusHistory.name,
       {
         tableName: tables.regionStatusHistory.name,
-        partitionKey: tables.regionStatusHistory.partitionKey,
+        partitionKey: tables.regionStatusHistory
+          .partitionKey as dynamodb.Attribute,
         billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
         removalPolicy:
           env('USER_RESOURCE_REMOVAL_POLICY') === 'destroy'
@@ -131,16 +132,19 @@ export default class extends cdk.Stack {
       tables.regionStatusHistory.indexes.regionStatusHistoryByRegion;
     regionStatusHistoryTable.addGlobalSecondaryIndex({
       indexName: regionStatusHistoryByRegionIndex.name,
-      partitionKey: regionStatusHistoryByRegionIndex.partitionKey,
-      sortKey: regionStatusHistoryByRegionIndex.sortKey,
+      partitionKey:
+        regionStatusHistoryByRegionIndex.partitionKey as dynamodb.Attribute,
+      sortKey: regionStatusHistoryByRegionIndex.sortKey as dynamodb.Attribute,
     });
 
     const regionStatusHistoryByInstagramPostIndex =
       tables.regionStatusHistory.indexes.regionStatusHistoryByInstagramPost;
     regionStatusHistoryTable.addGlobalSecondaryIndex({
       indexName: regionStatusHistoryByInstagramPostIndex.name,
-      partitionKey: regionStatusHistoryByInstagramPostIndex.partitionKey,
-      sortKey: regionStatusHistoryByInstagramPostIndex.sortKey,
+      partitionKey:
+        regionStatusHistoryByInstagramPostIndex.partitionKey as dynamodb.Attribute,
+      sortKey:
+        regionStatusHistoryByInstagramPostIndex.sortKey as dynamodb.Attribute,
     });
 
     // Queues
@@ -558,9 +562,8 @@ export default class extends cdk.Stack {
     // instagram
     const instagramApi = api.root.addResource('instagram');
     const instagramAuthorizeApi = instagramApi.addResource('authorize');
-    const instagramAuthorizeCallbackApi = instagramAuthorizeApi.addResource(
-      'callback',
-    );
+    const instagramAuthorizeCallbackApi =
+      instagramAuthorizeApi.addResource('callback');
 
     // GET /instagram/authorize
     const authorizeInstagramHandler = new lambda.Function(
@@ -598,9 +601,8 @@ export default class extends cdk.Stack {
       },
     );
 
-    const authorizeInstagramCallbackIntegration = new apigateway.LambdaIntegration(
-      authorizeInstagramCallbackHandler,
-    );
+    const authorizeInstagramCallbackIntegration =
+      new apigateway.LambdaIntegration(authorizeInstagramCallbackHandler);
 
     instagramAuthorizeCallbackApi.addMethod(
       'GET',

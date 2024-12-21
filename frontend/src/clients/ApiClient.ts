@@ -1,7 +1,9 @@
-import jwtDecode from 'jwt-decode';
-import { env } from '@trail-status-app/utilities';
+import { jwtDecode } from 'jwt-decode';
 
-const apiEndpoint = env('REACT_APP_API_ENDPOINT');
+const apiEndpoint = import.meta.env.VITE_API_ENDPOINT;
+if (!apiEndpoint) {
+  throw new Error('Missing VITE_API_ENDPOINT');
+}
 
 interface RequestOptions {
   method: string;
@@ -97,8 +99,13 @@ export default class ApiClient {
     return `${apiEndpoint}/instagram/authorize`;
   }
 
-  getUser(): User {
-    const decodedToken = jwtDecode(this.accessToken);
+  getUser(): User | undefined {
+    if (!this.accessToken) {
+      return undefined;
+    }
+
+    // TODO: Add type for decoded token
+    const decodedToken = jwtDecode<any>(this.accessToken);
 
     return {
       id: decodedToken.sub,
@@ -238,11 +245,13 @@ export default class ApiClient {
           this.onUnauthorized();
         }
 
-        throw new Error(
+        console.error(
           `ApiClient error from ${url}: ${resp.statusText} — ${JSON.stringify(
             await resp.text(),
           )}`,
         );
+
+        return;
       }
 
       return await resp.json();

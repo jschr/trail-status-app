@@ -1,94 +1,93 @@
-import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import projectPrefix from './projectPrefix';
 
 export default {
   users: {
     name: projectPrefix('users'),
-    partitionKey: { name: 'id', type: dynamodb.AttributeType.STRING },
+    partitionKey: { name: 'id', type: 'S' },
   },
   regions: {
     name: projectPrefix('regions'),
-    partitionKey: { name: 'id', type: dynamodb.AttributeType.STRING },
+    partitionKey: { name: 'id', type: 'S' },
     indexes: {
       regionsByUser: {
         name: 'regionsByUser',
         partitionKey: {
           name: 'userId',
-          type: dynamodb.AttributeType.STRING,
+          type: 'S',
         },
         sortKey: {
           name: 'createdAt',
-          type: dynamodb.AttributeType.STRING,
+          type: 'S',
         },
       },
     },
   },
   regionStatus: {
     name: projectPrefix('regionStatus'),
-    partitionKey: { name: 'id', type: dynamodb.AttributeType.STRING },
+    partitionKey: { name: 'id', type: 'S' },
   },
   trails: {
     name: projectPrefix('trails'),
-    partitionKey: { name: 'id', type: dynamodb.AttributeType.STRING },
+    partitionKey: { name: 'id', type: 'S' },
     indexes: {
       trailsByRegion: {
         name: 'trailsByRegion',
         partitionKey: {
           name: 'regionId',
-          type: dynamodb.AttributeType.STRING,
+          type: 'S',
         },
         sortKey: {
           name: 'createdAt',
-          type: dynamodb.AttributeType.STRING,
+          type: 'S',
         },
       },
     },
   },
   trailStatus: {
     name: projectPrefix('trailStatus'),
-    partitionKey: { name: 'id', type: dynamodb.AttributeType.STRING },
+    partitionKey: { name: 'id', type: 'S' },
   },
   webhooks: {
     name: projectPrefix('webhooks'),
-    partitionKey: { name: 'id', type: dynamodb.AttributeType.STRING },
+    partitionKey: { name: 'id', type: 'S' },
     indexes: {
       webhooksByRegion: {
         name: 'webhooksByRegion',
         partitionKey: {
           name: 'regionId',
-          type: dynamodb.AttributeType.STRING,
+          type: 'S',
         },
         sortKey: {
           name: 'runPriority',
-          type: dynamodb.AttributeType.NUMBER,
+          type: 'N',
         },
       },
     },
   },
   regionStatusHistory: {
     name: projectPrefix('regionStatusHistory'),
-    partitionKey: { name: 'id', type: dynamodb.AttributeType.STRING },
+    partitionKey: { name: 'id', type: 'S' },
     indexes: {
       regionStatusHistoryByRegion: {
         name: 'regionStatusHistoryByRegion',
         partitionKey: {
           name: 'regionId',
-          type: dynamodb.AttributeType.STRING,
+          type: 'S',
         },
         sortKey: {
           name: 'createdAt',
-          type: dynamodb.AttributeType.STRING,
+          type: 'S',
         },
       },
       regionStatusHistoryByInstagramPost: {
         name: 'regionStatusHistoryByInstagramPost',
         partitionKey: {
           name: 'instagramPostId',
-          type: dynamodb.AttributeType.STRING,
+          type: 'S',
         },
         sortKey: {
           name: 'createdAt',
-          type: dynamodb.AttributeType.STRING,
+          type: 'S',
         },
       },
     },

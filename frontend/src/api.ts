@@ -1,9 +1,9 @@
 import qs from 'querystring';
 import nprogress from 'nprogress';
-import ApiClient from './clients/ApiClient';
-import history from './history';
+import ApiClient from '@/clients/ApiClient';
+import history from '@/history';
 
-export * from './clients/ApiClient';
+export * from '@/clients/ApiClient';
 
 let accessToken: string | null = null;
 
@@ -22,7 +22,7 @@ if (typeof querystring.sessionToken === 'string') {
 }
 
 let requests = 0;
-let doneTimeout: ReturnType<typeof setTimeout>;
+let doneTimeout: ReturnType<typeof setTimeout> | null = null;
 export default new ApiClient({
   accessToken,
   onUnauthorized: () => history.push('/login'),
