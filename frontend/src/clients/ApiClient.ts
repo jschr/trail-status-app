@@ -245,11 +245,13 @@ export default class ApiClient {
           this.onUnauthorized();
         }
 
-        throw new Error(
+        console.error(
           `ApiClient error from ${url}: ${resp.statusText} — ${JSON.stringify(
             await resp.text(),
           )}`,
         );
+
+        return;
       }
 
       return await resp.json();
