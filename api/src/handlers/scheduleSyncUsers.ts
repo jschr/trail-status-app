@@ -12,8 +12,11 @@ if (!runSyncUsersQueueUrl) {
 
 export default withScheduledHandler(async () => {
   const users = await UserModel.all();
-  console.info(`Found '${users.length}' users to sync`);
-  await Promise.all(users.map(createSyncUserJob));
+
+  const usersToSync = users.filter((user) => !user.disabled);
+  console.info(`Syncing ${usersToSync.length}/${users.length} users`);
+
+  await Promise.all(usersToSync.map(createSyncUserJob));
 });
 
 const createSyncUserJob = async (user: UserModel) => {

@@ -12,6 +12,7 @@ export interface User {
   lastLoginAt: string;
   createdAt: string;
   sharedRegions: string[];
+  disabled?: boolean;
 }
 
 const isNotNullOrUndefined = <T>(value: T | null | undefined): value is T => {
@@ -41,7 +42,7 @@ export default class UserModel {
       id: string;
     }>,
   ): Promise<Array<UserModel | null>> {
-    const requestKeys = items.filter(i => i.id).map(this.toAttributeMap);
+    const requestKeys = items.filter((i) => i.id).map(this.toAttributeMap);
     if (requestKeys.length === 0) return [];
 
     const params: DynamoDB.BatchGetItemInput = {
@@ -64,11 +65,11 @@ export default class UserModel {
       }
 
       const UserModels = tableResults.map(
-        attrMap => new UserModel(this.fromAttributeMap(attrMap)),
+        (attrMap) => new UserModel(this.fromAttributeMap(attrMap)),
       );
 
       return items.map(
-        item => UserModels.find(um => um.id === item.id) ?? null,
+        (item) => UserModels.find((um) => um.id === item.id) ?? null,
       );
     } catch (err) {
       throw new Error(
@@ -96,7 +97,7 @@ export default class UserModel {
       }
 
       const users = res.Items.map(
-        attrMap => new UserModel(this.fromAttributeMap(attrMap)),
+        (attrMap) => new UserModel(this.fromAttributeMap(attrMap)),
       );
 
       return [users, res.LastEvaluatedKey];
@@ -138,9 +139,10 @@ export default class UserModel {
     if (user.createdAt !== undefined) attrMap.createdAt = { S: user.createdAt };
     if (user.sharedRegions !== undefined) {
       attrMap.sharedRegions = attrMap.sharedRegions = {
-        L: user.sharedRegions.map(regionId => ({ S: regionId })),
+        L: user.sharedRegions.map((regionId) => ({ S: regionId })),
       };
     }
+    if (user.disabled !== undefined) attrMap.disabled = { BOOL: user.disabled };
 
     return attrMap;
   }
@@ -159,9 +161,10 @@ export default class UserModel {
       expiresAt: attrMap.expiresAt?.S,
       lastLoginAt: attrMap.lastLoginAt?.S,
       createdAt: attrMap.createdAt?.S,
-      sharedRegions: attrMap.sharedRegions?.L?.map(i => i.S).filter(
+      sharedRegions: attrMap.sharedRegions?.L?.map((i) => i.S).filter(
         isNotNullOrUndefined,
       ),
+      disabled: attrMap.disabled?.BOOL ?? false,
     };
   }
 
@@ -223,6 +226,10 @@ export default class UserModel {
     return this.attrs.sharedRegions ?? [];
   }
 
+  get disabled() {
+    return this.attrs.disabled ?? false;
+  }
+
   public toJSON() {
     return {
       id: this.id,
@@ -230,6 +237,7 @@ export default class UserModel {
       profilePictureUrl: this.profilePictureUrl,
       createdAt: this.createdAt,
       sharedRegions: this.sharedRegions,
+      disabled: this.disabled,
     };
   }
 }
