@@ -1,11 +1,12 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/api';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 export interface SaveRegionInput {
   regionId: string;
   regionName: string;
   openHashtag: string;
   closeHashtag: string;
+  statusLookbackDays?: number | null;
 }
 
 export function useSaveRegion() {
@@ -17,6 +18,7 @@ export function useSaveRegion() {
         name: input.regionName,
         openHashtag: input.openHashtag,
         closeHashtag: input.closeHashtag,
+        statusLookbackDays: input.statusLookbackDays ?? null,
       });
     },
     onSuccess: (region) => {
@@ -26,3 +28,4 @@ export function useSaveRegion() {
 
   return result;
 }
+

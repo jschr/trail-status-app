@@ -22,6 +22,7 @@ export interface Region {
   name: string;
   openHashtag: string;
   closeHashtag: string;
+  statusLookbackDays?: number | null;
   updatedAt: string;
   createdAt: string;
   trails: Trail[];
@@ -136,6 +137,7 @@ export default class ApiClient {
       name?: string;
       openHashtag?: string;
       closeHashtag?: string;
+      statusLookbackDays?: number | null;
     },
   ): Promise<Region> {
     return await this.makeProtectedRequest(`${apiEndpoint}/regions?id=${id}`, {

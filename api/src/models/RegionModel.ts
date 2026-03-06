@@ -1,8 +1,8 @@
 import * as DynamoDB from '@aws-sdk/client-dynamodb';
 import tables from '@trail-status-app/infrastructure/build/src/tables';
+import { unwrapError } from '../utilities';
 import dynamodb from './dynamodb';
 import ensureHashtagPrefix from './ensureHashtagPrefix';
-import { unwrapError } from '../utilities';
 
 export interface Region {
   id: string;
@@ -11,6 +11,7 @@ export interface Region {
   openHashtag: string;
   closeHashtag: string;
   timestreamId?: string;
+  statusLookbackDays?: number | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -186,6 +187,10 @@ export default class RegionModel {
       attrMap.closeHashtag = { S: region.closeHashtag };
     if (region.timestreamId !== undefined)
       attrMap.timestreamId = { S: region.timestreamId };
+    if (region.statusLookbackDays !== undefined)
+      attrMap.statusLookbackDays = region.statusLookbackDays != null
+        ? { N: String(region.statusLookbackDays) }
+        : { NULL: true };
     if (region.updatedAt !== undefined)
       attrMap.updatedAt = { S: region.updatedAt };
     if (region.createdAt !== undefined)
@@ -207,6 +212,9 @@ export default class RegionModel {
       openHashtag: attrMap.openHashtag?.S,
       closeHashtag: attrMap.closeHashtag?.S,
       timestreamId: attrMap.timestreamId?.S,
+      statusLookbackDays: attrMap.statusLookbackDays?.N != null
+        ? Number(attrMap.statusLookbackDays.N)
+        : null,
       updatedAt: attrMap.updatedAt?.S,
       createdAt: attrMap.createdAt?.S,
     };
@@ -267,6 +275,10 @@ export default class RegionModel {
     return this.attrs.timestreamId ?? '';
   }
 
+  get statusLookbackDays() {
+    return this.attrs.statusLookbackDays ?? null;
+  }
+
   get updatedAt() {
     return this.attrs.updatedAt ?? '';
   }
@@ -283,6 +295,7 @@ export default class RegionModel {
       openHashtag: this.openHashtag,
       closeHashtag: this.closeHashtag,
       timestreamId: this.timestreamId,
+      statusLookbackDays: this.statusLookbackDays,
       updatedAt: this.updatedAt,
       createdAt: this.createdAt,
     };

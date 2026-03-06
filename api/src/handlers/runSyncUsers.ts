@@ -1,15 +1,15 @@
 import * as SQS from '@aws-sdk/client-sqs';
 import uuid from 'uuid/v4';
-import withSQSHandler from '../withSQSHandler';
+import * as instagram from '../clients/instagram';
 import RegionModel from '../models/RegionModel';
-import RegionStatusModel from '../models/RegionStatusModel';
 import RegionStatusHistoryModel from '../models/RegionStatusHistoryModel';
-import UserModel from '../models/UserModel';
+import RegionStatusModel from '../models/RegionStatusModel';
 import TrailModel from '../models/TrailModel';
 import TrailStatusModel from '../models/TrailStatusModel';
+import UserModel from '../models/UserModel';
 import WebhookModel from '../models/WebhookModel';
-import * as instagram from '../clients/instagram';
 import { unwrapError } from '../utilities';
+import withSQSHandler from '../withSQSHandler';
 
 const sqs = new SQS.SQS();
 const runWebhooksQueueUrl = process.env.RUN_WEBHOOKS_QUEUE_URL;
@@ -93,10 +93,23 @@ const syncRegion = async (
     `Region '${region.id}' has ${trails.length} trails and ${webhooks.length} webhooks`,
   );
 
+  // Apply the per-region lookback threshold if configured.
+  let eligibleMedia = userMedia;
+  if (region.statusLookbackDays != null) {
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - region.statusLookbackDays);
+    eligibleMedia = userMedia.filter(
+      m => new Date(m.timestamp) >= cutoff,
+    );
+    console.info(
+      `Applying ${region.statusLookbackDays}-day lookback for region '${region.id}': ${eligibleMedia.length}/${userMedia.length} posts eligible.`,
+    );
+  }
+
   let mediaWithOpenStatus: instagram.UserMedia | null = null;
   let mediaWithClosedStatus: instagram.UserMedia | null = null;
   let permalink = '';
-  for (const media of userMedia) {
+  for (const media of eligibleMedia) {
     if (hasHashtag(media, region.openHashtag)) {
       console.info(
         `Found open hashtag '${region.openHashtag}' for region '${region.id}'.`,
